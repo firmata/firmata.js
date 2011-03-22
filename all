@@ -1,0 +1,77 @@
+var SerialPort=require('serialport').SerialPort
+,   sys=require('sys')
+,   events=require('events');
+const  PIN_MODE=0xF4
+,      ANALOG_IN=0xC0
+,      DIGITAL_WRITE=0xD0
+,      DIGITAL_MESSAGE=0x90
+,      START_SYSEX=0xF0
+,      END_SYSEX=0xF7
+,      QUERY_FIRMWARE=0x79
+,      REPORT_VERSION=0xF9
+,      ANALOG_MESSAGE=0xE0;
+var Board=function(port,callback){
+  events.EventEmitter.call(this);
+  var board=this;
+  this.masks=[];
+  this.sp=new SerialPort(port,{baudrate:57600});
+  for(i=2;i<13;i++){
+    this.sp.write(String.fromCharCode(DIGITAL_WRITE+i)+String.fromCharCode(1));
+  }
+  this.sp.on('data',function(data){
+      for(var i=0,length=data.length;i < length;i++){
+        switch (data[i]){
+          case START_SYSEX:
+            console.log(data);
+            console.log('start sysex');
+            break;
+          case QUERY_FIRMWARE:
+            break;
+          case REPORT_VERSION:
+            board.emit('reportversion',{major:data[i+1],minor:data[i+2]});
+            i+=2;
+            break;
+        }
+      }
+  });
+  this.sp.on('error',function(string){
+    console.log(string);
+  });
+  this.reportVersion(callback);
+}
+sys.inherits(Board,events.EventEmitter);
+Board.prototype.reportVersion=function(callback){
+  this.once('reportversion',callback);
+  this.sp.write(REPORT_VERSION);
+};
+Board.prototype.queryFirmware=function(callback){
+  this.once('queryfirmware',callback);
+  this.sp.write(START_SYSEX);
+  this.sp.write(QUERY_FIRMWARE)
+  this.sp.write(END_SYSEX);
+  console.log('querying firmware');
+};
+Board.prototype.pinMode=function(number,state){
+  this.sp.write(PIN_MODE);
+  this.sp.write(number);
+  this.sp.write(state);
+  console.log('Pin mode');
+  console.log(PIN_MODE);
+  console.log(number);
+  console.log(state);
+};
+Board.prototype.setActive=function(number,state){
+  this.masks[number]=0;
+  this.sp.write(DIGITAL_WRITE+7);
+  this.sp.write(1);
+  console.log('set active');
+  console.log(DIGITAL_WRITE+7);
+  console.log(1);
+};
+Board.prototype.digitalWrite=function(number,value){
+  var mask = this.masks[number];
+  mask ^=1 << number;
+  this.sp.write(String.fromCharCode(DIGITAL_MESSAGE)+String.fromCharCode(mask %128)+String.fromCharCode(mask >> 7));
+  this.masks[number]=mask;
+}
+module.exports={Board:Board}; 
