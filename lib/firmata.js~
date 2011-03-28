@@ -1,0 +1,77 @@
+var SerialPort=require('serialport').SerialPort
+,   sys=require('sys')
+,   events=require('events');
+const  PIN_MODE=0xF4
+,      REPORT_DIGITAL=0xD0
+,      REPORT_ANALOG=0xC0
+,      DIGITAL_MESSAGE=0x90
+,      START_SYSEX=0xF0
+,      END_SYSEX=0xF7
+,      QUERY_FIRMWARE=0x79
+,      REPORT_VERSION=0xF9
+,      ANALOG_MESSAGE=0xE0;
+var Board=function(port,callback){
+  events.EventEmitter.call(this);
+  var board=this;
+  this.OUTPUT=1;
+  this.INPUT=0;
+  this.HIGH=1;
+  this.LOW=0;
+  this.masks=[];
+  this.sp=new SerialPort(port,{baudrate:57600});
+  this.sp.on('data',function(data){
+    var cmd=data[0]&0xF0;
+    if(cmd==ANALOG_MESSAGE){
+      var port = data[0]&0x0F;      
+      if((data[1]|(data[2]<<7))>100){
+        console.log('port'+(data[0]&0x0F)+' value '+(data[1]|(data[2] << 7)));
+      }
+    }else{
+      switch (data[0]){
+        case START_SYSEX:
+          console.log(data);
+          console.log('start sysex');
+           break;
+        case QUERY_FIRMWARE:
+           break;
+        case REPORT_VERSION:
+          board.emit('reportversion',{major:data[1],minor:data[2]});
+          for(i=0;i<16;i++){
+            board.sp.write([REPORT_DIGITAL | i,1]);
+            board.sp.write([REPORT_ANALOG | i,1]);
+          }
+          break;
+       }
+    }
+  });
+  this.sp.on('error',function(string){
+    console.log(string);
+  });
+  this.reportVersion(callback);
+}
+sys.inherits(Board,events.EventEmitter);
+Board.prototype.reportVersion=function(callback){
+  this.once('reportversion',callback);
+  this.sp.write(REPORT_VERSION);
+};
+Board.prototype.queryFirmware=function(callback){
+  this.once('queryfirmware',callback);
+  this.sp.write(START_SYSEX);
+  this.sp.write(QUERY_FIRMWARE)
+  this.sp.write(END_SYSEX);
+  console.log('querying firmware');
+};
+Board.prototype.pinMode=function(number,state){
+  this.sp.write([PIN_MODE,number,state]);
+};
+Board.prototype.setActive=function(number,state){
+  this.masks[number]=0;
+  this.sp.write([DIGITAL_WRITE+7,1]);
+};
+Board.prototype.digitalWrite=function(number,value){
+  var mask = this.masks[number];
+  mask ^=1 << number;
+  this.sp.write([DIGITAL_MESSAGE,mask %128,mask >> 7]);
+  this.masks[number]=mask;
+}
+module.exports={Board:Board}; 

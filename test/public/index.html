@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<script src="http://code.jquery.com/jquery-1.5.min.js"></script>
+		<script>
+			$(function(){
+                          var onOff="off";
+                          $("#setOut").click(function(){
+                            $.get("/pinmode?pin="+$("#txtPin").val(),function(){
+                            });
+                          });
+				$("#onOff").click(function(){
+					if(onOff=="off"){
+						onOff="on";
+					}else{
+						onOff="off";
+					}
+					$.get("/"+onOff+"?pin="+$("#txtPin").val(),function(){
+					});
+					$(this).val(onOff);
+				});
+			});
+		</script>
+	</head>
+        <body>
+          <input type="text" id="txtPin" value="">
+          <input type="button" id="setOut" value="OUTPUT">
+          <input type="button" id="onOff" value="Off" height="3000" width="3000"></input>
+	</body>
+</html>
