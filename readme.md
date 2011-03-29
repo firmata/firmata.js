@@ -11,15 +11,14 @@ Arduino running firmata (tested with v2.2)
 View test folder for examples.
 #Methods:
 *board.digitalWrite(pin,value)*  
-  
   Write an output to a digital pin.  pin is the number of the pin and the value is either board.HIGH or board.LOW  
+  
 *board.pinMode(pin,state)*  
-  
   Set a mode for a pin.  pin is the number of the pin and state is one of the following.  board.INPUT, board.OUTPUT, board.PWM  
+  
 *board.analogWrite(pin,value)*  
-  
   Write an output to a digital pin.  pin is the number of the pin and the value is between 0 and 255.  
-*board.analogRead(pin,callback)*  
   
+*board.analogRead(pin,callback)*  
   Read an input for an analog pin.  Every time there is data on the pin the callback will be fired.  
 
