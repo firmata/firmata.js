@@ -1,8 +1,9 @@
 #firmata.js
 A Node library to interact with an arduino running the firmata protocol.
 #Requirements
-Node
-Arduino running firmata (tested with v2.2)
+Node   
+Arduino running firmata (tested with v2.2)    
+node-serialport https://github.com/voodootikigod/node-serialport  
 #Usage
     var firmata = require('..lib/firmata');
     var board = new firmata.Board('path to usb',function(){
