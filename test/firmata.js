@@ -90,7 +90,7 @@ var board=new firmata.Board('/dev/ttyS2',function(error){
                console.log('Put Your hand over light sensor');
                board.pinMode(8,board.MODES.INPUT);
                board.digitalRead(8,function(value){
-                   if(value == 0){
+                   if(value === 0){
                        if(!callbackCalled){
                            callbackCalled=true;
                            callback(null,'2');
@@ -135,7 +135,6 @@ var board=new firmata.Board('/dev/ttyS2',function(error){
               ,analogWrite
               ,readYes
            ],function(error,results){
-               console.log(results);
                assert.ok(true,'Analog Read Succesful');
                assert.ok(true,'Digital Read Successful');
                assert.ok(results[3] == 'Y\n','Digital Write Successful');
