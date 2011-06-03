@@ -5,6 +5,7 @@ A Node library to interact with an Arduino running the firmata protocol.
 #Tests
 The tests are written with expresso and assume you have the async library install globally.  It also assumes you have an Arduino Uno running firmata 2.2 with a photocell and an LED hooked up.
 #Usage
+    
     var firmata = require('firmata');
     var board = new firmata.Board('path to usb',function(){
       //arduino is ready to communicate
@@ -15,6 +16,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   The Board object is where all the functionality is for the library.
 ##attributes
   *Board.MODES*
+    
     {
      INPUT:0x00,
      OUTPUT:0x01,
