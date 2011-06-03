@@ -54,20 +54,20 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
 ##methods
   *board.pinMode(pin,mode)*  
 
-    Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
+  Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
 
   *board.digitalWrite(pin,value)*  
 
-    Write an output to a digital pin.  pin is the number of the pin and the value is either board.HGH or board.LOW.
+  Write an output to a digital pin.  pin is the number of the pin and the value is either board.HGH or board.LOW.
 
   *board.digitalRead(pin,callback)*
 
-    Read a digital value from the pin.  Evertime there is data for the pin the callback will be fired with a value argument.  
+  Read a digital value from the pin.  Evertime there is data for the pin the callback will be fired with a value argument.  
 
   *board.analogWrite(pin,value)*  
 
-    Write an output to a digital pin.  pin is the number of the pin and the value is between 0 and 255.  
+  Write an output to a digital pin.  pin is the number of the pin and the value is between 0 and 255.  
 
   *board.analogRead(pin,callback)*  
 
-    Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument.  
+  Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument.  
