@@ -13,7 +13,7 @@ The tests are written with expresso and assume you have the async library instal
 If you run *firmata* from the command line it will prompt you for the usb port.  Then it will present you with a REPL with a board variable available.
 #The Board object:
   ##attributes
-    *Board.MODES*
+  *Board.MODES*
         {
             INPUT:0x00,
             OUTPUT:0x01,
