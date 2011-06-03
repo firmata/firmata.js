@@ -11,17 +11,18 @@ The tests are written with expresso and assume you have the async library instal
     });  
 #REPL
 If you run *firmata* from the command line it will prompt you for the usb port.  Then it will present you with a REPL with a board variable available.
-#The Board object:
+#Board
+  The Board object is where all the functionality is for the library.
 ##attributes
   *Board.MODES*
-        {
-            INPUT:0x00,
-            OUTPUT:0x01,
-            ANALOG:0x02,
-            PWM:0x03,
-            SERVO:0x04   
-        }
-      This is an enumeration of the different modes available.  This are used in calls to the *pinMode* function.
+    {
+     INPUT:0x00,
+     OUTPUT:0x01,
+     ANALOG:0x02,
+     PWM:0x03,
+     SERVO:0x04   
+    }
+    This is an enumeration of the different modes available.  This are used in calls to the *pinMode* function.
     *Board.HIGH* and *Board.LOW*
       These are constants used to set a digital pin low or high.  Used in calls to the *digitalWrite* function.
     *Board.pins*
