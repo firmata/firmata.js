@@ -27,9 +27,11 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   This is an enumeration of the different modes available.  This are used in calls to the *pinMode* function.
 
   *Board.HIGH* and *Board.LOW*
+
   These are constants used to set a digital pin low or high.  Used in calls to the *digitalWrite* function.
 
   *Board.pins*
+
   This is an array of all the pins on the arduino board.
 
   Each value in the array is an object:
