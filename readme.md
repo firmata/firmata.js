@@ -43,7 +43,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   For example to get the analog pin 5 from the *Board.pins* attributes use:
 
     board.pins[board.analogPins[5]];
-  #methods
+##methods
     *board.pinMode(pin,mode)*  
       Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
     *board.digitalWrite(pin,value)*  
