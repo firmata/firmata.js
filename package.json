@@ -15,7 +15,7 @@
   }
 , "dependencies" : 
   {
-      "serialport" : "0.2.0"
+      "serialport" : ">=0.2.0"
   }
 , "engines" :
   {
