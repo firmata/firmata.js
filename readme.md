@@ -70,4 +70,16 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
 
   *board.analogRead(pin,callback)*  
 
-  Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument.  
+  Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument. 
+
+  *board.servoWrite(pin,degree)*
+
+  Write a degree value to a servo pin.
+
+  *board.sendI2CWriteRequest(slaveAddress,[bytes])*
+
+  Write an array of bytes to a an I2C device.
+
+  *board.sendI2CReadRequest(slaveAddress,numBytes,function(data))*
+
+  Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
