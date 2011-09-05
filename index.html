@@ -1,77 +1,476 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <meta charset='utf-8'>
+	<head>
+		<title>firmata</title>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+		<style>body {
+    margin: 0;
+    padding: 0;
+    font: 14px/1.5 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    color: #252519;
+}
+a {
+    color: #252519;
+}
+a:hover {
+    text-decoration: underline;
+    color: #19469D;
+}
+p {
+    margin: 12px 0;
+}
+h1, h2, h3 {
+    margin: 0;
+    padding: 0;
+}
+table#source {
+    width: 100%;
+    border-collapse: collapse;
+}
+table#source td:first-child {
+    padding: 30px 40px 30px 40px;
+    vertical-align: top;
+}
+table#source td:first-child,
+table#source td:first-child pre {
+    width: 450px;
+}
+table#source td:last-child {
+    padding: 30px 0 30px 40px;
+    border-left: 1px solid #E5E5EE;
+    background: #F5F5FF;
+}
+table#source tr {
+    border-bottom: 1px solid #E5E5EE;
+}
+table#source tr.filename {
+    padding-top: 40px;
+    border-top: 1px solid #E5E5EE;
+}
+table#source tr.filename td:first-child {
+    text-transform: capitalize;
+}
+table#source tr.filename td:last-child {
+    font-size: 12px;
+}
+table#source tr.filename h2 {
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+table#source tr.code h1,
+table#source tr.code h2,
+table#source tr.code h3 {
+    margin-top: 30px;
+    font-family: "Lucida Grande", "Helvetica Nueue", Arial, sans-serif;
+    font-size: 18px;
+}
+table#source tr.code h2 {
+    font-size: 16px;
+}
+table#source tr.code h3 {
+    font-size: 14px;
+}
+table#source tr.code ul {
+    margin: 15px 0 15px 35px;
+    padding: 0;
+}
+table#source tr.code ul li {
+    margin: 0;
+    padding: 1px 0;
+}
+table#source tr.code ul li p {
+    margin: 0;
+    padding: 0;
+}
+table#source tr.code td:first-child pre {
+    padding: 20px;
+}
+#ribbon {
+    position: fixed;
+    top: 0;
+    right: 0;
+}
+code .string { color: #219161; }
+code .regexp { color: #219161; }
+code .keyword { color: #954121; }
+code .number { color: #19469D; }
+code .comment { color: #bbb; }
+code .this { color: #19469D; }</style>
+		<script>
+			$(function(){
+				$('tr.code').hide();
+				$('tr.filename').toggle(function(){
+					$(this).nextUntil('.filename').fadeIn();
+				}, function(){
+					$(this).nextUntil('.filename').fadeOut();
+				});
+			});
+		</script>
+	</head>
+	<body>
+<table id="source"><tbody><tr><td><h1>firmata</h1></td><td></td></tr><tr class="filename"><td><h2 id="lib/firmata.js"><a href="#">firmata</a></h2></td><td>lib/firmata.js</td></tr><tr class="code">
+<td class="docs">
+<ul><li><strong>author</strong>: <em>Julian</em>
+Gautier</li></ul>
+</td>
+<td class="code">
 
-  <title>jgautier/firmata @ GitHub</title>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Module Dependencies
+ </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">SerialPort</span> = <span class="variable">require</span>(<span class="string">'serialport'</span>).<span class="class">SerialPort</span>,
+    <span class="variable">sys</span> = <span class="variable">require</span>(<span class="string">'sys'</span>),
+    <span class="variable">events</span> = <span class="variable">require</span>(<span class="string">'events'</span>);</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>constants
+ </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">PIN_MODE</span> = <span class="variable">xF4</span>,
+    <span class="class">REPORT_DIGITAL</span> = <span class="variable">xD0</span>,
+    <span class="class">REPORT_ANALOG</span> = <span class="variable">xC0</span>,
+    <span class="class">DIGITAL_MESSAGE</span> = <span class="variable">x90</span>,
+    <span class="class">START_SYSEX</span> = <span class="variable">xF0</span>,
+    <span class="class">END_SYSEX</span> = <span class="variable">xF7</span>,
+    <span class="class">QUERY_FIRMWARE</span> = <span class="variable">x79</span>,
+    <span class="class">REPORT_VERSION</span> = <span class="variable">xF9</span>,
+    <span class="class">ANALOG_MESSAGE</span> = <span class="variable">xE0</span>,
+    <span class="class">CAPABILITY_QUERY</span> = <span class="variable">x6B</span>,
+    <span class="class">CAPABILITY_RESPONSE</span> = <span class="variable">x6C</span>,
+    <span class="class">PIN_STATE_QUERY</span> = <span class="variable">x6D</span>,
+    <span class="class">PIN_STATE_RESPONSE</span> = <span class="variable">x6E</span>,
+    <span class="class">ANALOG_MAPPING_QUERY</span> = <span class="variable">x69</span>,
+    <span class="class">ANALOG_MAPPING_RESPONSE</span> = <span class="variable">x6A</span>,
+    <span class="class">I2C_REQUEST</span> = <span class="variable">x76</span>,
+    <span class="class">I2C_REPLY</span> = <span class="variable">x77</span>,
+    <span class="class">I2C_CONFIG</span> = <span class="variable">x78</span>,
+    <span class="class">STRING_DATA</span> = <span class="variable">x71</span></code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>MIDI_RESPONSE contains functions to be called when we receive a MIDI message from the arduino.
+used as a switch object as seen here http://james.padolsey.com/javascript/how-to-avoid-switch-case-syndrome/
+     </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">MIDI_RESPONSE</span> = {};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>SYSEX_RESPONSE contains functions to be called when we receive a SYSEX message from the arduino.
+used as a switch object as seen here http://james.padolsey.com/javascript/how-to-avoid-switch-case-syndrome/
+ </p>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">SYSEX_RESPONSE</span> = {};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<ul><li><strong>class</strong>: <em>The</em>
+Board object represents an arduino board.</li><li><strong>augments</strong>: <em>EventEmitter</em></li></ul>
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #4e8a59;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
+<h2></h2>
+
+<ul><li><p><strong>param</strong>: <em>String</em>  port This is the serial port the arduino is connected to.</p></li><li><p><strong>param</strong>: <em>function</em>  function A function to be called when the arduino is ready to communicate.</p></li><li><p><strong>property</strong>: <em>MODES</em>
+All the modes available for pins on this arduino board.</p></li><li><strong>property</strong>: <em>I2C</em>MODES_
+All the I2C modes available.</li><li><strong>property</strong>: <em>HIGH</em>
+A constant to set a pins value to HIGH when the pin is set to an output.</li><li><strong>property</strong>: <em>LOW</em>
+A constant to set a pins value to LOW when the pin is set to an output.</li><li><strong>property</strong>: <em>pins</em>
+An array of pin object literals.</li><li><strong>property</strong>: <em>analogPins</em>
+An array of analog pins and their corresponding indexes in the pins array.</li><li><strong>property</strong>: <em>version</em>
+An object indicating the major and minor version of the firmware currently running.</li><li><strong>property</strong>: <em>firmware</em>
+An object indication the name, major and minor version of the firmware currently running.</li><li><p><strong>property</strong>: <em>currentBuffer</em>
+An array holding the current bytes received from the arduino.</p></li><li><p><strong>property</strong>: <em>SerialPort</em>  sp The serial port object used to communicate with the arduino.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="keyword">var</span> <span class="class">Board</span> = <span class="keyword">function</span>(<span class="variable">port</span>, <span class="variable">callback</span>) {
+        <span class="variable">events</span>.<span class="class">EventEmitter</span>.<span class="variable">call</span>(<span class="this">this</span>);
+        <span class="keyword">var</span> <span class="variable">board</span> = <span class="this">this</span>;
+        <span class="this">this</span>.<span class="class">MODES</span> = {
+            <span class="class">INPUT</span>: <span class="variable">x00</span>,
+            <span class="class">OUTPUT</span>: <span class="variable">x01</span>,
+            <span class="class">ANALOG</span>: <span class="variable">x02</span>,
+            <span class="class">PWM</span>: <span class="variable">x03</span>,
+            <span class="class">SERVO</span>: <span class="variable">x04</span>
+        };
+        <span class="this">this</span>.<span class="class">I2C_MODES</span> = {
+            <span class="class">WRITE</span>: <span class="variable">x00</span>,
+            <span class="class">READ</span>: <span class="number integer">1</span>,
+            <span class="class">CONTINUOUS_READ</span>: <span class="number integer">2</span>,
+            <span class="class">STOP_READING</span>: <span class="number integer">3</span>
+        };
+        <span class="this">this</span>.<span class="class">HIGH</span> = <span class="number integer">1</span>;
+        <span class="this">this</span>.<span class="class">LOW</span> = <span class="number integer">0</span>;
+        <span class="this">this</span>.<span class="variable">pins</span> = [];
+        <span class="this">this</span>.<span class="variable">analogPins</span> = [];
+        <span class="this">this</span>.<span class="variable">version</span> = {};
+        <span class="this">this</span>.<span class="variable">firmware</span> = {};
+        <span class="this">this</span>.<span class="variable">currentBuffer</span> = [];
+        <span class="this">this</span>.<span class="variable">sp</span> = <span class="keyword">new</span> <span class="class">SerialPort</span>(<span class="variable">port</span>, {
+            <span class="variable">baudrate</span>: <span class="number integer">57600</span>,
+            <span class="variable">buffersize</span>: <span class="number integer">1</span>
+        });
+        <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">on</span>(<span class="string">'data'</span>, <span class="keyword">function</span>(<span class="variable">data</span>) {
+            <span class="comment">//we dont want to push 0 as the first byte on our buffer</span>
+            <span class="keyword">if</span> ((<span class="variable">board</span>.<span class="variable">currentBuffer</span>.<span class="variable">length</span> === <span class="number integer">0</span> &<span class="variable">amp</span>;&<span class="variable">amp</span>; <span class="variable">data</span>[<span class="number integer">0</span>] !== <span class="number integer">0</span> || <span class="variable">board</span>.<span class="variable">currentBuffer</span>.<span class="variable">length</span>)) {
+                <span class="variable">board</span>.<span class="variable">currentBuffer</span>.<span class="variable">push</span>(<span class="variable">data</span>[<span class="number integer">0</span>]);
+            }
+            <span class="comment">//a MIDI or SYSEX command function we are going to call</span>
+            <span class="keyword">var</span> <span class="variable">cmdFunc</span>;
+            <span class="keyword">var</span> <span class="variable">cmd</span>;
+            <span class="comment">//if the first byte is START_SYSEX and last byte is END_SYSEX we have a SYSEX command.</span>
+            <span class="keyword">if</span> (<span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">0</span>] == <span class="class">START_SYSEX</span> &<span class="variable">amp</span>;&<span class="variable">amp</span>; <span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="variable">board</span>.<span class="variable">currentBuffer</span>.<span class="variable">length</span> - <span class="number integer">1</span>] == <span class="class">END_SYSEX</span>) {
+                <span class="variable">cmdFunc</span> = <span class="class">SYSEX_RESPONSE</span>[<span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">1</span>]];
+                <span class="comment">//if the first byte is not a START_SYSEX and we have 3 bytes we might have a MIDI Command</span>
+            } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="variable">board</span>.<span class="variable">currentBuffer</span>.<span class="variable">length</span> == <span class="number integer">3</span> &<span class="variable">amp</span>;&<span class="variable">amp</span>; <span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">0</span>] != <span class="class">START_SYSEX</span>) {
+                <span class="comment">//commands under 0xF0 we have a multi byte command</span>
+                <span class="keyword">if</span> (<span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">0</span>] &<span class="variable">lt</span>; <span class="number integer">240</span>) {
+                    <span class="variable">cmd</span> = <span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">0</span>] &<span class="variable">amp</span>; <span class="variable">xF0</span>;
+                } <span class="keyword">else</span> {
+                    <span class="variable">cmd</span> = <span class="variable">board</span>.<span class="variable">currentBuffer</span>[<span class="number integer">0</span>];
+                }
+                <span class="variable">cmdFunc</span> = <span class="class">MIDI_RESPONSE</span>[<span class="variable">cmd</span>];
+            }
+            <span class="comment">//if a function is found we will call it</span>
+            <span class="keyword">if</span> (<span class="variable">cmdFunc</span>) {
+                <span class="comment">//call function with board object</span>
+                <span class="variable">cmdFunc</span>(<span class="variable">board</span>);
+                <span class="comment">//reset currentBuffer so we can receive the next command</span>
+                <span class="variable">board</span>.<span class="variable">currentBuffer</span> = [];
+            }
+        });
+        <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">on</span>(<span class="string">'error'</span>, <span class="keyword">function</span>(<span class="variable">string</span>) {
+            <span class="variable">callback</span>(<span class="variable">string</span>);
+        });
+        <span class="this">this</span>.<span class="variable">reportVersion</span>(<span class="keyword">function</span>() {
+            <span class="variable">board</span>.<span class="variable">queryCapabilities</span>(<span class="keyword">function</span>() {
+                <span class="variable">board</span>.<span class="variable">queryAnalogMapping</span>(<span class="keyword">function</span>() {
+                    <span class="keyword">var</span> <span class="variable">pinsToQuery</span> = [];
+                    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> &<span class="variable">lt</span>; <span class="variable">board</span>.<span class="variable">pins</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
+                        <span class="variable">pinsToQuery</span>[<span class="variable">i</span>] = <span class="variable">i</span>;
+                    }
+                    <span class="keyword">for</span> (<span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> &<span class="variable">lt</span>; <span class="variable">pinsToQuery</span>.<span class="variable">length</span>; <span class="variable">i</span>++) {
+                        <span class="keyword">if</span> (<span class="variable">i</span> == <span class="variable">pinsToQuery</span>.<span class="variable">length</span> - <span class="number integer">1</span>) {
+                            <span class="variable">board</span>.<span class="variable">queryPinState</span>(<span class="variable">pinsToQuery</span>[<span class="variable">i</span>], <span class="keyword">function</span>() {
+                                <span class="variable">callback</span>();
+                            });
+                        } <span class="keyword">else</span> {
+                            <span class="variable">board</span>.<span class="variable">queryPinState</span>(<span class="variable">pinsToQuery</span>[<span class="variable">i</span>], <span class="keyword">function</span>() {});
+                        }
+                    }
+                });
+            });
+        });
+    };
+<span class="variable">sys</span>.<span class="variable">inherits</span>(<span class="class">Board</span>, <span class="variable">events</span>.<span class="class">EventEmitter</span>);</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to tell us its version.
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>function</em>  callback A function to be called when the arduino has reported its version.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">reportVersion</span> = <span class="keyword">function</span>(<span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'reportversion'</span>, <span class="variable">callback</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>(<span class="class">REPORT_VERSION</span>);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to tell us its firmware version.
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>function</em>  callback A function to be called when the arduino has reported its firmware version.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">queryFirmware</span> = <span class="keyword">function</span>(<span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'queryfirmware'</span>, <span class="variable">callback</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">QUERY_FIRMWARE</span>, <span class="class">END_SYSEX</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to read analog data.
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin to read analog data</p></li><li><p><strong>param</strong>: <em>function</em>  callback A function to call when we have the analag data.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">analogRead</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">addListener</span>(<span class="string">'analog-read-'</span> + <span class="variable">pin</span>, <span class="variable">callback</span>);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to write an analog message.
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin to write analog data to.</p></li><li><p><strong>param</strong>: <em>nubmer</em>  value The data to write to the pin between 0 and 255.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">analogWrite</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">value</span>) {
+    <span class="this">this</span>.<span class="variable">pins</span>[<span class="variable">pin</span>].<span class="variable">value</span> = <span class="variable">value</span>;
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">ANALOG_MESSAGE</span> | <span class="variable">pin</span>, <span class="variable">value</span> &<span class="variable">amp</span>; <span class="variable">x7F</span>, (<span class="variable">value</span> &<span class="variable">gt</span>;&<span class="variable">gt</span>; <span class="number integer">7</span>) &<span class="variable">amp</span>; <span class="variable">x7F</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to move a servo
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin the servo is connected to</p></li><li><p><strong>param</strong>: <em>number</em>  value The degrees to move the servo to.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">servoWrite</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">value</span>) {
+    <span class="this">this</span>.<span class="variable">analogWrite</span>.<span class="variable">apply</span>(<span class="this">this</span>, <span class="variable">arguments</span>);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to set the pin to a certain mode.
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin you want to change the mode of.</p></li><li><p><strong>param</strong>: <em>number</em>  mode The mode you want to set. Must be one of board.MODES</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">pinMode</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">mode</span>) {
+    <span class="this">this</span>.<span class="variable">pins</span>[<span class="variable">pin</span>].<span class="variable">mode</span> = <span class="variable">mode</span>;
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">PIN_MODE</span>, <span class="variable">pin</span>, <span class="variable">mode</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to write a value to a digital pin
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin you want to write a value to.</p></li><li><p><strong>param</strong>: <em>value</em>  value The value you want to write. Must be board.HIGH or board.LOW</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">digitalWrite</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">value</span>) {
+    <span class="keyword">var</span> <span class="variable">port</span> = <span class="class">Math</span>.<span class="variable">floor</span>(<span class="variable">pin</span> / <span class="number integer">8</span>);
+    <span class="keyword">var</span> <span class="variable">portValue</span> = <span class="number integer">0</span>;
+    <span class="this">this</span>.<span class="variable">pins</span>[<span class="variable">pin</span>].<span class="variable">value</span> = <span class="variable">value</span>;
+    <span class="keyword">for</span> (<span class="keyword">var</span> <span class="variable">i</span> = <span class="number integer">0</span>; <span class="variable">i</span> &<span class="variable">lt</span>; <span class="number integer">8</span>; <span class="variable">i</span>++) {
+        <span class="keyword">if</span> (<span class="this">this</span>.<span class="variable">pins</span>[<span class="number integer">8</span> * <span class="variable">port</span> + <span class="variable">i</span>].<span class="variable">value</span>) <span class="variable">portValue</span> |= (<span class="number integer">1</span> &<span class="variable">lt</span>;&<span class="variable">lt</span>; <span class="variable">i</span>);
     }
-    #container {
-      margin: 0 auto;
-      width: 700px;
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">DIGITAL_MESSAGE</span> | <span class="variable">port</span>, <span class="variable">portValue</span> &<span class="variable">amp</span>; <span class="variable">x7F</span>, (<span class="variable">portValue</span> &<span class="variable">gt</span>;&<span class="variable">gt</span>; <span class="number integer">7</span>) &<span class="variable">amp</span>; <span class="variable">x7F</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to read digital data
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin to read data from</p></li><li><p><strong>param</strong>: <em>function</em>  callback The function to call when data has been received</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">digitalRead</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">addListener</span>(<span class="string">'digital-read-'</span> + <span class="variable">pin</span>, <span class="variable">callback</span>);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to tell us its capabilities
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>function</em>  callback A function to call when we receive the capabilities</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">queryCapabilities</span> = <span class="keyword">function</span>(<span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'capability-query'</span>, <span class="variable">callback</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">CAPABILITY_QUERY</span>, <span class="class">END_SYSEX</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to tell us its analog pin mapping
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>function</em>  callback A function to call when we receive the pin mappings.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">queryAnalogMapping</span> = <span class="keyword">function</span>(<span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'analog-mapping-query'</span>, <span class="variable">callback</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">ANALOG_MAPPING_QUERY</span>, <span class="class">END_SYSEX</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to tell us the current state of a pin
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  pin The pin we want to the know the state of</p></li><li><p><strong>param</strong>: <em>function</em>  callback A function to call when we receive the pin state.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">queryPinState</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'pin-state-'</span> + <span class="variable">pin</span>, <span class="variable">callback</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">PIN_STATE_QUERY</span>, <span class="variable">pin</span>, <span class="class">END_SYSEX</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to send an I2C request to a device
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  slaveAddress The address of the I2C device</p></li><li><p><strong>param</strong>: <em>Array</em>  bytes The bytes to send to the device</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">sendI2CWriteRequest</span> = <span class="keyword">function</span>(<span class="variable">slaveAddress</span>, <span class="variable">bytes</span>) {
+    <span class="keyword">var</span> <span class="variable">bytes</span> = <span class="variable">bytes</span> || [];
+    <span class="keyword">var</span> <span class="variable">data</span> = [];
+    <span class="variable">data</span>.<span class="variable">push</span>(<span class="class">START_SYSEX</span>);
+    <span class="variable">data</span>.<span class="variable">push</span>(<span class="class">I2C_REQUEST</span>);
+    <span class="variable">data</span>.<span class="variable">push</span>(<span class="variable">slaveAddress</span>);
+    <span class="variable">data</span>.<span class="variable">push</span>(<span class="this">this</span>.<span class="class">I2C_MODES</span>.<span class="class">WRITE</span> &<span class="variable">lt</span>;&<span class="variable">lt</span>; <span class="number integer">3</span>);
+    <span class="keyword">for</span> (<span class="keyword">var</span> <span class="variable">i</span> = <span class="number integer">0</span>, <span class="variable">length</span> = <span class="variable">bytes</span>.<span class="variable">length</span>; <span class="variable">i</span> &<span class="variable">lt</span>; <span class="variable">length</span>; <span class="variable">i</span>++) {
+        <span class="variable">data</span>.<span class="variable">push</span>(<span class="variable">bytes</span>[<span class="variable">i</span>] &<span class="variable">amp</span>; <span class="variable">x7F</span>);
+        <span class="variable">data</span>.<span class="variable">push</span>((<span class="variable">bytes</span>[<span class="variable">i</span>] &<span class="variable">gt</span>;&<span class="variable">gt</span>; <span class="number integer">7</span>) &<span class="variable">amp</span>; <span class="variable">x7F</span>);
     }
-    h1 { font-size: 3.8em; color: #b175a6; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #b175a6; }
-    h3 { text-align: center; color: #b175a6; }
-    a { color: #b175a6; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-</head>
+    <span class="variable">data</span>.<span class="variable">push</span>(<span class="class">END_SYSEX</span>);
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>(<span class="variable">data</span>);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Asks the arduino to request bytes from an I2C device
+## </p>
 
-<body>
-  <a href="http://github.com/jgautier/firmata"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-
-  <div id="container">
-
-    <div class="download">
-      <a href="http://github.com/jgautier/firmata/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/jgautier/firmata/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="http://github.com/jgautier/firmata">firmata</a>
-      <span class="small">by <a href="http://github.com/jgautier">jgautier</a></span></h1>
-
-    <div class="description">
-      firmata protocol implemented in javascript
-    </div>
-
-    <h2>Authors</h2>
-<p>Julian Gautier (julian.gautier@alumni.neumont.edu)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Julian Gautier (julian.gautier@alumni.neumont.edu)<br/>      </p>
-
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/jgautier/firmata/zipball/master">zip</a> or
-      <a href="http://github.com/jgautier/firmata/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/jgautier/firmata</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/jgautier/firmata">jgautier/firmata</a>
-    </div>
-
-  </div>
-
-  
-</body>
-</html>
+<ul><li><p><strong>param</strong>: <em>number</em>  slaveAddress The address of the I2C device</p></li><li><p><strong>param</strong>: <em>number</em>  numBytes The number of bytes to receive.</p></li><li><p><strong>param</strong>: <em>function</em>  callback A function to call when we have received the bytes.</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">sendI2CReadRequest</span> = <span class="keyword">function</span>(<span class="variable">slaveAddress</span>, <span class="variable">numBytes</span>, <span class="variable">callback</span>) {
+    <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">I2C_REQUEST</span>, <span class="variable">slaveAddress</span>, <span class="this">this</span>.<span class="class">I2C_MODES</span>.<span class="class">READ</span> &<span class="variable">lt</span>;&<span class="variable">lt</span>; <span class="number integer">3</span>, <span class="variable">numBytes</span> &<span class="variable">amp</span>; <span class="variable">x7F</span>, (<span class="variable">numBytes</span> &<span class="variable">gt</span>;&<span class="variable">gt</span>; <span class="number integer">7</span>) &<span class="variable">amp</span>; <span class="variable">x7F</span>, <span class="class">END_SYSEX</span>]);
+    <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'I2C-reply-'</span> + <span class="variable">slaveAddress</span>, <span class="variable">callback</span>);
+};
+<span class="variable">module</span>.<span class="variable">exports</span> = {
+    <span class="class">Board</span>: <span class="class">Board</span>
+};</code></pre>
+</td>
+</tr>	</body>
+</html></tbody></table>
