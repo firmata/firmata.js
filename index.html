@@ -157,26 +157,6 @@ Gautier</li></ul>
 </tr>
 <tr class="code">
 <td class="docs">
-<p>MIDI_RESPONSE contains functions to be called when we receive a MIDI message from the arduino.
-used as a switch object as seen here http://james.padolsey.com/javascript/how-to-avoid-switch-case-syndrome/
-     </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">MIDI_RESPONSE</span> = {};</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
-<p>SYSEX_RESPONSE contains functions to be called when we receive a SYSEX message from the arduino.
-used as a switch object as seen here http://james.padolsey.com/javascript/how-to-avoid-switch-case-syndrome/
- </p>
-</td>
-<td class="code">
-<pre><code><span class="keyword">var</span> <span class="class">SYSEX_RESPONSE</span> = {};</code></pre>
-</td>
-</tr>
-<tr class="code">
-<td class="docs">
 <ul><li><strong>class</strong>: <em>The</em>
 Board object represents an arduino board.</li><li><strong>augments</strong>: <em>EventEmitter</em></li></ul>
 
@@ -429,6 +409,22 @@ An array holding the current bytes received from the arduino.</p></li><li><p><st
 <pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">queryPinState</span> = <span class="keyword">function</span>(<span class="variable">pin</span>, <span class="variable">callback</span>) {
     <span class="this">this</span>.<span class="variable">once</span>(<span class="string">'pin-state-'</span> + <span class="variable">pin</span>, <span class="variable">callback</span>);
     <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>, <span class="class">PIN_STATE_QUERY</span>, <span class="variable">pin</span>, <span class="class">END_SYSEX</span>]);
+};</code></pre>
+</td>
+</tr>
+<tr class="code">
+<td class="docs">
+<p>Sends a I2C config request to the arduino board with an optional 
+value in microseconds to delay an I2C Read.  Must be called before
+an I2C Read or Write
+## </p>
+
+<ul><li><p><strong>param</strong>: <em>number</em>  delay in microseconds to set for I2C Read</p></li></ul>
+</td>
+<td class="code">
+<pre><code><span class="class">Board</span>.<span class="variable">prototype</span>.<span class="variable">sendI2CConfig</span>=<span class="keyword">function</span>(<span class="variable">delay</span>){
+  <span class="keyword">var</span> <span class="variable">delay</span> = <span class="variable">delay</span> || <span class="number integer">0</span>;
+  <span class="this">this</span>.<span class="variable">sp</span>.<span class="variable">write</span>([<span class="class">START_SYSEX</span>,<span class="class">I2C_CONFIG</span>,(<span class="variable">delay</span> &<span class="variable">amp</span>; <span class="variable">xFF</span>),((<span class="variable">delay</span> &<span class="variable">gt</span>;&<span class="variable">gt</span>; <span class="number integer">8</span>) &<span class="variable">amp</span>; <span class="variable">xFF</span>),<span class="class">END_SYSEX</span>]);
 };</code></pre>
 </td>
 </tr>
