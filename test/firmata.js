@@ -1,138 +1,289 @@
-/*
-    Tests performed with arduino Uno and firmata 2.2
-*/
-var assert = require('assert'),
-    firmata = require('firmata'),
-    async = require('async');
-var board = new firmata.Board('/dev/tty.usbmodemfa131', function(error) {
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('connected');
-        exports['Test Connection'] = function() {
-            assert.ok(true, 'We connected');
-        };
-        exports['Test Version'] = function() {
-            assert.ok(board.version.major == 2, 'major version is 2');
-            assert.ok(board.version.minor == 2, 'minor version is 2');
-        };
-        exports['Test Capabilities'] = function() {
-            assert.ok(board.pins[0].supportedModes.length === 0, '0 is a serial pin');
-            assert.ok(board.pins[1].supportedModes.length === 0, '1 is a serial pin');
-            for (var i = 2, length = board.pins.length; i < length; i++) {
-                //if the analogChannel is 127 then its a digital pin and it supports board.INPUT board.OUTPUT board.PWM and board.SERVO
-                if (board.pins[i].supportedModes.length === 0) continue;
-                if (board.pins[i].analogChannel == 127) {
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.INPUT) > -1, 'Pin has INPUT');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.OUTPUT) > -1, 'Pin has OUTPUT');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.PWM) > -1, 'Pin has PWM');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.SERVO) > -1, 'Pin has Servo');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.ANALOG) == -1, 'Pin does not have Analog');
-                    //on arduino uno there are Analog 6 and 7 which are analog only
-                } else if (board.pins[i].analogChannel > 5) {
-                    assert.ok(board.pins[i].supportedModes.length == 1, 'Only one mode');
-                    assert.ok(board.pins[i].supportedModes[0] == board.MODES.ANALOG, 'Only analog');
-
-                    //else its analog and it supported board.INPUT, board.OUTPUT and board.PWM but no board.SERVO
-                } else if (board.pins[i].analogChannel > 0) {
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.INPUT) > -1, 'Pin has INPUT');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.PWM) > -1, 'Pin has PWM');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.OUTPUT) > -1, 'Pin has Output');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.ANALOG) > -1, 'Pin has Analog');
-                    assert.ok(board.pins[i].supportedModes.indexOf(board.MODES.SERVO) == -1, 'Pin does not have Servo');
-                }
-            }
-        };
-        exports['Test Pin State'] = function() {
-            assert.ok(board.pins[0].mode === 0, '0 is a serial pin');
-            assert.ok(board.pins[1].mode === 0, '1 is a serial pin');
-            for (var i = 2, length = board.pins.length; i < length; i++) {
-                if (board.pins[i].supportedModes.length === 0) continue;
-                //if its digital
-                if (board.pins[i].analogChannel == 127) {
-                    assert.ok(board.pins[i].mode == board.MODES.OUTPUT, 'Digital defaults to Output');
-                }
-                //else its analog
-                else {
-                    assert.ok(board.pins[i].mode == board.MODES.ANALOG, 'Analgo defaults to analog');
-                }
-            }
-        };
-        exports['Test Query Firmware'] = function() {
-            board.queryFirmware(function() {
-                assert.ok(true, 'Firmware queried');
-            });
-        };
-        var analogRead = function(callback) {
-                console.log('Connect photocell to analog 5');
-                console.log('Testing in 15 seconds');
-                var callbackCalled = false;
-                setTimeout(function() {
-                    console.log('Put your hand over light sensor');
-                    board.pinMode(5, board.MODES.ANALOG);
-                    board.analogRead(5, function(value) {
-                        if (value < 500) {
-                            if (!callbackCalled) {
-                                callbackCalled = true;
-                                callback(null, '1');
-                            }
-                        }
-                    });
-                }, 15000);
-            };
-        var digitalRead = function(callback) {
-                console.log('Connect photocell to digital 8');
-                console.log('Testing in 15 seconds');
-                var callbackCalled = false;
-                setTimeout(function() {
-                    console.log('Put Your hand over light sensor');
-                    board.pinMode(8, board.MODES.INPUT);
-                    board.digitalRead(8, function(value) {
-                        if (value == 0) {
-                            if (!callbackCalled) {
-                                callbackCalled = true;
-                                callback(null, '2');
-                            }
-                        }
-                    });
-                }, 15000);
-            };
-        var readYes = function(callback) {
-                process.stdin.resume();
-                process.stdin.setEncoding('utf8');
-                process.stdin.once('data', function(chunk) {
-                    callback(null, chunk);
-                });
-            };
-        var digitalWrite = function(callback) {
-                console.log('Test Digital Write Connect LED to Pin 7');
-                console.log('Testing in 15 seconds');
-                setTimeout(function() {
-                    console.log('Press Y if you see the light turn on');
-                    board.pinMode(7, board.MODES.OUTPUT);
-                    board.digitalWrite(7, board.HIGH);
-                    callback(null, '3');
-                }, 15000);
-            };
-        var analogWrite = function(callback) {
-                console.log('Testing Analog Write Connect LED to Pin 9');
-                console.log('Testing in 15 seconds');
-                setTimeout(function() {
-                    board.pinMode(9, board.MODES.PWM);
-                    board.analogWrite(9, 255);
-                    console.log('Press Y if you saw the light turn on');
-                    callback(null, '4');
-                }, 15000);
-            };
-        exports['Test Pins'] = function() {
-            async.series([
-            analogRead, digitalRead, digitalWrite, readYes, analogWrite, readYes], function(error, results) {
-                assert.ok(true, 'Analog Read Succesful');
-                assert.ok(true, 'Digital Read Successful');
-                assert.ok(results[3] == 'Y\n', 'Digital Write Successful');
-                assert.ok(results[5] == 'Y\n', 'Analog WRite Successful');
-                process.exit();
-            });
-        };
-    }
+var firmata = process.env.FIRMATA_COV
+   ? require('../lib-cov/firmata')
+   : require('../lib/firmata');
+var SerialPort = require('./MockSerialPort').SerialPort;
+var should = require('should');
+describe('board',function(){
+   var boardStarted = false;
+   var serialPort = new SerialPort('/path/to/fake/usb');
+   var board = new firmata.Board(serialPort,function(err){
+      err.should.equal('test error'); 
+   });
+   serialPort.emit('error','test error');
+   var serialPort = new SerialPort('/path/to/fake/usb');
+   var board = new firmata.Board(serialPort,function(err){
+      boardStarted = true;
+      (typeof err).should.equal('undefined'); 
+   });
+   it('gets the version on startup',function(done){
+     //0xF9 is command to get version
+     serialPort.lastWrite.should.equal(0xF9)  
+     //'send' report version command back from arduino
+     serialPort.emit('data',[0xF9]);
+     serialPort.emit('data',[0x02]);
+     //subscribe to the 'data' event to capture the event
+     serialPort.once('data',function(buffer){
+        board.version.major.should.equal(2);
+        board.version.minor.should.equal(3);
+        done();
+     });
+     //send the last byte of command to get 'data' event to fire when the report version function is called
+     serialPort.emit('data',[0x03]);
+   });
+   it('gets the capabilities after the version',function(done){
+      //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
+      serialPort.lastWrite.indexOf(0xF0).should.equal(0);
+      serialPort.lastWrite.indexOf(0x6B).should.equal(1);
+      serialPort.lastWrite.indexOf(0xF7).should.equal(2);
+      //report back mock capabilities
+      //taken from boards.h for arduino uno
+      serialPort.emit('data',[0xF0]);
+      serialPort.emit('data',[0x6C]);
+      for(var i = 0;i<20;i++){
+          // if "pin" is digital it can be input and output
+          if(i>=2 && i <=19 ){
+              //input is on
+              serialPort.emit('data',[0]);
+              serialPort.emit('data',[1]);
+              //output is on
+              serialPort.emit('data',[1]);
+              serialPort.emit('data',[1]);
+          } 
+          //if pin is analog
+          if(i >=14 && i <=19){
+              serialPort.emit('data',[0x02]);
+              serialPort.emit('data',[10]);
+          }
+          //if pin is PWM
+          if([3,5,6,10,11].indexOf(i) > -1){
+              serialPort.emit('data',[0x03]);
+              serialPort.emit('data',[8]);
+          }
+          //all pins are servo
+          if(i >= 2){
+              serialPort.emit('data',[0x04]);
+              serialPort.emit('data',[14]);
+          }
+          //signal end of command for pin
+          serialPort.emit('data',[127]);
+      } 
+      //capture the event once to make all pin modes are set correctly
+      serialPort.once('data',function(){
+          board.pins.length.should.equal(20);
+          board.pins.forEach(function(value,index){
+             if(index >=2 && index <=19){
+                value.supportedModes.indexOf(0).should.not.equal(-1);
+                value.supportedModes.indexOf(1).should.not.equal(-1);
+             } else {
+                 value.supportedModes.length.should.equal(0);
+             }
+             if(index >=14 && index <=19){
+                 value.supportedModes.indexOf(0x02).should.not.equal(-1);
+             } else {
+                 value.supportedModes.indexOf(0x02).should.equal(-1);
+             }
+             if([3,5,6,10,11].indexOf(index) > -1){
+                 value.supportedModes.indexOf(0x03).should.not.equal(-1);
+             } else {
+                 value.supportedModes.indexOf(0x03).should.equal(-1);
+             }
+             if(index >=2){
+                 value.supportedModes.indexOf(0x04).should.not.equal(-1);
+             }
+          });
+          done();
+      });
+      //end the sysex message
+      serialPort.emit('data',[0xF7]);
+   });
+   it('querys analog mappings after capabilities',function(done){
+       //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
+       serialPort.lastWrite.indexOf(0xF0).should.not.equal(-1);
+       serialPort.lastWrite.indexOf(0x69).should.not.equal(-1);
+       serialPort.lastWrite.indexOf(0xF7).should.not.equal(-1);
+       serialPort.emit('data',[0xF0]);
+       serialPort.emit('data',[0x6A]);
+       for(var i =0;i < 20; i++){
+           if(i >= 14 && i < 20){
+               serialPort.emit('data',[i - 14]);    
+           } else {
+               serialPort.emit('data',[127]);
+           }
+           
+       }
+       serialPort.once('data',function(){
+           board.pins[14].analogChannel.should.equal(0);
+           board.pins[15].analogChannel.should.equal(1)
+           board.pins[16].analogChannel.should.equal(2);
+           board.pins[17].analogChannel.should.equal(3);
+           board.pins[18].analogChannel.should.equal(4);
+           board.pins[19].analogChannel.should.equal(5);
+           board.analogPins.length.should.equal(6);
+           board.analogPins[0].should.equal(14);
+           board.analogPins[1].should.equal(15);
+           board.analogPins[2].should.equal(16);
+           board.analogPins[3].should.equal(17);
+           board.analogPins[4].should.equal(18);
+           board.analogPins[5].should.equal(19);
+           done();
+       });
+       serialPort.emit('data',[0xF7]);
+   });
+   it('should now be started',function(){
+       boardStarted.should.equal(true);
+   })
+   it('should be able to set pin mode on digital pin',function(done){
+       board.pinMode(2,board.MODES.INPUT);
+       serialPort.lastWrite[0].should.equal(0xF4);
+       serialPort.lastWrite[1].should.equal(2);
+       serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
+       board.pins[2].mode.should.equal(board.MODES.INPUT);
+       done(); 
+   });
+   it('should be able to read value of digital pin',function(done){
+      var theValue = 1;
+      board.digitalRead(2,function(value){
+          value.should.equal(theValue);
+          if(theValue === 0){
+              done();
+          }
+      });
+      serialPort.emit('data',[0x90]);
+      serialPort.emit('data',[4%128]);
+      serialPort.emit('data',[4>>7]);
+      theValue = 0;
+      serialPort.emit('data',[0x90]);
+      serialPort.emit('data',[0x00]);
+      serialPort.emit('data',[0x00]);
+   });
+   it('should be able to set mode on analog pins',function(done){
+      board.pinMode(board.analogPins[0],board.MODES.INPUT);
+      serialPort.lastWrite[0].should.equal(0xF4);
+      serialPort.lastWrite[1].should.equal(board.analogPins[0]);
+      serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
+      done(); 
+   });
+   it('should be able to read value of analog pin',function(done){
+      var theValue = 1023;
+      board.analogRead(board.analogPins[0],function(value){
+         theValue.should.equal(value) 
+         board.pins[board.analogPins[0]].value.should.equal(value);
+         if(theValue === 0){
+             done();
+         }
+      });
+      serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
+      serialPort.emit('data',[1023%128]);
+      serialPort.emit('data',[1023>>7]) 
+      theValue = 0;
+      serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
+      serialPort.emit('data',[0%128]);
+      serialPort.emit('data',[0>>7])
+   });
+   it('should be able to write a value to a digital output',function(done){
+      board.digitalWrite(3,board.HIGH);
+      serialPort.lastWrite[0].should.equal(0x90);
+      serialPort.lastWrite[1].should.equal(8);
+      serialPort.lastWrite[2].should.equal(0);
+      board.digitalWrite(3,board.LOW);
+      serialPort.lastWrite[0].should.equal(0x90);
+      serialPort.lastWrite[1].should.equal(0);
+      serialPort.lastWrite[2].should.equal(0);
+      done();
+   });
+   it('should be able to write a value to a analog output',function(done){
+       board.analogWrite(board.analogPins[1],1023);
+       serialPort.lastWrite[0].should.equal(0xE0 | board.analogPins[1]);
+       serialPort.lastWrite[1].should.equal(127);
+       serialPort.lastWrite[2].should.equal(7);
+       board.analogWrite(board.analogPins[1],0);
+       serialPort.lastWrite[0].should.equal(0xE0 | board.analogPins[1]);
+       serialPort.lastWrite[1].should.equal(0);
+       serialPort.lastWrite[2].should.equal(0);
+       done();
+   });
+   it('should be able to send an i2c config',function(done){
+        board.sendI2CConfig(1);
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x78);
+        serialPort.lastWrite[2].should.equal(1 & 0xFF);
+        serialPort.lastWrite[3].should.equal((1 >> 8) & 0xFF);
+        serialPort.lastWrite[4].should.equal(0xF7);
+        done();
+       
+   });
+   it('should be able to send an i2c request',function(done){
+       board.sendI2CWriteRequest(0x68,[1,2,3]);
+       serialPort.lastWrite[0].should.equal(0xF0);
+       serialPort.lastWrite[1].should.equal(0x76);
+       serialPort.lastWrite[2].should.equal(0x68);
+       serialPort.lastWrite[3].should.equal(0 << 3);
+       serialPort.lastWrite[4].should.equal(1 & 0x7F);
+       serialPort.lastWrite[5].should.equal((1 >> 7) & 0x7F);
+       serialPort.lastWrite[6].should.equal(2 & 0x7F);
+       serialPort.lastWrite[7].should.equal((2 >> 7) & 0x7F);
+       serialPort.lastWrite[8].should.equal(3 & 0x7F);
+       serialPort.lastWrite[9].should.equal((3 >> 7) & 0x7F);
+       serialPort.lastWrite[10].should.equal(0xF7);
+       done();
+   });
+   it('should be able to receive an i2c reply',function(done){
+       board.sendI2CReadRequest(0x68,4,function(data){
+           data[0].should.equal(1);
+           data[1].should.equal(2);
+           data[2].should.equal(3);
+           data[3].should.equal(4);
+           done();
+       });
+       serialPort.lastWrite[0].should.equal(0xF0)
+       serialPort.lastWrite[1].should.equal(0x76);
+       serialPort.lastWrite[2].should.equal(0x68);
+       serialPort.lastWrite[3].should.equal(1<<3);
+       serialPort.lastWrite[4].should.equal(4 & 0x7F);
+       serialPort.lastWrite[5].should.equal((4 >> 7) & 0x7F );
+       serialPort.lastWrite[6].should.equal(0xF7);
+       serialPort.emit('data',[0xF0]);
+       serialPort.emit('data',[0x77]);
+       serialPort.emit('data',[0x68 % 128]);
+       serialPort.emit('data',[0x68 >> 7]);
+       serialPort.emit('data',[1]);
+       serialPort.emit('data',[1]);
+       serialPort.emit('data',[1 & 0x7F]);
+       serialPort.emit('data',[(1 >> 7) & 0x7F]);
+       serialPort.emit('data',[2 & 0x7F]);
+       serialPort.emit('data',[(2 >> 7) & 0x7F]);
+       serialPort.emit('data',[3 & 0x7F]);
+       serialPort.emit('data',[(3 >> 7) & 0x7F]);
+       serialPort.emit('data',[4 & 0x7F]);
+       serialPort.emit('data',[(4 >> 7) & 0x7F]);
+       serialPort.emit('data',[0xF7]);
+   });
+   it('should emit a string event',function(done){
+       board.on('string',function(string){
+         string.should.equal('test string'); 
+         done(); 
+       });
+       serialPort.emit('data',[0xF0]);
+       serialPort.emit('data',[0x71]);
+       var bytes = new Buffer('test string','utf8');
+       Array.prototype.forEach.call(bytes,function(value,index){
+          serialPort.emit('data',[value]); 
+       });
+       serialPort.emit('data',[0xF7]);
+   });
+   it('can query pin state',function(done){
+      board.queryPinState(2,function(){
+          board.pins[2].value.should.equal(1024);
+      });
+      serialPort.lastWrite[0].should.equal(0xF0);
+      serialPort.lastWrite[1].should.equal(0x6D);
+      serialPort.lastWrite[2].should.equal(2);
+      serialPort.lastWrite[3].should.equal(0xF7);
+      serialPort.emit('data',[0xF0]);
+      serialPort.emit('data',[0x6E]);
+      serialPort.emit('data',[board.MODES.INPUT])
+      serialPort.emit('data',[1024%128]);
+      serialPort.emit('data',[1024 << 7]);
+      serialPort.emit('data',[0xF7]);
+   });
 });

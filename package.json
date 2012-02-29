@@ -12,6 +12,10 @@
     "bin": {
         "firmata": "./repl.js"
     },
+    "devDependencies": {
+        "mocha" : "0.13.x",
+        "should" : "0.5.x"
+    },
     "dependencies": {
         "serialport": ">=0.2.0"
     }
