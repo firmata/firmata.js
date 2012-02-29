@@ -1,3 +1,4 @@
+[![Build Status](https://secure.travis-ci.org/jgautier/firmata.png)](http://travis-ci.org/jgautier/firmata)
 #Firmata
 A Node library to interact with an Arduino running the firmata protocol.
 #Install
@@ -86,7 +87,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
     board.sendI2CReadRequest(slaveAddress,numBytes,function(data))
 
   Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
-  *note* You must use the latest version of firmata seen here http://firmata.svn.sourceforge.net/viewvc/firmata/arduino/trunk/Firmata/examples/StandardFirmata/ for I2C Support.
+  
 ## License 
 
 (The MIT License)

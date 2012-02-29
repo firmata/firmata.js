@@ -274,6 +274,7 @@ describe('board',function(){
    it('can query pin state',function(done){
       board.queryPinState(2,function(){
           board.pins[2].value.should.equal(1024);
+          done();
       });
       serialPort.lastWrite[0].should.equal(0xF0);
       serialPort.lastWrite[1].should.equal(0x6D);
@@ -281,9 +282,9 @@ describe('board',function(){
       serialPort.lastWrite[3].should.equal(0xF7);
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x6E]);
-      serialPort.emit('data',[board.MODES.INPUT])
-      serialPort.emit('data',[1024%128]);
-      serialPort.emit('data',[1024 << 7]);
+      serialPort.emit('data',[2]);
+      serialPort.emit('data',[board.MODES.INPUT]);
+      serialPort.emit('data',[1024]);
       serialPort.emit('data',[0xF7]);
    });
 });
