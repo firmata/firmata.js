@@ -287,4 +287,9 @@ describe('board',function(){
       serialPort.emit('data',[1024]);
       serialPort.emit('data',[0xF7]);
    });
+   it('will close when process exits',function(done){
+      process.emit('exit');
+      serialPort.isClosed.should.equal(true);
+      done();
+   });
 });
