@@ -7,17 +7,17 @@ describe('board',function(){
    var boardStarted = false;
    var serialPort = new SerialPort('/path/to/fake/usb');
    var board = new firmata.Board(serialPort,function(err){
-      err.should.equal('test error'); 
+      err.should.equal('test error');
    });
    serialPort.emit('error','test error');
    var serialPort = new SerialPort('/path/to/fake/usb');
    var board = new firmata.Board(serialPort,function(err){
       boardStarted = true;
-      (typeof err).should.equal('undefined'); 
+      (typeof err).should.equal('undefined');
    });
    it('gets the version on startup',function(done){
      //0xF9 is command to get version
-     serialPort.lastWrite.should.equal(0xF9)  
+     serialPort.lastWrite.should.equal(0xF9)
      //'send' report version command back from arduino
      serialPort.emit('data',[0xF9]);
      serialPort.emit('data',[0x02]);
@@ -48,7 +48,7 @@ describe('board',function(){
               //output is on
               serialPort.emit('data',[1]);
               serialPort.emit('data',[1]);
-          } 
+          }
           //if pin is analog
           if(i >=14 && i <=19){
               serialPort.emit('data',[0x02]);
@@ -66,7 +66,7 @@ describe('board',function(){
           }
           //signal end of command for pin
           serialPort.emit('data',[127]);
-      } 
+      }
       //capture the event once to make all pin modes are set correctly
       serialPort.once('data',function(){
           board.pins.length.should.equal(20);
@@ -105,11 +105,11 @@ describe('board',function(){
        serialPort.emit('data',[0x6A]);
        for(var i =0;i < 20; i++){
            if(i >= 14 && i < 20){
-               serialPort.emit('data',[i - 14]);    
+               serialPort.emit('data',[i - 14]);
            } else {
                serialPort.emit('data',[127]);
            }
-           
+
        }
        serialPort.once('data',function(){
            board.pins[14].analogChannel.should.equal(0);
@@ -138,7 +138,7 @@ describe('board',function(){
        serialPort.lastWrite[1].should.equal(2);
        serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
        board.pins[2].mode.should.equal(board.MODES.INPUT);
-       done(); 
+       done();
    });
    it('should be able to read value of digital pin',function(done){
       var theValue = 1;
@@ -161,12 +161,12 @@ describe('board',function(){
       serialPort.lastWrite[0].should.equal(0xF4);
       serialPort.lastWrite[1].should.equal(board.analogPins[0]);
       serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
-      done(); 
+      done();
    });
    it('should be able to read value of analog pin',function(done){
       var theValue = 1023;
       board.analogRead(board.analogPins[0],function(value){
-         theValue.should.equal(value) 
+         theValue.should.equal(value)
          board.pins[board.analogPins[0]].value.should.equal(value);
          if(theValue === 0){
              done();
@@ -174,7 +174,7 @@ describe('board',function(){
       });
       serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
       serialPort.emit('data',[1023%128]);
-      serialPort.emit('data',[1023>>7]) 
+      serialPort.emit('data',[1023>>7])
       theValue = 0;
       serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
       serialPort.emit('data',[0%128]);
@@ -210,7 +210,7 @@ describe('board',function(){
         serialPort.lastWrite[3].should.equal((1 >> 8) & 0xFF);
         serialPort.lastWrite[4].should.equal(0xF7);
         done();
-       
+
    });
    it('should be able to send an i2c request',function(done){
        board.sendI2CWriteRequest(0x68,[1,2,3]);
@@ -260,14 +260,14 @@ describe('board',function(){
    });
    it('should emit a string event',function(done){
        board.on('string',function(string){
-         string.should.equal('test string'); 
-         done(); 
+         string.should.equal('test string');
+         done();
        });
        serialPort.emit('data',[0xF0]);
        serialPort.emit('data',[0x71]);
        var bytes = new Buffer('test string','utf8');
        Array.prototype.forEach.call(bytes,function(value,index){
-          serialPort.emit('data',[value]); 
+          serialPort.emit('data',[value]);
        });
        serialPort.emit('data',[0xF7]);
    });
@@ -288,7 +288,7 @@ describe('board',function(){
       serialPort.emit('data',[0xF7]);
    });
    it('will close when process exits',function(done){
-      process.emit('exit');
+      process.emit('SIGINT');
       serialPort.isClosed.should.equal(true);
       done();
    });
