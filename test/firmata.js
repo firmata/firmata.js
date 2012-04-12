@@ -165,18 +165,18 @@ describe('board',function(){
    });
    it('should be able to read value of analog pin',function(done){
       var theValue = 1023;
-      board.analogRead(board.analogPins[0],function(value){
+      board.analogRead(1,function(value){
          theValue.should.equal(value) 
-         board.pins[board.analogPins[0]].value.should.equal(value);
+         board.pins[board.analogPins[1]].value.should.equal(value);
          if(theValue === 0){
              done();
          }
       });
-      serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
+      serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[1023%128]);
       serialPort.emit('data',[1023>>7]) 
       theValue = 0;
-      serialPort.emit('data',[0xE0 | (board.analogPins[0] & 0xF)]);
+      serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[0%128]);
       serialPort.emit('data',[0>>7])
    });
