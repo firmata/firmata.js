@@ -287,8 +287,8 @@ describe('board',function(){
       serialPort.emit('data',[1024]);
       serialPort.emit('data',[0xF7]);
    });
-   it('can send a pulseIn without a timeout',function(done){
-      board.pulseIn(3,board.HIGH,function(duration){
+   it('can send a pulseIn without a timeout and without a pulse out',function(done){
+      board.pulseIn({pin : 3, value: board.HIGH}, function(duration){
         duration.should.equal(0);  
         done();
       });
@@ -298,13 +298,21 @@ describe('board',function(){
       serialPort.lastWrite[3].should.equal(board.HIGH);
       serialPort.lastWrite[4].should.equal(0);
       serialPort.lastWrite[5].should.equal(0);
-      serialPort.lastWrite[6].should.equal(15);
+      serialPort.lastWrite[6].should.equal(0);
       serialPort.lastWrite[7].should.equal(0);
-      serialPort.lastWrite[8].should.equal(66);
+      serialPort.lastWrite[8].should.equal(0);
       serialPort.lastWrite[9].should.equal(0); 
-      serialPort.lastWrite[10].should.equal(64);
+      serialPort.lastWrite[10].should.equal(0);
       serialPort.lastWrite[11].should.equal(0); 
-      serialPort.lastWrite[12].should.equal(0xF7);    
+      serialPort.lastWrite[12].should.equal(0);
+      serialPort.lastWrite[13].should.equal(0);
+      serialPort.lastWrite[14].should.equal(15);
+      serialPort.lastWrite[15].should.equal(0);
+      serialPort.lastWrite[16].should.equal(66);
+      serialPort.lastWrite[17].should.equal(0); 
+      serialPort.lastWrite[18].should.equal(64);
+      serialPort.lastWrite[19].should.equal(0); 
+      serialPort.lastWrite[20].should.equal(0xF7);    
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);
@@ -319,8 +327,8 @@ describe('board',function(){
       serialPort.emit('data',[0]);
       serialPort.emit('data',[0xF7]);
    });
-   it('can send a pulseIn with a timeout',function(done){
-      board.pulseIn(3,board.HIGH,1000000,function(duration){
+   it('can send a pulseIn with a timeout and without a pulse out',function(done){
+      board.pulseIn({pin : 3, value: board.HIGH, timeout: 1000000} ,function(duration){
         duration.should.equal(0);  
         done();
       });
@@ -330,13 +338,21 @@ describe('board',function(){
       serialPort.lastWrite[3].should.equal(board.HIGH);
       serialPort.lastWrite[4].should.equal(0);
       serialPort.lastWrite[5].should.equal(0);
-      serialPort.lastWrite[6].should.equal(15);
+      serialPort.lastWrite[6].should.equal(0);
       serialPort.lastWrite[7].should.equal(0);
-      serialPort.lastWrite[8].should.equal(66);
+      serialPort.lastWrite[8].should.equal(0);
       serialPort.lastWrite[9].should.equal(0); 
-      serialPort.lastWrite[10].should.equal(64);
+      serialPort.lastWrite[10].should.equal(0);
       serialPort.lastWrite[11].should.equal(0); 
-      serialPort.lastWrite[12].should.equal(0xF7);    
+      serialPort.lastWrite[12].should.equal(0);
+      serialPort.lastWrite[13].should.equal(0);
+      serialPort.lastWrite[14].should.equal(15);
+      serialPort.lastWrite[15].should.equal(0);
+      serialPort.lastWrite[16].should.equal(66);
+      serialPort.lastWrite[17].should.equal(0); 
+      serialPort.lastWrite[18].should.equal(64);
+      serialPort.lastWrite[19].should.equal(0); 
+      serialPort.lastWrite[20].should.equal(0xF7)   
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);
@@ -351,8 +367,8 @@ describe('board',function(){
       serialPort.emit('data',[0]);
       serialPort.emit('data',[0xF7]);
    });
-    it('can send a pulseIn and get a duration',function(done){
-      board.pulseIn(3,board.HIGH,function(duration){
+    it('can send a pulseIn with a timeout and a pulse out',function(done){
+      board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5, timeout: 1000000}, function(duration){
         duration.should.equal(1000000);  
         done();
       });
@@ -362,13 +378,61 @@ describe('board',function(){
       serialPort.lastWrite[3].should.equal(board.HIGH);
       serialPort.lastWrite[4].should.equal(0);
       serialPort.lastWrite[5].should.equal(0);
-      serialPort.lastWrite[6].should.equal(15);
+      serialPort.lastWrite[6].should.equal(0);
       serialPort.lastWrite[7].should.equal(0);
-      serialPort.lastWrite[8].should.equal(66);
+      serialPort.lastWrite[8].should.equal(0);
       serialPort.lastWrite[9].should.equal(0); 
-      serialPort.lastWrite[10].should.equal(64);
+      serialPort.lastWrite[10].should.equal(5);
       serialPort.lastWrite[11].should.equal(0); 
-      serialPort.lastWrite[12].should.equal(0xF7);    
+      serialPort.lastWrite[12].should.equal(0);
+      serialPort.lastWrite[13].should.equal(0);
+      serialPort.lastWrite[14].should.equal(15);
+      serialPort.lastWrite[15].should.equal(0);
+      serialPort.lastWrite[16].should.equal(66);
+      serialPort.lastWrite[17].should.equal(0); 
+      serialPort.lastWrite[18].should.equal(64);
+      serialPort.lastWrite[19].should.equal(0); 
+      serialPort.lastWrite[20].should.equal(0xF7)    
+      serialPort.emit('data',[0xF0]);
+      serialPort.emit('data',[0x74]);
+      serialPort.emit('data',[3]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[15]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[66]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[64]);
+      serialPort.emit('data',[0]);
+      serialPort.emit('data',[0xF7]);
+   });
+   it('can send a pulseIn with a pulse out and without a timeout ',function(done){
+      board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5}, function(duration){
+        duration.should.equal(1000000);  
+        done();
+      });
+      serialPort.lastWrite[0].should.equal(0xF0);
+      serialPort.lastWrite[1].should.equal(0x74);
+      serialPort.lastWrite[2].should.equal(3);
+      serialPort.lastWrite[3].should.equal(board.HIGH);
+      serialPort.lastWrite[4].should.equal(0);
+      serialPort.lastWrite[5].should.equal(0);
+      serialPort.lastWrite[6].should.equal(0);
+      serialPort.lastWrite[7].should.equal(0);
+      serialPort.lastWrite[8].should.equal(0);
+      serialPort.lastWrite[9].should.equal(0); 
+      serialPort.lastWrite[10].should.equal(5);
+      serialPort.lastWrite[11].should.equal(0); 
+      serialPort.lastWrite[12].should.equal(0);
+      serialPort.lastWrite[13].should.equal(0);
+      serialPort.lastWrite[14].should.equal(15);
+      serialPort.lastWrite[15].should.equal(0);
+      serialPort.lastWrite[16].should.equal(66);
+      serialPort.lastWrite[17].should.equal(0); 
+      serialPort.lastWrite[18].should.equal(64);
+      serialPort.lastWrite[19].should.equal(0); 
+      serialPort.lastWrite[20].should.equal(0xF7)    
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);
