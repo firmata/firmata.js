@@ -17,7 +17,7 @@
     "should": "0.5.x"
   },
   "dependencies": {
-    "serialport": ">=0.2.0"
+    "serialport": "~0.7.5"
   },
   "scripts": {
     "test": "mocha test/firmata.js"
