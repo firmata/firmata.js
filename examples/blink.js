@@ -8,7 +8,7 @@ console.log('blink start ...');
 var ledPin = 13;
 
 var firmata = require('../lib/firmata');
-var board = new firmata.Board('/dev/ttyACM0', function() {
+var board = new firmata.Board('/dev/tty.usbmodemfd121', function() {
 
     console.log('connected');
 
