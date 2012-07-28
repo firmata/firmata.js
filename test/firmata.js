@@ -30,7 +30,8 @@ describe('board',function(){
      //send the last byte of command to get 'data' event to fire when the report version function is called
      serialPort.emit('data',[0x03]);
    });
-   it('gets the capabilities after the version',function(done){
+
+   it('gets the capabilities after the firmware',function(done){
       //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
       serialPort.lastWrite.indexOf(0xF0).should.equal(0);
       serialPort.lastWrite.indexOf(0x6B).should.equal(1);
@@ -286,10 +287,5 @@ describe('board',function(){
       serialPort.emit('data',[board.MODES.INPUT]);
       serialPort.emit('data',[1024]);
       serialPort.emit('data',[0xF7]);
-   });
-   it('will close when process exits',function(done){
-      process.emit('SIGINT');
-      serialPort.isClosed.should.equal(true);
-      done();
    });
 });
