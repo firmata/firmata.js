@@ -7,7 +7,7 @@ describe('board',function(){
    var boardStarted = false;
    var serialPort = new SerialPort('/path/to/fake/usb');
    var board = new firmata.Board(serialPort,function(err){
-      err.should.equal('test error'); 
+      'test error'.should.equal(err); 
    });
    serialPort.emit('error','test error');
    var serialPort = new SerialPort('/path/to/fake/usb');
@@ -15,9 +15,7 @@ describe('board',function(){
       boardStarted = true;
       (typeof err).should.equal('undefined'); 
    });
-   it('gets the version on startup',function(done){
-     //0xF9 is command to get version
-     serialPort.lastWrite.should.equal(0xF9)  
+   it('receives the version on startup',function(done){ 
      //'send' report version command back from arduino
      serialPort.emit('data',[0xF9]);
      serialPort.emit('data',[0x02]);
@@ -29,6 +27,50 @@ describe('board',function(){
      });
      //send the last byte of command to get 'data' event to fire when the report version function is called
      serialPort.emit('data',[0x03]);
+   });
+
+   it('receives the firmware after the version', function (done) {
+        board.once('queryfirmware', function () {
+          board.firmware.version.major.should.equal(2);
+          board.firmware.version.minor.should.equal(3);
+          board.firmware.name.should.equal('StandardFirmata');
+          done();
+        });
+        serialPort.emit('data', [240]);
+        serialPort.emit('data', [121]);
+        serialPort.emit('data', [2]);
+        serialPort.emit('data', [3]);
+        serialPort.emit('data', [83]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [116]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [97]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [110]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [100]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [97]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [114]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [100]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [70]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [105]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [114]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [109]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [97]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [116]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [97]);
+        serialPort.emit('data', [0]);
+        serialPort.emit('data', [247]);
    });
 
    it('gets the capabilities after the firmware',function(done){
