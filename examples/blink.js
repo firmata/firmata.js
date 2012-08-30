@@ -8,8 +8,11 @@ console.log('blink start ...');
 var ledPin = 13;
 
 var firmata = require('../lib/firmata');
-var board = new firmata.Board('/dev/tty.usbmodemfd121', function() {
-
+var board = new firmata.Board('/dev/tty.usbmodemfd121', function(err) {
+    if (err) {
+    	console.log(err);
+    	return;
+    }
     console.log('connected');
 
     console.log('Firmware: ' + board.firmware.name + '-' + board.firmware.version.major + '.' + board.firmware.version.minor);
