@@ -184,44 +184,73 @@ describe('board',function(){
        done(); 
    });
    it('should be able to read value of digital pin',function(done){
-      var theValue = 1;
+      var counter = 0;
+      var order = [1, 0, 1, 0];
       board.digitalRead(2,function(value){
-          value.should.equal(theValue);
-          if(theValue === 0){
-              done();
-          }
+         if (value === 1) {
+            counter++
+         }
+         if (value === 0) {
+            counter++;
+         }
+         if (order[0] === value) {
+            order.shift();
+         }
+         if (counter === 4) {
+            order.length.should.equal(0);
+            done();
+         }
       });
+      // Single Byte
       serialPort.emit('data',[0x90]);
       serialPort.emit('data',[4%128]);
       serialPort.emit('data',[4>>7]);
-      theValue = 0;
+
       serialPort.emit('data',[0x90]);
       serialPort.emit('data',[0x00]);
       serialPort.emit('data',[0x00]);
+
+      // Multi Byte
+      serialPort.emit('data',[0x90, 4%128, 4>>7]);
+      serialPort.emit('data',[0x90, 0x00, 0x00]);
    });
    it('should be able to set mode on analog pins',function(done){
       board.pinMode(board.analogPins[0],board.MODES.INPUT);
       serialPort.lastWrite[0].should.equal(0xF4);
       serialPort.lastWrite[1].should.equal(board.analogPins[0]);
       serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
-      done(); 
+      done();
    });
    it('should be able to read value of analog pin',function(done){
-      var theValue = 1023;
+      var counter = 0;
+      var order = [1023, 0, 1023, 0];
       board.analogRead(1,function(value){
-         theValue.should.equal(value) 
-         board.pins[board.analogPins[1]].value.should.equal(value);
-         if(theValue === 0){
-             done();
+         if (value === 1023) {
+            counter++
+         }
+         if (value === 0) {
+            counter++;
+         }
+         if (order[0] === value) {
+            order.shift();
+         }
+         if (counter === 4) {
+            order.length.should.equal(0);
+            done();
          }
       });
+      // Single Byte
       serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[1023%128]);
-      serialPort.emit('data',[1023>>7]) 
-      theValue = 0;
+      serialPort.emit('data',[1023>>7])
+
       serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[0%128]);
       serialPort.emit('data',[0>>7])
+
+      // Multi Byte
+      serialPort.emit('data',[0xE0 | (1 & 0xF), 1023%128, 1023>>7]);
+      serialPort.emit('data',[0xE0 | (1 & 0xF), 0%128, 0>>7]);
    });
    it('should be able to write a value to a digital output',function(done){
       board.digitalWrite(3,board.HIGH);
