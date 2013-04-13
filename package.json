@@ -14,7 +14,10 @@
   },
   "devDependencies": {
     "mocha": ">=0.13.x",
-    "should": ">=0.5.x"
+    "should": ">=0.5.x",
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-mocha-test": "~0.2.2"
   },
   "dependencies": {
     "serialport": ">=0.7.5"

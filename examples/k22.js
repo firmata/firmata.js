@@ -16,7 +16,7 @@ var board = new Board('/dev/tty.usbmodemfa131',function(){
 			ppms = ppms << 8;
 			ppms |= data[2] & 0xFF;
 			var checksum = data[0] + data[1] + data[2];
-			if(checksum == data[3]){
+			if(checksum === data[3]){
 				console.log('Current PPMs: '+ppms);
 			} else {
 				console.log('Checksum failure');

@@ -10,8 +10,8 @@ var ledPin = 13;
 var firmata = require('../lib/firmata');
 var board = new firmata.Board('/dev/tty.usbmodemfd121', function(err) {
     if (err) {
-    	console.log(err);
-    	return;
+        console.log(err);
+        return;
     }
     console.log('connected');
 
@@ -23,16 +23,16 @@ var board = new firmata.Board('/dev/tty.usbmodemfd121', function(err) {
     setInterval(function(){
 
 	if (ledOn) {
-	    console.log('+');
-	    board.digitalWrite(ledPin, board.HIGH);
+        console.log('+');
+        board.digitalWrite(ledPin, board.HIGH);
 	}
 	else {
-	    console.log('-');
-	    board.digitalWrite(ledPin, board.LOW);
+        console.log('-');
+        board.digitalWrite(ledPin, board.LOW);
 	}
 
 	ledOn = !ledOn;
 
-    },500)
+    },500);
 
 });

@@ -13,5 +13,5 @@ var board = new Board('/dev/tty.usbmodemfa131', function() {
 		}
 		degrees += incrementer;
 		board.servoWrite(9,degrees);
-	},500)
+	},500);
 });

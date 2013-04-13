@@ -1,6 +1,4 @@
-var firmata = process.env.FIRMATA_COV
-   ? require('../lib-cov/firmata')
-   : require('../lib/firmata');
+var firmata = process.env.FIRMATA_COV ? require('../lib-cov/firmata') : require('../lib/firmata');
 var SerialPort = require('./MockSerialPort').SerialPort;
 var should = require('should');
 describe('board',function(){
@@ -10,8 +8,8 @@ describe('board',function(){
       'test error'.should.equal(err); 
    });
    serialPort.emit('error','test error');
-   var serialPort = new SerialPort('/path/to/fake/usb');
-   var board = new firmata.Board(serialPort,function(err){
+   serialPort = new SerialPort('/path/to/fake/usb');
+   board = new firmata.Board(serialPort,function(err){
       boardStarted = true;
       (typeof err).should.equal('undefined'); 
    });
@@ -156,7 +154,7 @@ describe('board',function(){
        }
        serialPort.once('data',function(){
            board.pins[14].analogChannel.should.equal(0);
-           board.pins[15].analogChannel.should.equal(1)
+           board.pins[15].analogChannel.should.equal(1);
            board.pins[16].analogChannel.should.equal(2);
            board.pins[17].analogChannel.should.equal(3);
            board.pins[18].analogChannel.should.equal(4);
@@ -174,7 +172,7 @@ describe('board',function(){
    });
    it('should now be started',function(){
        boardStarted.should.equal(true);
-   })
+   });
    it('should be able to set pin mode on digital pin',function(done){
        board.pinMode(2,board.MODES.INPUT);
        serialPort.lastWrite[0].should.equal(0xF4);
@@ -188,7 +186,7 @@ describe('board',function(){
       var order = [1, 0, 1, 0];
       board.digitalRead(2,function(value){
          if (value === 1) {
-            counter++
+            counter++;
          }
          if (value === 0) {
             counter++;
@@ -226,7 +224,7 @@ describe('board',function(){
       var order = [1023, 0, 1023, 0];
       board.analogRead(1,function(value){
          if (value === 1023) {
-            counter++
+            counter++;
          }
          if (value === 0) {
             counter++;
@@ -242,11 +240,11 @@ describe('board',function(){
       // Single Byte
       serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[1023%128]);
-      serialPort.emit('data',[1023>>7])
+      serialPort.emit('data',[1023>>7]);
 
       serialPort.emit('data',[0xE0 | (1 & 0xF)]);
       serialPort.emit('data',[0%128]);
-      serialPort.emit('data',[0>>7])
+      serialPort.emit('data',[0>>7]);
 
       // Multi Byte
       serialPort.emit('data',[0xE0 | (1 & 0xF), 1023%128, 1023>>7]);
@@ -307,7 +305,7 @@ describe('board',function(){
            data[3].should.equal(4);
            done();
        });
-       serialPort.lastWrite[0].should.equal(0xF0)
+       serialPort.lastWrite[0].should.equal(0xF0);
        serialPort.lastWrite[1].should.equal(0x76);
        serialPort.lastWrite[2].should.equal(0x68);
        serialPort.lastWrite[3].should.equal(1<<3);
@@ -424,7 +422,7 @@ describe('board',function(){
       serialPort.lastWrite[17].should.equal(0); 
       serialPort.lastWrite[18].should.equal(64);
       serialPort.lastWrite[19].should.equal(0); 
-      serialPort.lastWrite[20].should.equal(0xF7)   
+      serialPort.lastWrite[20].should.equal(0xF7);   
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);
@@ -464,7 +462,7 @@ describe('board',function(){
       serialPort.lastWrite[17].should.equal(0); 
       serialPort.lastWrite[18].should.equal(64);
       serialPort.lastWrite[19].should.equal(0); 
-      serialPort.lastWrite[20].should.equal(0xF7)    
+      serialPort.lastWrite[20].should.equal(0xF7);    
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);
@@ -504,7 +502,7 @@ describe('board',function(){
       serialPort.lastWrite[17].should.equal(0); 
       serialPort.lastWrite[18].should.equal(64);
       serialPort.lastWrite[19].should.equal(0); 
-      serialPort.lastWrite[20].should.equal(0xF7)    
+      serialPort.lastWrite[20].should.equal(0xF7);    
       serialPort.emit('data',[0xF0]);
       serialPort.emit('data',[0x74]);
       serialPort.emit('data',[3]);

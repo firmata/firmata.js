@@ -1,5 +1,4 @@
-var util = require('util')
-   ,events = require('events')
+var util = require('util'), events = require('events');
 var MockSerialPort = function(path){
 	this.isClosed = false;
 };
