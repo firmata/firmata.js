@@ -5,6 +5,7 @@ var MockSerialPort = function(path){
 util.inherits(MockSerialPort,events.EventEmitter);
 MockSerialPort.prototype.write = function(buffer){
 	this.lastWrite = buffer;
+    this.emit('write', buffer);
 };
 MockSerialPort.prototype.close = function(){
 	this.isClosed = true;

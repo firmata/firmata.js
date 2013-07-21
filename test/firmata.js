@@ -9,11 +9,28 @@ describe('board',function(){
     });
     serialPort.emit('error','test error');
     serialPort = new SerialPort('/path/to/fake/usb');
+    
     board = new firmata.Board(serialPort,function(err){
         boardStarted = true;
         (typeof err).should.equal('undefined'); 
     });
-    it('receives the version on startup',function(done){ 
+    
+    it('sends report version and query firmware if it hasnt received the version within the timeout', function(done) {
+        // rcheck for report version
+        serialPort.once('write', function (data) {
+            data.should.equal(0xF9);
+            // check for query firmware 
+            serialPort.once('write', function (data) {
+                data[0].should.equal(240);
+                data[1].should.equal(121);
+                data[2].should.equal(247);
+                done();
+            });
+        });
+    });
+    
+    it('receives the version on startup',function(done){
+ 
         //'send' report version command back from arduino
         serialPort.emit('data',[0xF9]);
         serialPort.emit('data',[0x02]);
@@ -26,7 +43,7 @@ describe('board',function(){
         //send the last byte of command to get 'data' event to fire when the report version function is called
         serialPort.emit('data',[0x03]);
     });
-
+    
     it('receives the firmware after the version', function (done) {
         board.once('queryfirmware', function () {
             board.firmware.version.major.should.equal(2);
