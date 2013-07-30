@@ -353,6 +353,21 @@ describe('board', function () {
         serialPort.emit('data',[(4 >> 7) & 0x7F]);
         serialPort.emit('data',[0xF7]);
     });
+    it('should be able to send a string',function(done){
+        var bytes = new Buffer('test string','utf8');
+        var length = bytes.length;
+        board.sendString(bytes);
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x71);
+        for (var i = 0; i < length; i++) {
+            serialPort.lastWrite[i*2 + 2].should.equal(bytes[i] & 0x7F);
+            serialPort.lastWrite[i*2 + 3].should.equal((bytes[i + 1] >> 7) & 0x7F);
+        }
+        serialPort.lastWrite[length * 2 + 2].should.equal(0);
+        serialPort.lastWrite[length * 2 + 3].should.equal(0);
+        serialPort.lastWrite[length * 2 + 4].should.equal(0xF7);
+        done();
+    });
     it('should emit a string event',function(done){
         board.on('string',function(string){
             string.should.equal('test string');
