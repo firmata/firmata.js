@@ -1,39 +1,48 @@
 var firmata = process.env.FIRMATA_COV ? require('../lib-cov/firmata') : require('../lib/firmata');
 var SerialPort = require('./MockSerialPort').SerialPort;
 var should = require('should');
-describe('board',function(){
-    var boardStarted = false;
-    var serialPort = new SerialPort('/path/to/fake/usb');
-    var board = new firmata.Board(serialPort,function(err){
-        'test error'.should.equal(err); 
+
+describe('board', function () {
+    it('reports errors', function (done) {
+        var serialPort = new SerialPort('/path/to/fake/usb');
+        var board = new firmata.Board(serialPort, function (err) {
+            'test error'.should.equal(err);
+            done();
+        });
+
+        serialPort.emit('error', 'test error');
     });
-    serialPort.emit('error','test error');
-    serialPort = new SerialPort('/path/to/fake/usb');
-    
-    board = new firmata.Board(serialPort,function(err){
-        boardStarted = true;
-        (typeof err).should.equal('undefined'); 
-    });
-    
-    it('sends report version and query firmware if it hasnt received the version within the timeout', function(done) {
+
+    it('sends report version and query firmware if it hasnt received the version within the timeout', function (done) {
+        var serialPort = new SerialPort('/path/to/fake/usb');
+        var opt = {
+            reportVersionTimeout: 1
+        };
+        var board = new firmata.Board(serialPort, opt ,function (err) { });
+
         // rcheck for report version
         serialPort.once('write', function (data) {
-            data.should.equal(0xF9);
-            // check for query firmware 
+            should.deepEqual(data, [0xF9]);
+            // check for query firmware
             serialPort.once('write', function (data) {
-                data[0].should.equal(240);
-                data[1].should.equal(121);
-                data[2].should.equal(247);
+                should.deepEqual(data, [240, 121, 247]);
                 done();
             });
         });
     });
-    
-    it('receives the version on startup',function(done){
- 
+
+    var serialPort = new SerialPort('/path/to/fake/usb');
+    var boardStarted = false;
+    var board = new firmata.Board(serialPort, function (err) {
+        boardStarted = true;
+        (typeof err).should.equal('undefined');
+    });
+
+    it('receives the version on startup', function(done){
+
         //'send' report version command back from arduino
-        serialPort.emit('data',[0xF9]);
-        serialPort.emit('data',[0x02]);
+        serialPort.emit('data', [0xF9]);
+        serialPort.emit('data', [0x02]);
         //subscribe to the 'data' event to capture the event
         serialPort.once('data',function(buffer){
             board.version.major.should.equal(2);
