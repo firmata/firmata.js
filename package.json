@@ -20,7 +20,8 @@
     "grunt-mocha-test": "~0.2.2"
   },
   "dependencies": {
-    "serialport": ">=0.7.5"
+    "serialport": ">=0.7.5",
+    "browser-serialport": "*"
   },
   "scripts": {
     "test": "mocha test/firmata.js"
