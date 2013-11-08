@@ -23,7 +23,7 @@
     "serialport": ">=0.7.5"
   },
   "scripts": {
-    "test": "mocha test/firmata.js"
+    "test": "mocha test/firmata.js test/encoder7bit.js test/onewireutils.js"
   },
   "engines": {
     "node": "*"
