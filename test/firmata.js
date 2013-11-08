@@ -1,6 +1,7 @@
 var firmata = process.env.FIRMATA_COV ? require('../lib-cov/firmata') : require('../lib/firmata');
 var SerialPort = require('./MockSerialPort').SerialPort;
-var should = require('should');
+var should = require('should'),
+    Encoder7Bit = require('../lib/encoder7bit');
 
 describe('board', function () {
     it('reports errors', function (done) {
@@ -298,7 +299,7 @@ describe('board', function () {
         serialPort.lastWrite[2].should.equal(0);
         done();
     });
-    it('should be able to send an i2c config',function(done){
+    it('should be able to send an i config',function(done){
         board.sendI2CConfig(1);
         serialPort.lastWrite[0].should.equal(0xF0);
         serialPort.lastWrite[1].should.equal(0x78);
@@ -632,5 +633,153 @@ describe('board', function () {
         serialPort.emit('data',[0x72]);
         serialPort.emit('data',[3]);
         serialPort.emit('data',[0xF7]);
+    });
+    it('should be able to send a 1-wire config with parasitic power enabled',function(done){
+        board.sendOneWireConfig(1, true);
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x41);
+        serialPort.lastWrite[3].should.equal(0x01);
+        serialPort.lastWrite[4].should.equal(0x01);
+        serialPort.lastWrite[5].should.equal(0xF7);
+        done();
+    });
+    it('should be able to send a 1-wire config with parasitic power disabled',function(done){
+        board.sendOneWireConfig(1, false);
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x41);
+        serialPort.lastWrite[3].should.equal(0x01);
+        serialPort.lastWrite[4].should.equal(0x00);
+        serialPort.lastWrite[5].should.equal(0xF7);
+        done();
+    });
+    it('should be able to send a 1-wire search request and recieve a reply',function(done){
+        board.sendOneWireSearch(1, function(error, devices) {
+            devices.length.should.equal(1);
+
+            done();
+        });
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x40);
+        serialPort.lastWrite[3].should.equal(0x01);
+        serialPort.lastWrite[4].should.equal(0xF7);
+
+        serialPort.emit('data',[0xF0, 0x73, 0x42, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
+    });
+    it('should be able to send a 1-wire search alarm request and recieve a reply',function(done){
+        board.sendOneWireAlarmsSearch(1, function(error, devices) {
+            devices.length.should.equal(1);
+
+            done();
+        });
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x44);
+        serialPort.lastWrite[3].should.equal(0x01);
+        serialPort.lastWrite[4].should.equal(0xF7);
+
+        serialPort.emit('data',[0xF0, 0x73, 0x45, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
+    });
+    it('should be able to send a 1-wire reset request',function(done) {
+        board.sendOneWireReset(1);
+
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x01);
+        serialPort.lastWrite[3].should.equal(0x01);
+
+        done();
+    });
+    it('should be able to send a 1-wire delay request',function(done) {
+        var delay = 1000;
+
+        board.sendOneWireDelay(1, delay);
+
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x3C);
+        serialPort.lastWrite[3].should.equal(0x01);
+
+        // decode delay from request
+        var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
+        var sentDelay = request[12] | (request[13] << 8) | (request[14] << 12) | request[15] << 24;
+        sentDelay.should.equal(delay);
+
+        done();
+    });
+    it('should be able to send a 1-wire write request',function(done) {
+        var device = [40, 219, 239, 33, 5, 0, 0, 93];
+        var data = 0x33;
+
+        board.sendOneWireWrite(1, device, data);
+
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x3C);
+        serialPort.lastWrite[3].should.equal(0x01);
+
+        // decode delay from request
+        var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
+
+        // should select the passed device
+        request[0].should.equal(device[0]);
+        request[1].should.equal(device[1]);
+        request[2].should.equal(device[2]);
+        request[3].should.equal(device[3]);
+        request[4].should.equal(device[4]);
+        request[5].should.equal(device[5]);
+        request[6].should.equal(device[6]);
+        request[7].should.equal(device[7]);
+
+        // and send the passed data
+        request[16].should.equal(data);
+
+        done();
+    });
+    it('should be able to send a 1-wire write and read request and recieve a reply',function(done) {
+        var device = [40, 219, 239, 33, 5, 0, 0, 93];
+        var data = 0x33;
+        var output = [0x01, 0x02];
+
+        board.sendOneWireWriteAndRead(1, device, data, 2, function(error, receieved) {
+            receieved.should.eql(output);
+
+            done();
+        });
+
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x73);
+        serialPort.lastWrite[2].should.equal(0x3C);
+        serialPort.lastWrite[3].should.equal(0x01);
+
+        // decode delay from request
+        var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
+
+        // should select the passed device
+        request[0].should.equal(device[0]);
+        request[1].should.equal(device[1]);
+        request[2].should.equal(device[2]);
+        request[3].should.equal(device[3]);
+        request[4].should.equal(device[4]);
+        request[5].should.equal(device[5]);
+        request[6].should.equal(device[6]);
+        request[7].should.equal(device[7]);
+
+        // and send the passed data
+        request[16].should.equal(data);
+
+        var dataSentFromBoard = [];
+
+        // respond with the same correlation id
+        dataSentFromBoard[0] = request[10];
+        dataSentFromBoard[1] = request[11];
+
+        // data "read" from the 1-wire device
+        dataSentFromBoard[2] = output[0];
+        dataSentFromBoard[3] = output[1];
+
+        serialPort.emit('data',[0xF0, 0x73, 0x43, 0x01].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([0xF7]));
     });
 });
