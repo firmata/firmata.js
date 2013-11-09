@@ -1,7 +1,7 @@
 module.exports = function (grunt) {
     grunt.initConfig({
         mochaTest: {
-            files: [ 'test/firmata.js']
+            files: [ 'test/*.test.js']
         },
         jshint: {   
             all: [ 'gruntfile.js', 'lib/firmata.js', 'test/*.js', 'examples/*.js'],

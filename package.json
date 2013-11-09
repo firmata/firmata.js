@@ -24,7 +24,7 @@
     "browser-serialport": "*"
   },
   "scripts": {
-    "test": "mocha test/firmata.js test/encoder7bit.js test/onewireutils.js"
+    "test": "grunt"
   },
   "engines": {
     "node": "*"
