@@ -15,18 +15,19 @@ describe('board', function () {
     });
 
     it('sends report version and query firmware if it hasnt received the version within the timeout', function (done) {
-        var serialPort = new SerialPort('/path/to/fake/usb');
+        this.timeout(50000);
+	var serialPort = new SerialPort('/path/to/fake/usb');
         var opt = {
             reportVersionTimeout: 1
         };
-        var board = new firmata.Board(serialPort, opt ,function (err) { });
+        var board = new firmata.Board(serialPort, opt, function (err) { });
 
         // rcheck for report version
         serialPort.once('write', function (data) {
-            should.deepEqual(data, [0xF9]);
+	should.deepEqual(data, [0xF9]);
             // check for query firmware
             serialPort.once('write', function (data) {
-                should.deepEqual(data, [240, 121, 247]);
+		should.deepEqual(data, [240, 121, 247]);
                 done();
             });
         });
@@ -39,21 +40,22 @@ describe('board', function () {
         (typeof err).should.equal('undefined');
     });
 
-    it('receives the version on startup', function(done){
-
+    it('receives the version on startup', function (done) {
         //'send' report version command back from arduino
         serialPort.emit('data', [0xF9]);
         serialPort.emit('data', [0x02]);
+
         //subscribe to the 'data' event to capture the event
-        serialPort.once('data',function(buffer){
+        serialPort.once('data', function (buffer) {
             board.version.major.should.equal(2);
             board.version.minor.should.equal(3);
             done();
         });
+
         //send the last byte of command to get 'data' event to fire when the report version function is called
-        serialPort.emit('data',[0x03]);
+        serialPort.emit('data', [0x03]);
     });
-    
+
     it('receives the firmware after the version', function (done) {
         board.once('queryfirmware', function () {
             board.firmware.version.major.should.equal(2);
@@ -98,45 +100,46 @@ describe('board', function () {
         serialPort.emit('data', [247]);
     });
 
-    it('gets the capabilities after the firmware',function(done){
+    it('gets the capabilities after the firmware', function (done) {
         //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
-        serialPort.lastWrite.indexOf(0xF0).should.equal(0);
-        serialPort.lastWrite.indexOf(0x6B).should.equal(1);
-        serialPort.lastWrite.indexOf(0xF7).should.equal(2);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x6B, 0xF7]);
+
         //report back mock capabilities
         //taken from boards.h for arduino uno
-        serialPort.emit('data',[0xF0]);
-        serialPort.emit('data',[0x6C]);
-        for(var i = 0;i<20;i++){
+        serialPort.emit('data', [0xF0]);
+        serialPort.emit('data', [0x6C]);
+
+        for (var i = 0; i<20; i++) {
             // if "pin" is digital it can be input and output
-            if(i>=2 && i <=19 ){
+            if (i>=2 && i <=19 ) {
                 //input is on
                 serialPort.emit('data',[0]);
                 serialPort.emit('data',[1]);
                 //output is on
                 serialPort.emit('data',[1]);
                 serialPort.emit('data',[1]);
-            } 
+            }
             //if pin is analog
-            if(i >=14 && i <=19){
+            if (i >=14 && i <=19) {
                 serialPort.emit('data',[0x02]);
                 serialPort.emit('data',[10]);
             }
             //if pin is PWM
-            if([3,5,6,10,11].indexOf(i) > -1){
+            if ([3,5,6,10,11].indexOf(i) > -1) {
                 serialPort.emit('data',[0x03]);
                 serialPort.emit('data',[8]);
             }
             //all pins are servo
-            if(i >= 2){
+            if (i >= 2) {
                 serialPort.emit('data',[0x04]);
                 serialPort.emit('data',[14]);
             }
             //signal end of command for pin
             serialPort.emit('data',[127]);
-        } 
+        }
+
         //capture the event once to make all pin modes are set correctly
-        serialPort.once('data',function(){
+        serialPort.once('data', function () {
             board.pins.length.should.equal(20);
             board.pins.forEach(function(value,index){
                 if(index >=2 && index <=19){
@@ -165,21 +168,21 @@ describe('board', function () {
         serialPort.emit('data',[0xF7]);
     });
 
-    it('querys analog mappings after capabilities',function(done){
+    it('querys analog mappings after capabilities', function (done) {
         //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
-        serialPort.lastWrite.indexOf(0xF0).should.not.equal(-1);
-        serialPort.lastWrite.indexOf(0x69).should.not.equal(-1);
-        serialPort.lastWrite.indexOf(0xF7).should.not.equal(-1);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x69, 0xF7]);
+
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x6A]);
-        for(var i =0;i < 20; i++){
-            if(i >= 14 && i < 20){
-                serialPort.emit('data',[i - 14]);    
+        for (var i =0;i < 20; i++) {
+            if (i >= 14 && i < 20) {
+                serialPort.emit('data',[i - 14]);
             } else {
                 serialPort.emit('data',[127]);
-            }    
+            }
         }
-        serialPort.once('data',function(){
+
+        serialPort.once('data', function () {
             board.pins[14].analogChannel.should.equal(0);
             board.pins[15].analogChannel.should.equal(1);
             board.pins[16].analogChannel.should.equal(2);
@@ -197,18 +200,21 @@ describe('board', function () {
         });
         serialPort.emit('data',[0xF7]);
     });
-    it('should now be started',function(){
+
+    it('should now be started', function () {
         boardStarted.should.equal(true);
     });
-    it('should be able to set pin mode on digital pin',function(done){
+
+    it('should be able to set pin mode on digital pin', function (done) {
         board.pinMode(2,board.MODES.INPUT);
         serialPort.lastWrite[0].should.equal(0xF4);
         serialPort.lastWrite[1].should.equal(2);
         serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
         board.pins[2].mode.should.equal(board.MODES.INPUT);
-        done(); 
+        done();
     });
-    it('should be able to read value of digital pin',function(done){
+
+    it('should be able to read value of digital pin', function (done) {
         var counter = 0;
         var order = [1, 0, 1, 0];
         board.digitalRead(2,function(value){
@@ -239,14 +245,16 @@ describe('board', function () {
         serialPort.emit('data',[0x90, 4%128, 4>>7]);
         serialPort.emit('data',[0x90, 0x00, 0x00]);
     });
-    it('should be able to set mode on analog pins',function(done){
+
+    it('should be able to set mode on analog pins', function (done) {
         board.pinMode(board.analogPins[0],board.MODES.INPUT);
         serialPort.lastWrite[0].should.equal(0xF4);
         serialPort.lastWrite[1].should.equal(board.analogPins[0]);
         serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
         done();
     });
-    it('should be able to read value of analog pin',function(done){
+
+    it('should be able to read value of analog pin', function (done) {
         var counter = 0;
         var order = [1023, 0, 1023, 0];
         board.analogRead(1,function(value){
@@ -277,67 +285,46 @@ describe('board', function () {
         serialPort.emit('data',[0xE0 | (1 & 0xF), 1023%128, 1023>>7]);
         serialPort.emit('data',[0xE0 | (1 & 0xF), 0%128, 0>>7]);
     });
-    it('should be able to write a value to a digital output',function(done){
+
+    it('should be able to write a value to a digital output', function (done) {
         board.digitalWrite(3,board.HIGH);
-        serialPort.lastWrite[0].should.equal(0x90);
-        serialPort.lastWrite[1].should.equal(8);
-        serialPort.lastWrite[2].should.equal(0);
+        should.deepEqual(serialPort.lastWrite, [0x90, 8, 0]);
+
         board.digitalWrite(3,board.LOW);
-        serialPort.lastWrite[0].should.equal(0x90);
-        serialPort.lastWrite[1].should.equal(0);
-        serialPort.lastWrite[2].should.equal(0);
+        should.deepEqual(serialPort.lastWrite, [0x90, 0, 0]);
+
         done();
     });
-    it('should be able to write a value to a analog output',function(done){
-        board.analogWrite(board.analogPins[1],1023);
-        serialPort.lastWrite[0].should.equal(0xE0 | board.analogPins[1]);
-        serialPort.lastWrite[1].should.equal(127);
-        serialPort.lastWrite[2].should.equal(7);
-        board.analogWrite(board.analogPins[1],0);
-        serialPort.lastWrite[0].should.equal(0xE0 | board.analogPins[1]);
-        serialPort.lastWrite[1].should.equal(0);
-        serialPort.lastWrite[2].should.equal(0);
+
+    it('should be able to write a value to a analog output', function (done) {
+        board.analogWrite(board.analogPins[1], 1023);
+        should.deepEqual(serialPort.lastWrite, [0xE0 | board.analogPins[1], 127, 7]);
+
+        board.analogWrite(board.analogPins[1], 0);
+        should.deepEqual(serialPort.lastWrite, [0xE0 | board.analogPins[1], 0, 0]);
         done();
     });
-    it('should be able to send an i config',function(done){
+
+    it('should be able to send an i2c config', function (done) {
         board.sendI2CConfig(1);
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x78);
-        serialPort.lastWrite[2].should.equal(1 & 0xFF);
-        serialPort.lastWrite[3].should.equal((1 >> 8) & 0xFF);
-        serialPort.lastWrite[4].should.equal(0xF7);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x78, 1 & 0xFF, (1 >> 8) & 0xFF, 0xF7]);
         done();
     });
-    it('should be able to send an i2c request',function(done){
-        board.sendI2CWriteRequest(0x68,[1,2,3]);
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x76);
-        serialPort.lastWrite[2].should.equal(0x68);
-        serialPort.lastWrite[3].should.equal(0 << 3);
-        serialPort.lastWrite[4].should.equal(1 & 0x7F);
-        serialPort.lastWrite[5].should.equal((1 >> 7) & 0x7F);
-        serialPort.lastWrite[6].should.equal(2 & 0x7F);
-        serialPort.lastWrite[7].should.equal((2 >> 7) & 0x7F);
-        serialPort.lastWrite[8].should.equal(3 & 0x7F);
-        serialPort.lastWrite[9].should.equal((3 >> 7) & 0x7F);
-        serialPort.lastWrite[10].should.equal(0xF7);
+
+    it('should be able to send an i2c request', function (done) {
+        board.sendI2CWriteRequest(0x68, [1,2,3]);
+        var request = [0xF0, 0x76, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, 0xF7];
+        should.deepEqual(serialPort.lastWrite, request);
         done();
     });
-    it('should be able to receive an i2c reply',function(done){
-        board.sendI2CReadRequest(0x68,4,function(data){
-            data[0].should.equal(1);
-            data[1].should.equal(2);
-            data[2].should.equal(3);
-            data[3].should.equal(4);
+
+    it('should be able to receive an i2c reply', function (done) {
+        board.sendI2CReadRequest(0x68, 4, function (data) {
+            should.deepEqual(data, [1, 2, 3, 4]);
             done();
         });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x76);
-        serialPort.lastWrite[2].should.equal(0x68);
-        serialPort.lastWrite[3].should.equal(1<<3);
-        serialPort.lastWrite[4].should.equal(4 & 0x7F);
-        serialPort.lastWrite[5].should.equal((4 >> 7) & 0x7F );
-        serialPort.lastWrite[6].should.equal(0xF7);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x76, 0x68, 1<<3, 4 & 0x7F, (4 >> 7) & 0x7F, 0xF7]);
+
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x77]);
         serialPort.emit('data',[0x68 % 128]);
@@ -354,28 +341,41 @@ describe('board', function () {
         serialPort.emit('data',[(4 >> 7) & 0x7F]);
         serialPort.emit('data',[0xF7]);
     });
-    it('should emit a string event',function(done){
+    it('should be able to send a string', function (done){
+        var bytes = new Buffer('test string','utf8');
+        var length = bytes.length;
+        board.sendString(bytes);
+        serialPort.lastWrite[0].should.equal(0xF0);
+        serialPort.lastWrite[1].should.equal(0x71);
+        for (var i = 0; i < length; i++) {
+            serialPort.lastWrite[i*2 + 2].should.equal(bytes[i] & 0x7F);
+            serialPort.lastWrite[i*2 + 3].should.equal((bytes[i + 1] >> 7) & 0x7F);
+        }
+        serialPort.lastWrite[length * 2 + 2].should.equal(0);
+        serialPort.lastWrite[length * 2 + 3].should.equal(0);
+        serialPort.lastWrite[length * 2 + 4].should.equal(0xF7);
+        done();
+    });
+    it('should emit a string event', function (done) {
         board.on('string',function(string){
-            string.should.equal('test string'); 
-            done(); 
+            string.should.equal('test string');
+            done();
         });
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x71]);
         var bytes = new Buffer('test string','utf8');
-        Array.prototype.forEach.call(bytes,function(value,index){
-           serialPort.emit('data',[value]); 
+        Array.prototype.forEach.call(bytes, function (value,index) {
+           serialPort.emit('data',[value]);
         });
         serialPort.emit('data',[0xF7]);
     });
-    it('can query pin state',function(done){
+
+    it('can query pin state', function (done) {
         board.queryPinState(2,function(){
             board.pins[2].value.should.equal(1024);
             done();
         });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x6D);
-        serialPort.lastWrite[2].should.equal(2);
-        serialPort.lastWrite[3].should.equal(0xF7);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x6D, 2, 0xF7]);
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x6E]);
         serialPort.emit('data',[2]);
@@ -383,32 +383,14 @@ describe('board', function () {
         serialPort.emit('data',[1024]);
         serialPort.emit('data',[0xF7]);
     });
-    it('can send a pulseIn without a timeout and without a pulse out',function(done){
-        board.pulseIn({pin : 3, value: board.HIGH}, function(duration){
-            duration.should.equal(0);  
+
+    it('can send a pulseIn without a timeout and without a pulse out', function (done) {
+        board.pulseIn({pin : 3, value: board.HIGH, timeout: 1000000}, function (duration) {
+            duration.should.equal(0);
             done();
         });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x74);
-        serialPort.lastWrite[2].should.equal(3);
-        serialPort.lastWrite[3].should.equal(board.HIGH);
-        serialPort.lastWrite[4].should.equal(0);
-        serialPort.lastWrite[5].should.equal(0);
-        serialPort.lastWrite[6].should.equal(0);
-        serialPort.lastWrite[7].should.equal(0);
-        serialPort.lastWrite[8].should.equal(0);
-        serialPort.lastWrite[9].should.equal(0); 
-        serialPort.lastWrite[10].should.equal(0);
-        serialPort.lastWrite[11].should.equal(0); 
-        serialPort.lastWrite[12].should.equal(0);
-        serialPort.lastWrite[13].should.equal(0);
-        serialPort.lastWrite[14].should.equal(15);
-        serialPort.lastWrite[15].should.equal(0);
-        serialPort.lastWrite[16].should.equal(66);
-        serialPort.lastWrite[17].should.equal(0); 
-        serialPort.lastWrite[18].should.equal(64);
-        serialPort.lastWrite[19].should.equal(0); 
-        serialPort.lastWrite[20].should.equal(0xF7);    
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x74, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 66, 0, 64, 0, 0xF7]);
+
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x74]);
         serialPort.emit('data',[3]);
@@ -423,72 +405,14 @@ describe('board', function () {
         serialPort.emit('data',[0]);
         serialPort.emit('data',[0xF7]);
     });
-    it('can send a pulseIn with a timeout and without a pulse out',function(done){
-        board.pulseIn({pin : 3, value: board.HIGH, timeout: 1000000} ,function(duration){
-            duration.should.equal(0);  
+
+    it('can send a pulseIn with a timeout and a pulse out', function (done) {
+        board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5, timeout: 1000000}, function (duration) {
+            duration.should.equal(1000000);
             done();
         });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x74);
-        serialPort.lastWrite[2].should.equal(3);
-        serialPort.lastWrite[3].should.equal(board.HIGH);
-        serialPort.lastWrite[4].should.equal(0);
-        serialPort.lastWrite[5].should.equal(0);
-        serialPort.lastWrite[6].should.equal(0);
-        serialPort.lastWrite[7].should.equal(0);
-        serialPort.lastWrite[8].should.equal(0);
-        serialPort.lastWrite[9].should.equal(0); 
-        serialPort.lastWrite[10].should.equal(0);
-        serialPort.lastWrite[11].should.equal(0); 
-        serialPort.lastWrite[12].should.equal(0);
-        serialPort.lastWrite[13].should.equal(0);
-        serialPort.lastWrite[14].should.equal(15);
-        serialPort.lastWrite[15].should.equal(0);
-        serialPort.lastWrite[16].should.equal(66);
-        serialPort.lastWrite[17].should.equal(0); 
-        serialPort.lastWrite[18].should.equal(64);
-        serialPort.lastWrite[19].should.equal(0); 
-        serialPort.lastWrite[20].should.equal(0xF7);   
-        serialPort.emit('data',[0xF0]);
-        serialPort.emit('data',[0x74]);
-        serialPort.emit('data',[3]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0]);
-        serialPort.emit('data',[0xF7]);
-    });
-    it('can send a pulseIn with a timeout and a pulse out',function(done){
-        board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5, timeout: 1000000}, function(duration){
-            duration.should.equal(1000000);  
-            done();
-        });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x74);
-        serialPort.lastWrite[2].should.equal(3);
-        serialPort.lastWrite[3].should.equal(board.HIGH);
-        serialPort.lastWrite[4].should.equal(0);
-        serialPort.lastWrite[5].should.equal(0);
-        serialPort.lastWrite[6].should.equal(0);
-        serialPort.lastWrite[7].should.equal(0);
-        serialPort.lastWrite[8].should.equal(0);
-        serialPort.lastWrite[9].should.equal(0); 
-        serialPort.lastWrite[10].should.equal(5);
-        serialPort.lastWrite[11].should.equal(0); 
-        serialPort.lastWrite[12].should.equal(0);
-        serialPort.lastWrite[13].should.equal(0);
-        serialPort.lastWrite[14].should.equal(15);
-        serialPort.lastWrite[15].should.equal(0);
-        serialPort.lastWrite[16].should.equal(66);
-        serialPort.lastWrite[17].should.equal(0); 
-        serialPort.lastWrite[18].should.equal(64);
-        serialPort.lastWrite[19].should.equal(0); 
-        serialPort.lastWrite[20].should.equal(0xF7);    
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x74, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 15, 0, 66, 0, 64, 0, 0xF7]);
+
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x74]);
         serialPort.emit('data',[3]);
@@ -503,9 +427,9 @@ describe('board', function () {
         serialPort.emit('data',[0]);
         serialPort.emit('data',[0xF7]);
     });
-    it('can send a pulseIn with a pulse out and without a timeout ',function(done){
-        board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5}, function(duration){
-            duration.should.equal(1000000);  
+    it('can send a pulseIn with a pulse out and without a timeout ',function (done) {
+        board.pulseIn({pin : 3, value: board.HIGH, pulseOut: 5}, function (duration) {
+            duration.should.equal(1000000);
             done();
         });
         serialPort.lastWrite[0].should.equal(0xF0);
@@ -517,18 +441,18 @@ describe('board', function () {
         serialPort.lastWrite[6].should.equal(0);
         serialPort.lastWrite[7].should.equal(0);
         serialPort.lastWrite[8].should.equal(0);
-        serialPort.lastWrite[9].should.equal(0); 
+        serialPort.lastWrite[9].should.equal(0);
         serialPort.lastWrite[10].should.equal(5);
-        serialPort.lastWrite[11].should.equal(0); 
+        serialPort.lastWrite[11].should.equal(0);
         serialPort.lastWrite[12].should.equal(0);
         serialPort.lastWrite[13].should.equal(0);
         serialPort.lastWrite[14].should.equal(15);
         serialPort.lastWrite[15].should.equal(0);
         serialPort.lastWrite[16].should.equal(66);
-        serialPort.lastWrite[17].should.equal(0); 
+        serialPort.lastWrite[17].should.equal(0);
         serialPort.lastWrite[18].should.equal(64);
-        serialPort.lastWrite[19].should.equal(0); 
-        serialPort.lastWrite[20].should.equal(0xF7);    
+        serialPort.lastWrite[19].should.equal(0);
+        serialPort.lastWrite[20].should.equal(0xF7);
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x74]);
         serialPort.emit('data',[3]);
@@ -543,7 +467,8 @@ describe('board', function () {
         serialPort.emit('data',[0]);
         serialPort.emit('data',[0xF7]);
     });
-    it('can send a stepper config for a driver configuration', function(done) {
+
+    it('can send a stepper config for a driver configuration', function (done) {
         board.stepperConfig(0, board.STEPPER.TYPE.DRIVER, 200, 2, 3);
         serialPort.lastWrite[0].should.equal(0xF0);
         serialPort.lastWrite[1].should.equal(0x72);
@@ -557,7 +482,8 @@ describe('board', function () {
         serialPort.lastWrite[9].should.equal(0xF7);
         done();
     });
-    it('can send a stepper config for a two wire configuration', function(done) {
+
+    it('can send a stepper config for a two wire configuration', function (done) {
         board.stepperConfig(0, board.STEPPER.TYPE.TWO_WIRE, 200, 2, 3);
         serialPort.lastWrite[0].should.equal(0xF0);
         serialPort.lastWrite[1].should.equal(0x72);
@@ -571,7 +497,8 @@ describe('board', function () {
         serialPort.lastWrite[9].should.equal(0xF7);
         done();
     });
-    it('can send a stepper config for a four wire configuration', function(done) {
+
+    it('can send a stepper config for a four wire configuration', function (done) {
         board.stepperConfig(0, board.STEPPER.TYPE.FOUR_WIRE, 200, 2, 3, 4, 5);
         serialPort.lastWrite[0].should.equal(0xF0);
         serialPort.lastWrite[1].should.equal(0x72);
@@ -587,8 +514,9 @@ describe('board', function () {
         serialPort.lastWrite[11].should.equal(0xF7);
         done();
     });
-    it('can send a stepper move without acceleration or deceleration', function(done) {
-        board.stepperStep(2, board.STEPPER.DIRECTION.CCW, 10000, 2000, function(complete) {
+
+    it('can send a stepper move without acceleration or deceleration', function (done) {
+        board.stepperStep(2, board.STEPPER.DIRECTION.CCW, 10000, 2000, function (complete) {
             complete.should.equal(true);
             done();
         });
@@ -609,26 +537,16 @@ describe('board', function () {
         serialPort.emit('data',[2]);
         serialPort.emit('data',[0xF7]);
     });
-    it('can send a stepper move with acceleration and deceleration', function(done) {
+
+    it('can send a stepper move with acceleration and deceleration', function (done) {
         board.stepperStep(3, board.STEPPER.DIRECTION.CCW, 10000, 2000, 3000, 8000, function(complete) {
             complete.should.equal(true);
             done();
         });
-        serialPort.lastWrite[0].should.equal(0xF0);
-        serialPort.lastWrite[1].should.equal(0x72);
-        serialPort.lastWrite[2].should.equal(1);
-        serialPort.lastWrite[3].should.equal(3);
-        serialPort.lastWrite[4].should.equal(board.STEPPER.DIRECTION.CCW);
-        serialPort.lastWrite[5].should.equal(10000 & 0x7F);
-        serialPort.lastWrite[6].should.equal((10000 >> 7) & 0x7F);
-        serialPort.lastWrite[7].should.equal((10000 >> 14) & 0x7F);
-        serialPort.lastWrite[8].should.equal(2000 & 0x7F);
-        serialPort.lastWrite[9].should.equal((2000 >> 7) & 0x7F);
-        serialPort.lastWrite[10].should.equal(3000 & 0x7F);
-        serialPort.lastWrite[11].should.equal((3000 >> 7) & 0x7F);
-        serialPort.lastWrite[12].should.equal(8000 & 0x7F);
-        serialPort.lastWrite[13].should.equal((8000 >> 7) & 0x7F);
-        serialPort.lastWrite[14].should.equal(0xF7);
+
+        var message = [0xF0, 0x72, 1, 3, board.STEPPER.DIRECTION.CCW, 10000 & 0x7F, (10000 >> 7) & 0x7F, (10000 >> 14) & 0x7F, 2000 & 0x7F, (2000 >> 7) & 0x7F, 3000 & 0x7F, (3000 >> 7) & 0x7F, 8000 & 0x7F, (8000 >> 7) & 0x7F, 0xF7];
+        should.deepEqual(serialPort.lastWrite, message);
+
         serialPort.emit('data',[0xF0]);
         serialPort.emit('data',[0x72]);
         serialPort.emit('data',[3]);
