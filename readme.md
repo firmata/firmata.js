@@ -67,7 +67,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
 
     board.analogWrite(pin,value)
 
-  Write an output to a digital pin.  pin is the number of the pin and the value is between 0 and 255.  
+  Write an output to an analog pin.  pin is the number of the pin and the value is between 0 and 255.  
 
     board.analogRead(pin,callback)
 
