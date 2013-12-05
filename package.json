@@ -19,7 +19,9 @@
     "grunt-contrib-jshint": "~0.4.3",
     "grunt-mocha-test": "~0.2.2"
   },
-  "dependencies": {
+  "dependencies": {    
+  },
+  "optionalDependencies": {
     "serialport": ">=0.7.5",
     "browser-serialport": "*"
   },
