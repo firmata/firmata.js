@@ -16,7 +16,7 @@ describe('board', function () {
 
     it('sends report version and query firmware if it hasnt received the version within the timeout', function (done) {
         this.timeout(50000);
-	var serialPort = new SerialPort('/path/to/fake/usb');
+        var serialPort = new SerialPort('/path/to/fake/usb');
         var opt = {
             reportVersionTimeout: 1
         };
@@ -24,10 +24,10 @@ describe('board', function () {
 
         // rcheck for report version
         serialPort.once('write', function (data) {
-	should.deepEqual(data, [0xF9]);
+            should.deepEqual(data, [0xF9]);
             // check for query firmware
             serialPort.once('write', function (data) {
-		should.deepEqual(data, [240, 121, 247]);
+                should.deepEqual(data, [240, 121, 247]);
                 done();
             });
         });
