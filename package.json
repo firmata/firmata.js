@@ -21,7 +21,9 @@
   },
   "dependencies": {
     "serialport": ">=0.7.5",
-    "browser-serialport": "*"
+    "browser-serialport": "*"    
+  },
+  "optionalDependencies": {
   },
   "scripts": {
     "test": "grunt"
