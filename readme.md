@@ -74,11 +74,11 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument. 
 
     board.servoWrite(pin,degree)
-  Set I2C Config on the arduino
+  Write a degree value to a servo pin.
   
     board.sendI2CConfig(delay)
+  Set I2C Config on the arduino
 
-  Write a degree value to a servo pin.
 
     board.sendI2CWriteRequest(slaveAddress,[bytes])
 
