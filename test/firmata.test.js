@@ -305,6 +305,30 @@ describe('board', function () {
         done();
     });
 
+    it('should be able to write a value to an extended analog output', function (done) {
+        var length = board.pins.length;
+
+        board.pins[46] = {
+            supportedModes: [0, 1, 4],
+            mode: 4,
+            value: 0,
+            report: 1,
+            analogChannel: 127
+        };
+
+
+        board.analogWrite(46, 180);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x6F, 46, 52, 1, 0xF7]);
+
+        board.analogWrite(46, 0);
+        should.deepEqual(serialPort.lastWrite, [0xF0, 0x6F, 46, 0, 0, 0xF7]);
+
+        // Restore to original length
+        board.pins.length = length;
+
+        done();
+    });
+
     it('should be able to send an i2c config', function (done) {
         board.sendI2CConfig(1);
         should.deepEqual(serialPort.lastWrite, [0xF0, 0x78, 1 & 0xFF, (1 >> 8) & 0xFF, 0xF7]);
