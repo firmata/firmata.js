@@ -1,7 +1,8 @@
 var firmata = process.env.FIRMATA_COV ? require('../lib-cov/firmata') : require('../lib/firmata');
 var SerialPort = require('./MockSerialPort').SerialPort;
 var should = require('should'),
-    Encoder7Bit = require('../lib/encoder7bit');
+    Encoder7Bit = require('../lib/encoder7bit'),
+    proxyquire = require('proxyquire');
 
 describe('board', function () {
     it('reports errors', function (done) {
@@ -723,5 +724,46 @@ describe('board', function () {
         dataSentFromBoard[3] = output[1];
 
         serialPort.emit('data',[0xF0, 0x73, 0x43, 0x01].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([0xF7]));
+    });
+
+    it('uses default baud rate and buffer size', function (done) {
+        var port = 'fake port';
+
+        var firmata = proxyquire(process.env.FIRMATA_COV ? '../lib-cov/firmata' : '../lib/firmata', {
+          'serialport': {
+            SerialPort: SerialPort
+          }
+        });
+
+        var board = new firmata.Board(port, function (err) { });
+        port.should.equal(board.sp.constructorArguments[0]);
+        (57600).should.equal(board.sp.constructorArguments[1].baudRate);
+        (1).should.equal(board.sp.constructorArguments[1].bufferSize);
+
+        done();
+    });
+
+    it('overrides baud rate and buffer size', function (done) {
+        var port = 'fake port';
+        var opt = {
+            reportVersionTimeout: 1,
+            serialport: {
+              baudRate: 5,
+              bufferSize: 10
+            }
+        };
+
+        var firmata = proxyquire(process.env.FIRMATA_COV ? '../lib-cov/firmata' : '../lib/firmata', {
+          'serialport': {
+            SerialPort: SerialPort
+          }
+        });
+
+        var board = new firmata.Board(port, opt, function (err) { });
+        port.should.equal(board.sp.constructorArguments[0]);
+        opt.serialport.baudRate.should.equal(board.sp.constructorArguments[1].baudRate);
+        opt.serialport.bufferSize.should.equal(board.sp.constructorArguments[1].bufferSize);
+
+        done();
     });
 });
