@@ -2,6 +2,7 @@ var util = require('util'), events = require('events');
 
 var MockSerialPort = function (path) {
 	this.isClosed = false;
+	this.constructorArguments = arguments;
 };
 
 util.inherits(MockSerialPort, events.EventEmitter);

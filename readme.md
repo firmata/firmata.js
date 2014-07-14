@@ -11,6 +11,22 @@ The tests are written with expresso and assume you have the async library instal
     var board = new firmata.Board('path to usb',function(){
       //arduino is ready to communicate
     });  
+#Options
+```javascript
+var firmata = require('firmata');
+var board = new firmata.Board('path to usb', {
+  reportVersionTimeout: 5000,
+
+  // the serialport object will be passed to the SerialPort constructor
+  // see https://www.npmjs.org/package/serialport#to-use for valid options
+  serialport: {
+    baudRate: 56700,
+    bufferSize: 1,
+  }
+}, function() {
+  //arduino is ready to communicate
+});
+```
 #REPL
 If you run *firmata* from the command line it will prompt you for the usb port.  Then it will present you with a REPL with a board variable available.
 #Board
