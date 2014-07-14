@@ -13,17 +13,17 @@
     "firmata": "./repl.js"
   },
   "devDependencies": {
-    "mocha": ">=0.13.x",
-    "should": ">=0.5.x",
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.4.3",
-    "grunt-mocha-test": "~0.2.2",
-    "proxyquire": "~1.0",
-    "merge-defaults": "~0.2"
+    "mocha": "^1.0",
+    "should": "^4.0",
+    "grunt": "^0.4",
+    "grunt-contrib-jshint": "^0.10",
+    "grunt-mocha-test": "^0.11",
+    "proxyquire": "^1.0",
+    "merge-defaults": "^0.2"
   },
   "dependencies": {
-    "serialport": ">=0.7.5",
-    "browser-serialport": "*"    
+    "serialport": "^1.4",
+    "browser-serialport": "^1.0"
   },
   "optionalDependencies": {
   },
@@ -31,6 +31,6 @@
     "test": "grunt"
   },
   "engines": {
-    "node": "*"
+    "node": ">= 0.10"
   }
 }

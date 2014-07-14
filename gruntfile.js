@@ -21,8 +21,7 @@ module.exports = function (grunt) {
                 boss: true,
                 eqnull: true,
                 node: true,
-                strict: false,
-                es5: true
+                strict: false
             }
         }
     });
