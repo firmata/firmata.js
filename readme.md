@@ -42,6 +42,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
     ,value://current value of the pin. when pin is digital and set to output it will be Board.HIGH or Board.LOW.  If the pin is an analog pin it will be an numeric value between 0 and 1023.
     ,supportedModes://an array of modes from board.MODES that are supported on this pin.
     ,analogChannel://will be 127 for digital pins and the pin number for analog pins.
+    ,state://for output pins this is the value of the pin on the board, for digital input it's the status of the pullup resistor (1 = pullup enabled, 0 = pullup disabled)
     }
 
   This array holds all pins digital and analog. To get the analog pin number as seen on the arduino board use the analogChannel attribute.

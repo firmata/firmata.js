@@ -396,7 +396,7 @@ describe('board', function () {
 
     it('can query pin state', function (done) {
         board.queryPinState(2,function(){
-            board.pins[2].value.should.equal(1024);
+            board.pins[2].state.should.equal(1024);
             done();
         });
         should.deepEqual(serialPort.lastWrite, [0xF0, 0x6D, 2, 0xF7]);
