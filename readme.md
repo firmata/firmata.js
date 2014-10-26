@@ -89,6 +89,10 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
 
   Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
   
+    board.sendString("a string")  
+    
+  Send an arbitrary string.
+  
 ## License 
 
 (The MIT License)
