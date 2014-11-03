@@ -1,12 +1,17 @@
-var firmata = process.env.FIRMATA_COV ? require("../lib-cov/firmata") : require("../lib/firmata");
+var firmata = process.env.FIRMATA_COV ?
+  require("../lib-cov/firmata") :
+  require("../lib/firmata");
 var SerialPort = require("./MockSerialPort").SerialPort;
-var should = require("should"),
-  Encoder7Bit = require("../lib/encoder7bit");
+var Encoder7Bit = require("../lib/encoder7bit");
+var should = require("should");
+var sinon = require("sinon");
+
+var Board = firmata.Board;
 
 describe("board", function() {
   it("reports errors", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
-    var board = new firmata.Board(serialPort, function(err) {
+    var board = new Board(serialPort, function(err) {
       "test error".should.equal(err);
       done();
     });
@@ -20,7 +25,7 @@ describe("board", function() {
     var opt = {
       reportVersionTimeout: 1
     };
-    var board = new firmata.Board(serialPort, opt, function(err) {});
+    var board = new Board(serialPort, opt, function(err) {});
 
     // rcheck for report version
     serialPort.once("write", function(data) {
@@ -35,7 +40,7 @@ describe("board", function() {
 
   var serialPort = new SerialPort("/path/to/fake/usb");
   var boardStarted = false;
-  var board = new firmata.Board(serialPort, function(err) {
+  var board = new Board(serialPort, function(err) {
     boardStarted = true;
     (typeof err).should.equal("undefined");
   });
@@ -98,6 +103,32 @@ describe("board", function() {
     serialPort.emit("data", [97]);
     serialPort.emit("data", [0]);
     serialPort.emit("data", [247]);
+  });
+
+  it("Optionally call setSamplingInterval after queryfirmware", function(done) {
+    var spy = sinon.spy(Board.prototype, "setSamplingInterval");
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var options = {
+      skipCapabilities: true,
+      samplingInterval: 100
+    };
+
+    var board = new Board(serialPort, options, function(err) {
+      should.deepEqual(serialPort.lastWrite, [ 240, 122, 100, 0, 247 ]);
+      should.equal(spy.callCount, 1);
+      should.ok(spy.calledWith(100));
+      done();
+    });
+
+    // Trigger fake "reportversion"
+    serialPort.emit("data", [0xF9, 0x02, 0x03]);
+
+    // Trigger fake "queryfirmware"
+    serialPort.emit("data", [
+      240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0,
+      97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0,
+      97, 0, 116, 0, 97, 0, 247
+    ]);
   });
 
   it("gets the capabilities after the firmware", function(done) {

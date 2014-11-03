@@ -19,7 +19,8 @@
     "grunt-jscs": "^0.8.1",
     "grunt-mocha-test": "~0.2.2",
     "mocha": ">=0.13.x",
-    "should": ">=0.5.x"
+    "should": ">=0.5.x",
+    "sinon": "^1.11.1"
   },
   "dependencies": {
     "serialport": ">=0.7.5",
