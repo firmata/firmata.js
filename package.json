@@ -19,12 +19,14 @@
     "grunt-jscs": "^0.8.1",
     "grunt-mocha-test": "~0.2.2",
     "mocha": ">=0.13.x",
+    "rewire": "^2.1.2",
     "should": ">=0.5.x",
     "sinon": "^1.11.1"
   },
   "dependencies": {
-    "serialport": ">=0.7.5",
-    "browser-serialport": "*"
+    "browser-serialport": "*",
+    "es6-shim": "^0.20.2",
+    "serialport": ">=0.7.5"
   },
   "optionalDependencies": {},
   "scripts": {

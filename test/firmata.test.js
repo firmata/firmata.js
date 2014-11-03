@@ -1,14 +1,22 @@
+var rewire = require("rewire");
 var firmata = process.env.FIRMATA_COV ?
-  require("../lib-cov/firmata") :
-  require("../lib/firmata");
+  rewire("../lib-cov/firmata") :
+  rewire("../lib/firmata");
 var SerialPort = require("./MockSerialPort").SerialPort;
 var Encoder7Bit = require("../lib/encoder7bit");
 var should = require("should");
 var sinon = require("sinon");
 
 var Board = firmata.Board;
+var spy;
 
 describe("board", function() {
+  beforeEach(function() {
+    spy = sinon.spy(SerialPort);
+
+    firmata.__set__("SerialPort", spy);
+  });
+
   it("reports errors", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
     var board = new Board(serialPort, function(err) {
@@ -36,6 +44,35 @@ describe("board", function() {
         done();
       });
     });
+  });
+
+  it("uses default baud rate and buffer size", function (done) {
+    var port = "fake port";
+    var board = new Board(port, function (err) {});
+
+    should.deepEqual(
+      spy.args, [ [ "fake port", { baudRate: 57600, bufferSize: 1 } ] ]
+    );
+
+    done();
+  });
+
+  it("overrides baud rate and buffer size", function (done) {
+    var port = "fake port";
+    var opt = {
+      reportVersionTimeout: 1,
+      serialport: {
+        baudRate: 5,
+        bufferSize: 10
+      }
+    };
+    var board = new Board(port, opt, function (err) {});
+
+    should.deepEqual(
+      spy.args, [ [ "fake port", { baudRate: 5, bufferSize: 10 } ] ]
+    );
+
+    done();
   });
 
   var serialPort = new SerialPort("/path/to/fake/usb");
