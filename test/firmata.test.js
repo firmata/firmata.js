@@ -263,6 +263,10 @@ describe("board", function() {
         done();
       }
     });
+
+    // Digital reporting turned on...
+    should.deepEqual(serialPort.lastWrite, [ 208, 1 ]);
+
     // Single Byte
     serialPort.emit("data", [0x90]);
     serialPort.emit("data", [4 % 128]);
@@ -303,6 +307,10 @@ describe("board", function() {
         done();
       }
     });
+
+    // Analog reporting turned on...
+    should.deepEqual(serialPort.lastWrite, [ 193, 1 ]);
+
     // Single Byte
     serialPort.emit("data", [0xE0 | (1 & 0xF)]);
     serialPort.emit("data", [1023 % 128]);
