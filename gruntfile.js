@@ -8,7 +8,10 @@ module.exports = function (grunt) {
       options: {
         globals: {
           it: true,
-          describe: true
+          describe: true,
+          beforeEach: true,
+          afterEach: true,
+          before: true
         },
         curly: true,
         eqeqeq: true,

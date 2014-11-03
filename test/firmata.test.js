@@ -1,9 +1,12 @@
 var firmata = process.env.FIRMATA_COV ? require("../lib-cov/firmata") : require("../lib/firmata");
 var SerialPort = require("./MockSerialPort").SerialPort;
-var should = require("should"),
-  Encoder7Bit = require("../lib/encoder7bit");
+var Encoder7Bit = require("../lib/encoder7bit");
+var should = require("should");
+var sinon = require("sinon");
+
 
 describe("board", function() {
+
   it("reports errors", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
     var board = new firmata.Board(serialPort, function(err) {
@@ -33,11 +36,30 @@ describe("board", function() {
     });
   });
 
+
   var serialPort = new SerialPort("/path/to/fake/usb");
   var boardStarted = false;
   var board = new firmata.Board(serialPort, function(err) {
     boardStarted = true;
     (typeof err).should.equal("undefined");
+  });
+
+
+  beforeEach(function() {
+    if (serialPort.history.length) {
+      serialPort.history.length = 0;
+    }
+
+    if (board.reporting.length) {
+      board.reporting.length = 0;
+    }
+
+
+    for (var i = 0; i < board.pins.length; i++) {
+      board.pins[i].value = 0;
+      board.pins[i].report = null;
+      board.pins[i].mode = board.MODES.UNKNOWN;
+    }
   });
 
   it("receives the version on startup", function(done) {
@@ -201,11 +223,11 @@ describe("board", function() {
     serialPort.emit("data", [0xF7]);
   });
 
-  it("should now be started", function() {
+  it("must now be started", function() {
     boardStarted.should.equal(true);
   });
 
-  it("should be able to set pin mode on digital pin", function(done) {
+  it("must set pin mode on digital pin", function(done) {
     board.pinMode(2, board.MODES.INPUT);
     serialPort.lastWrite[0].should.equal(0xF4);
     serialPort.lastWrite[1].should.equal(2);
@@ -214,9 +236,69 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to read value of digital pin", function(done) {
+  it("must turn on digital pin reporting for mode: INPUT", function(done) {
+
+    var pin = 2;
+
+    board.pins[pin].report = 0;
+    board.pins[pin].mode = 1;
+
+    board.pinMode(pin, board.MODES.INPUT);
+
+    var history = serialPort.history[serialPort.history.length - 1];
+
+    history[0].should.equal(0xD0 | (pin / 8 | 0));
+    history[1].should.equal(1);
+
+    serialPort.lastWrite[0].should.equal(0xF4);
+    serialPort.lastWrite[1].should.equal(pin);
+    serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
+
+    board.pins[pin].mode.should.equal(board.MODES.INPUT);
+    board.pins[pin].report.should.equal(1);
+
+    done();
+  });
+
+  it("doesn't send same digital port reporting command twice", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.pinMode(3, board.MODES.INPUT);
+    board.pinMode(4, board.MODES.INPUT);
+
+    spy.callCount.should.equal(3);
+
+    /*
+      3 calls to write:
+
+      1. First port report command from pin 3 for port 0
+      2. Pin mode command for pin 3
+      3. Pin mode command for pin 4
+     */
+
+    spy.restore();
+    done();
+  });
+
+  it("can toggle digital port reporting, prevents duplicates", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.reportDigitalPin(3, 1);
+    board.reportDigitalPin(3, 1);
+    board.reportDigitalPin(3, 0);
+    board.reportDigitalPin(3, 0);
+
+    spy.callCount.should.equal(2);
+
+    spy.restore();
+    done();
+  });
+
+  it("must read value of digital pin", function(done) {
     var counter = 0;
     var order = [1, 0, 1, 0];
+
+    board.pinMode(2, board.MODES.INPUT);
     board.digitalRead(2, function(value) {
       if (value === 1) {
         counter++;
@@ -246,7 +328,15 @@ describe("board", function() {
     serialPort.emit("data", [0x90, 0x00, 0x00]);
   });
 
-  it("should be able to set mode on analog pins", function(done) {
+  it("must set mode on analog pins: ANALOG", function(done) {
+    board.pinMode(board.analogPins[0], board.MODES.ANALOG);
+    serialPort.lastWrite[0].should.equal(0xF4);
+    serialPort.lastWrite[1].should.equal(board.analogPins[0]);
+    serialPort.lastWrite[2].should.equal(board.MODES.ANALOG);
+    done();
+  });
+
+  it("must set mode on analog pins: INPUT", function(done) {
     board.pinMode(board.analogPins[0], board.MODES.INPUT);
     serialPort.lastWrite[0].should.equal(0xF4);
     serialPort.lastWrite[1].should.equal(board.analogPins[0]);
@@ -254,9 +344,90 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to read value of analog pin", function(done) {
+  it("must turn on analog pin reporting for mode: ANALOG, index", function(done) {
+
+    board.pins[14].report = 0;
+    board.pins[14].mode = 1;
+
+    board.pinMode(14, board.MODES.ANALOG);
+
+    var history = serialPort.history[serialPort.history.length - 1];
+
+    // Reporting was turned on before pin mode sent
+    history[0].should.equal(0xC0 | 0);
+    history[1].should.equal(1);
+
+    board.pins[14].report.should.equal(1);
+    board.pins[14].mode.should.equal(board.MODES.ANALOG);
+
+    done();
+  });
+
+  it("must turn on analog pin reporting for mode: ANALOG, zero", function(done) {
+
+    board.pins[14].report = 0;
+    board.pins[14].mode = 1;
+
+    // 0 should be treated as 14 in ANALOG input mode
+    board.pinMode(0, board.MODES.ANALOG);
+
+    var history = serialPort.history[serialPort.history.length - 1];
+
+    // Reporting was turned on before pin mode sent
+    history[0].should.equal(0xC0 | 0);
+    history[1].should.equal(1);
+
+    board.pins[14].report.should.equal(1);
+    board.pins[14].mode.should.equal(board.MODES.ANALOG);
+
+    done();
+  });
+
+  it("doesn't send same analog pin reporting twice", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    for (var i = 0; i < 6; i++) {
+      board.pinMode(i, board.MODES.ANALOG);
+      board.pinMode(i + 14, board.MODES.ANALOG);
+    }
+    /*
+      2 calls to write:
+
+      1. First analog report command for pin AN/N/N+14
+      2. Pin mode command for AN/N/N+14
+
+      The entire second call to pinMode is a no-op
+     */
+
+    spy.callCount.should.equal(12);
+
+    spy.restore();
+    done();
+  });
+
+  it("can toggle analog pin reporting, prevents duplicates", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.reportAnalogPin(14, 1);
+    board.reportAnalogPin(14, 1);
+    board.reportAnalogPin(0, 1);
+    board.reportAnalogPin(0, 1);
+
+    board.reportAnalogPin(14, 0);
+    board.reportAnalogPin(14, 0);
+    board.reportAnalogPin(0, 0);
+    board.reportAnalogPin(0, 0);
+
+    spy.callCount.should.equal(2);
+
+    spy.restore();
+    done();
+  });
+
+  it("must read value of analog pin", function(done) {
     var counter = 0;
     var order = [1023, 0, 1023, 0];
+    board.pinMode(1, board.MODES.ANALOG);
     board.analogRead(1, function(value) {
       if (value === 1023) {
         counter++;
@@ -286,7 +457,7 @@ describe("board", function() {
     serialPort.emit("data", [0xE0 | (1 & 0xF), 0 % 128, 0 >> 7]);
   });
 
-  it("should be able to write a value to a digital output", function(done) {
+  it("must write a value to a digital output", function(done) {
     board.digitalWrite(3, board.HIGH);
     should.deepEqual(serialPort.lastWrite, [0x90, 8, 0]);
 
@@ -296,7 +467,7 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to write a value to a analog output", function(done) {
+  it("must write a value to a analog output", function(done) {
     board.analogWrite(board.analogPins[1], 1023);
     should.deepEqual(serialPort.lastWrite, [0xE0 | board.analogPins[1], 127, 7]);
 
@@ -305,7 +476,7 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to write a value to an extended analog output", function(done) {
+  it("must write a value to an extended analog output", function(done) {
     var length = board.pins.length;
 
     board.pins[46] = {
@@ -328,20 +499,20 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to send an i2c config", function(done) {
+  it("must send an i2c config", function(done) {
     board.sendI2CConfig(1);
     should.deepEqual(serialPort.lastWrite, [0xF0, 0x78, 1 & 0xFF, (1 >> 8) & 0xFF, 0xF7]);
     done();
   });
 
-  it("should be able to send an i2c request", function(done) {
+  it("must send an i2c request", function(done) {
     board.sendI2CWriteRequest(0x68, [1, 2, 3]);
     var request = [0xF0, 0x76, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, 0xF7];
     should.deepEqual(serialPort.lastWrite, request);
     done();
   });
 
-  it("should be able to receive an i2c reply", function(done) {
+  it("must receive an i2c reply", function(done) {
     board.sendI2CReadRequest(0x68, 4, function(data) {
       should.deepEqual(data, [1, 2, 3, 4]);
       done();
@@ -364,7 +535,7 @@ describe("board", function() {
     serialPort.emit("data", [(4 >> 7) & 0x7F]);
     serialPort.emit("data", [0xF7]);
   });
-  it("should be able to send a string", function(done) {
+  it("must send a string", function(done) {
     var bytes = new Buffer("test string", "utf8");
     var length = bytes.length;
     board.sendString(bytes);
@@ -379,7 +550,7 @@ describe("board", function() {
     serialPort.lastWrite[length * 2 + 4].should.equal(0xF7);
     done();
   });
-  it("should emit a string event", function(done) {
+  it("must emit a string event", function(done) {
     board.on("string", function(string) {
       string.should.equal("test string");
       done();
@@ -588,7 +759,7 @@ describe("board", function() {
     serialPort.emit("data", [3]);
     serialPort.emit("data", [0xF7]);
   });
-  it("should be able to send a 1-wire config with parasitic power enabled", function(done) {
+  it("must send a 1-wire config with parasitic power enabled", function(done) {
     board.sendOneWireConfig(1, true);
     serialPort.lastWrite[0].should.equal(0xF0);
     serialPort.lastWrite[1].should.equal(0x73);
@@ -598,7 +769,7 @@ describe("board", function() {
     serialPort.lastWrite[5].should.equal(0xF7);
     done();
   });
-  it("should be able to send a 1-wire config with parasitic power disabled", function(done) {
+  it("must send a 1-wire config with parasitic power disabled", function(done) {
     board.sendOneWireConfig(1, false);
     serialPort.lastWrite[0].should.equal(0xF0);
     serialPort.lastWrite[1].should.equal(0x73);
@@ -608,7 +779,7 @@ describe("board", function() {
     serialPort.lastWrite[5].should.equal(0xF7);
     done();
   });
-  it("should be able to send a 1-wire search request and recieve a reply", function(done) {
+  it("must send a 1-wire search request and recieve a reply", function(done) {
     board.sendOneWireSearch(1, function(error, devices) {
       devices.length.should.equal(1);
 
@@ -622,7 +793,7 @@ describe("board", function() {
 
     serialPort.emit("data", [0xF0, 0x73, 0x42, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
   });
-  it("should be able to send a 1-wire search alarm request and recieve a reply", function(done) {
+  it("must send a 1-wire search alarm request and recieve a reply", function(done) {
     board.sendOneWireAlarmsSearch(1, function(error, devices) {
       devices.length.should.equal(1);
 
@@ -636,7 +807,7 @@ describe("board", function() {
 
     serialPort.emit("data", [0xF0, 0x73, 0x45, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
   });
-  it("should be able to send a 1-wire reset request", function(done) {
+  it("must send a 1-wire reset request", function(done) {
     board.sendOneWireReset(1);
 
     serialPort.lastWrite[0].should.equal(0xF0);
@@ -646,7 +817,7 @@ describe("board", function() {
 
     done();
   });
-  it("should be able to send a 1-wire delay request", function(done) {
+  it("must send a 1-wire delay request", function(done) {
     var delay = 1000;
 
     board.sendOneWireDelay(1, delay);
@@ -663,7 +834,7 @@ describe("board", function() {
 
     done();
   });
-  it("should be able to send a 1-wire write request", function(done) {
+  it("must send a 1-wire write request", function(done) {
     var device = [40, 219, 239, 33, 5, 0, 0, 93];
     var data = 0x33;
 
@@ -692,7 +863,7 @@ describe("board", function() {
 
     done();
   });
-  it("should be able to send a 1-wire write and read request and recieve a reply", function(done) {
+  it("must send a 1-wire write and read request and recieve a reply", function(done) {
     var device = [40, 219, 239, 33, 5, 0, 0, 93];
     var data = 0x33;
     var output = [0x01, 0x02];
