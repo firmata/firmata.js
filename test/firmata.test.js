@@ -812,4 +812,19 @@ describe("board", function() {
 
     serialPort.emit("data", [0xF0, 0x73, 0x43, 0x01].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([0xF7]));
   });
+
+  it("can configure a servo pwm range", function(done) {
+    board.servoConfig(3, 1000, 2000);
+    serialPort.lastWrite[0].should.equal(0xF0);
+    serialPort.lastWrite[1].should.equal(0x70);
+    serialPort.lastWrite[2].should.equal(0x03);
+
+    serialPort.lastWrite[3].should.equal(1000 & 0x7F);
+    serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
+
+    serialPort.lastWrite[5].should.equal(2000 & 0x7F);
+    serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
+
+    done();
+  });
 });
