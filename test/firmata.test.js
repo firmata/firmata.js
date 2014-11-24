@@ -236,6 +236,39 @@ describe("board", function() {
     serialPort.emit("data", [0xF7]);
   });
 
+  it("capabilities response is an idempotent operation", function(done) {
+
+    var count = 0;
+    var i = 0;
+
+    serialPort.on("data", function data() {
+      count++;
+
+      // Should be 20 after both responses.
+      board.pins.length.should.equal(20);
+
+      if (count === 2) {
+        serialPort.removeListener("data", data);
+        done();
+      }
+    });
+
+    // Fake two capabilities responses...
+    // 1
+    serialPort.emit("data", [0xF0, 0x6C]);
+    for (i = 0; i < 20; i++) {
+      serialPort.emit("data", [0, 1, 1, 1, 127]);
+    }
+    serialPort.emit("data", [0xF7]);
+    // 2
+    serialPort.emit("data", [0xF0, 0x6C]);
+    for (i = 0; i < 20; i++) {
+      serialPort.emit("data", [0, 1, 1, 1, 127]);
+    }
+    serialPort.emit("data", [0xF7]);
+  });
+
+
   it("querys analog mappings after capabilities", function(done) {
     //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
     should.deepEqual(serialPort.lastWrite, [0xF0, 0x69, 0xF7]);
