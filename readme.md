@@ -52,46 +52,79 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   This is an array of all the array indexes of the analog pins in the *Board.pins* array.  
   For example to get the analog pin 5 from the *Board.pins* attributes use:
 
-    board.pins[board.analogPins[5]];
+`board.pins[board.analogPins[5]];`
 ##methods
-    board.pinMode(pin,mode)
+`board.pinMode(pin,mode)`
 
   Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
 
-    board.digitalWrite(pin,value)
+`board.digitalWrite(pin,value)`
 
   Write an output to a digital pin.  pin is the number of the pin and the value is either board.HGH or board.LOW.
 
-    board.digitalRead(pin,callback)
+`board.digitalRead(pin,callback)`
 
   Read a digital value from the pin.  Evertime there is data for the pin the callback will be fired with a value argument.  
 
-    board.analogWrite(pin,value)
+`board.analogWrite(pin,value)`
 
   Write an output to an analog pin.  pin is the number of the pin and the value is between 0 and 255.  
 
-    board.analogRead(pin,callback)
+`board.analogRead(pin,callback)`
 
   Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument. 
 
-    board.servoWrite(pin,degree)
+`board.servoWrite(pin,degree)`
   Write a degree value to a servo pin.
   
-    board.sendI2CConfig(delay)
+`board.sendI2CConfig(delay)`
   Set I2C Config on the arduino
 
 
-    board.sendI2CWriteRequest(slaveAddress,[bytes])
+`board.sendI2CWriteRequest(slaveAddress,[bytes])`
 
   Write an array of bytes to a an I2C device.
 
-    board.sendI2CReadRequest(slaveAddress,numBytes,function(data))
+`board.sendI2CReadRequest(slaveAddress,numBytes,function(data))`
 
   Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
   
-    board.sendString("a string")  
+`board.sendString("a string")`
     
   Send an arbitrary string.
+
+`sendOneWireConfig(pin, enableParasiticPower)`
+  
+  Configure the pin as the controller in a 1-wire bus. Set `enableParasiticPower` to `true` if you want the data pin to power the bus.
+
+`sendOneWireSearch(pin, callback)`
+  
+  Searches for 1-wire devices on the bus. The callback should accept an error argument and an array of device identifiers.
+
+`sendOneWireAlarmsSearch(pin, callback)`
+  
+  Searches for 1-wire devices on the bus in an alarmed state. The callback should accept and error argument and an array of device identifiers.
+
+`sendOneWireRead(pin, device, numBytesToRead, callback)`
+  
+  Reads data from a device on the bus and invokes the callback.
+
+`sendOneWireReset()`
+
+  Resets all devices on the bus.
+
+`sendOneWireWrite(pin, device, data)`
+  
+  Writes data to the bus to be received by the device. The device should be obtained from a previous call to `sendOneWireSearch`.
+
+`sendOneWireDelay(pin, delay)`
+  
+  Tells Firmata to not do anything for the amount of ms. Use when you need to give a device attached to the bus time to do a calculation.
+
+`sendOneWireWriteAndRead(pin, device, data, numBytesToRead, callback)`
+  
+  Sends the `data` to the `device` on the bus, reads the specified number of bytes and invokes the `callback`.
+
   
 ## License 
 
