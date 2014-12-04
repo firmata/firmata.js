@@ -17,6 +17,14 @@ describe("board", function() {
     firmata.__set__("SerialPort", spy);
   });
 
+  it("has a name", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+
+    board.name.should.equal("Firmata");
+    done();
+  });
+
   it("reports errors", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
     var board = new Board(serialPort, function(err) {
