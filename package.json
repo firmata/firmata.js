@@ -1,7 +1,7 @@
 {
   "name": "firmata",
   "description": "A library to control an arduino running firmata",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "author": "Julian Gautier",
   "homepage": "http://www.github.com/jgautier/firmata",
   "repository": {
