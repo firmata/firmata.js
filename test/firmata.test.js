@@ -17,6 +17,20 @@ describe("board", function() {
     firmata.__set__("SerialPort", spy);
   });
 
+  it("uses serialport defaults", function(done) {
+    var a = new Board("/path/to/fake/usb1", function(err) {});
+    var b = new Board("/path/to/fake/usb2", function(err) {});
+
+    should.equal(spy.getCall(0).args[0], "/path/to/fake/usb1");
+    should.deepEqual(spy.getCall(0).args[1], { baudRate: 57600, bufferSize: 1 });
+
+    should.equal(spy.getCall(1).args[0], "/path/to/fake/usb2");
+    should.deepEqual(spy.getCall(1).args[1], { baudRate: 57600, bufferSize: 1 });
+
+    done();
+  });
+
+
   it("has a name", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
     var board = new Board(serialPort, function(err) {});
