@@ -53,7 +53,12 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
   For example to get the analog pin 5 from the *Board.pins* attributes use:
 
 `board.pins[board.analogPins[5]];`
-##methods
+
+
+## API
+
+### Pin
+
 `board.pinMode(pin,mode)`
 
   Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
@@ -74,24 +79,59 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
 
   Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument. 
 
+### Servo 
+
 `board.servoWrite(pin,degree)`
   Write a degree value to a servo pin.
+
+`board.servoConfig(pin, min, max)`
+  Setup a servo with a specific min and max pulse (call instead of `pinMode`, which will provide default).
   
-`board.sendI2CConfig(delay)`
+### I2C
+  
+`board.i2cConfig([delay])` 
+  Configure and enable I2C, optionally set a delay (defaults to `0`). Required to enable I2C communication. 
+
+`board.i2cWrite(address, [...bytes])` 
+  Write an arbitrary number of bytes. May not exceed 64 Bytes.
+
+`board.i2cWrite(address, register, [...bytes])` 
+  Write an arbitrary number of bytes to the specified register. May not exceed 64 Bytes.
+
+`board.i2cWriteReg(address, register, byte)` 
+  Write a byte value to a specific register. 
+
+`board.i2cRead(address, numberOfBytesToRead, handler(data))` 
+  Read a specified number of bytes, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
+
+`board.i2cRead(address, register, numberOfBytesToRead, handler(data))` 
+  Read a specified number of bytes from a register, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
+
+`board.i2cReadOnce(address, numberOfBytesToRead, handler(data))` 
+  Read a specified number of bytes, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
+
+`board.i2cReadOnce(address, register, numberOfBytesToRead, handler(data))` 
+  Read a specified number of bytes from a register, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
+
+
+`board.sendI2CConfig(delay)` **Deprecated**
   Set I2C Config on the arduino
 
-
-`board.sendI2CWriteRequest(slaveAddress,[bytes])`
+`board.sendI2CWriteRequest(slaveAddress,[bytes])` **Deprecated**
 
   Write an array of bytes to a an I2C device.
 
-`board.sendI2CReadRequest(slaveAddress,numBytes,function(data))`
+`board.sendI2CReadRequest(slaveAddress,numBytes,function(data))` **Deprecated**
 
   Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
-  
+
+### Debug
+
 `board.sendString("a string")`
     
   Send an arbitrary string.
+
+### One-Wire
 
 `sendOneWireConfig(pin, enableParasiticPower)`
   

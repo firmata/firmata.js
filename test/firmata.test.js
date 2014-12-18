@@ -11,8 +11,19 @@ var Board = firmata.Board;
 var spy;
 
 describe("board", function() {
+
+  var serialPort = new SerialPort("/path/to/fake/usb");
+  var boardStarted = false;
+  var board = new Board(serialPort, function(err) {
+    boardStarted = true;
+    (typeof err).should.equal("undefined");
+  });
+
+
   beforeEach(function() {
     spy = sinon.spy(SerialPort);
+
+    board._events.length = 0;
 
     firmata.__set__("SerialPort", spy);
   });
@@ -95,13 +106,6 @@ describe("board", function() {
     );
 
     done();
-  });
-
-  var serialPort = new SerialPort("/path/to/fake/usb");
-  var boardStarted = false;
-  var board = new Board(serialPort, function(err) {
-    boardStarted = true;
-    (typeof err).should.equal("undefined");
   });
 
   it("receives the version on startup", function(done) {
@@ -473,27 +477,40 @@ describe("board", function() {
   });
 
   it("should be able to receive an i2c reply", function(done) {
-    board.sendI2CReadRequest(0x68, 4, function(data) {
-      should.deepEqual(data, [1, 2, 3, 4]);
-      done();
-    });
+    var handler = sinon.spy(function() {});
+
+    board.sendI2CReadRequest(0x68, 4, handler);
     should.deepEqual(serialPort.lastWrite, [0xF0, 0x76, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, 0xF7]);
 
+    // Start
     serialPort.emit("data", [0xF0]);
+    // Reply
     serialPort.emit("data", [0x77]);
+    // Address
     serialPort.emit("data", [0x68 % 128]);
     serialPort.emit("data", [0x68 >> 7]);
-    serialPort.emit("data", [1]);
-    serialPort.emit("data", [1]);
+    // Register
+    serialPort.emit("data", [0]);
+    serialPort.emit("data", [0]);
+    // Data 0
     serialPort.emit("data", [1 & 0x7F]);
     serialPort.emit("data", [(1 >> 7) & 0x7F]);
+    // Data 1
     serialPort.emit("data", [2 & 0x7F]);
     serialPort.emit("data", [(2 >> 7) & 0x7F]);
+    // Data 2
     serialPort.emit("data", [3 & 0x7F]);
     serialPort.emit("data", [(3 >> 7) & 0x7F]);
+    // Data 3
     serialPort.emit("data", [4 & 0x7F]);
     serialPort.emit("data", [(4 >> 7) & 0x7F]);
+    // End
     serialPort.emit("data", [0xF7]);
+
+    should.equal(handler.callCount, 1);
+    should.deepEqual(handler.getCall(0).args[0], [1, 2, 3, 4]);
+
+    done();
   });
   it("should be able to send a string", function(done) {
     var bytes = new Buffer("test string", "utf8");
@@ -880,6 +897,164 @@ describe("board", function() {
     serialPort.lastWrite[5].should.equal(2000 & 0x7F);
     serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
 
+    done();
+  });
+
+  it("has an i2cWrite method, that writes a data array", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.i2cWrite(0x53, [1, 2]);
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 2, 0, 247 ]);
+    should.equal(spy.callCount, 1);
+    spy.restore();
+    done();
+  });
+
+  it("has an i2cWrite method, that writes a byte", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.i2cWrite(0x53, 1);
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 247 ]);
+    should.equal(spy.callCount, 1);
+    spy.restore();
+    done();
+  });
+
+  it("has an i2cWrite method, that writes a data array to a register", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.i2cWrite(0x53, 0xB2, [1, 2]);
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247 ]);
+    should.equal(spy.callCount, 1);
+    spy.restore();
+    done();
+  });
+
+  it("has an i2cWrite method, that writes a data byte to a register", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.i2cWrite(0x53, 0xB2, 1);
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+    should.equal(spy.callCount, 1);
+    spy.restore();
+    done();
+  });
+
+  it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
+    var spy = sinon.spy(serialPort, "write");
+
+    board.i2cWrite(0x53, 0xB2, 1);
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+    should.equal(spy.callCount, 1);
+    spy.restore();
+    done();
+  });
+
+  it("has an i2cRead method that reads continuously", function(done) {
+    var handler = sinon.spy(function() {});
+
+    board.i2cConfig(0);
+    board.i2cRead(0x53, 0x04, handler);
+
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        0xF0, 0x77, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+      ]);
+    }
+
+    should.equal(handler.callCount, 5);
+    should.equal(handler.getCall(0).args[0].length, 4);
+    should.equal(handler.getCall(1).args[0].length, 4);
+    should.equal(handler.getCall(2).args[0].length, 4);
+    should.equal(handler.getCall(3).args[0].length, 4);
+    should.equal(handler.getCall(4).args[0].length, 4);
+
+    done();
+  });
+
+  it("has an i2cRead method that reads a register continuously", function(done) {
+    var handler = sinon.spy(function() {});
+
+    board.i2cConfig(0);
+    board.i2cRead(0x53, 0xB2, 0x04, handler);
+
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+      ]);
+    }
+
+    should.equal(handler.callCount, 5);
+    should.equal(handler.getCall(0).args[0].length, 4);
+    should.equal(handler.getCall(1).args[0].length, 4);
+    should.equal(handler.getCall(2).args[0].length, 4);
+    should.equal(handler.getCall(3).args[0].length, 4);
+    should.equal(handler.getCall(4).args[0].length, 4);
+
+    done();
+  });
+
+
+  it("has an i2cRead method that reads continuously", function(done) {
+    var handler = sinon.spy(function() {});
+
+    board.i2cConfig(0);
+    board.i2cRead(0x53, 0x04, handler);
+
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        0xF0, 0x77, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+      ]);
+    }
+
+    should.equal(handler.callCount, 5);
+    should.equal(handler.getCall(0).args[0].length, 4);
+    should.equal(handler.getCall(1).args[0].length, 4);
+    should.equal(handler.getCall(2).args[0].length, 4);
+    should.equal(handler.getCall(3).args[0].length, 4);
+    should.equal(handler.getCall(4).args[0].length, 4);
+
+    done();
+  });
+
+  it("has an i2cReadOnce method that reads a register once", function(done) {
+    var handler = sinon.spy(function() {});
+
+    board.i2cConfig(0);
+    board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
+
+    // Emit data enough times to potentially break it.
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+      ]);
+    }
+
+    should.equal(handler.callCount, 1);
+    should.equal(handler.getCall(0).args[0].length, 4);
+    done();
+  });
+
+  it("has an i2cReadOnce method that reads a register once", function(done) {
+    var handler = sinon.spy(function() {});
+
+    board.i2cConfig(0);
+    board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
+
+    // Emit data enough times to potentially break it.
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+      ]);
+    }
+
+    should.equal(handler.callCount, 1);
+    should.equal(handler.getCall(0).args[0].length, 4);
     done();
   });
 });
