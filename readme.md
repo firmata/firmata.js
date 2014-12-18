@@ -25,7 +25,7 @@ If you run *firmata* from the command line it will prompt you for the usb port. 
      PWM:0x03,
      SERVO:0x04   
     }
-  This is an enumeration of the different modes available.  This are used in calls to the *pinMode* function.
+  This is an enumeration of the different modes available.  These are used in calls to the *pinMode* function.
 
   *Board.HIGH* and *Board.LOW*
 
