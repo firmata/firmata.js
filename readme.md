@@ -4,7 +4,7 @@ A Node library to interact with an Arduino running the firmata protocol.
 #Install
     npm install -g firmata
 #Tests
-The tests are written with expresso and assume you have the async library install globally.  It also assumes you have an Arduino Uno running firmata 2.2 with a photocell and an LED hooked up.
+The tests are written with expresso and assume you have the async library install globally. It also assumes you have an Arduino Uno running firmata 2.2 with a photocell and an LED hooked up.
 #Usage
     
     var firmata = require('firmata');
@@ -12,133 +12,140 @@ The tests are written with expresso and assume you have the async library instal
       //arduino is ready to communicate
     });  
 #REPL
-If you run *firmata* from the command line it will prompt you for the usb port.  Then it will present you with a REPL with a board variable available.
-#Board
+If you run *firmata* from the command line it will prompt you for the usb port. Then it will present you with a REPL with a board variable available.
+# Board
   The Board object is where all the functionality is for the library.
-##attributes
-  *Board.MODES*
-    
-    {
-     INPUT:0x00,
-     OUTPUT:0x01,
-     ANALOG:0x02,
-     PWM:0x03,
-     SERVO:0x04   
-    }
-  This is an enumeration of the different modes available.  These are used in calls to the *pinMode* function.
 
-  *Board.HIGH* and *Board.LOW*
+## Board Instance API
+  
+  *MODES*
 
-  These are constants used to set a digital pin low or high.  Used in calls to the *digitalWrite* function.
+```js    
+{
+  INPUT: 0x00,
+  OUTPUT: 0x01,
+  ANALOG: 0x02,
+  PWM: 0x03,
+  SERVO: 0x04
+}
+```
 
-  *Board.pins*
+This is an enumeration of the different modes available. These are used in calls to the *pinMode* function.
 
-  This is an array of all the pins on the arduino board.
+*HIGH* and *LOW*
 
-  Each value in the array is an object:
+These are constants used to set a digital pin low or high. Used in calls to the *digitalWrite* function.
 
-    {
-     mode://current mode of pin which is on the the board.MODES.
-    ,value://current value of the pin. when pin is digital and set to output it will be Board.HIGH or Board.LOW.  If the pin is an analog pin it will be an numeric value between 0 and 1023.
-    ,supportedModes://an array of modes from board.MODES that are supported on this pin.
-    ,analogChannel://will be 127 for digital pins and the pin number for analog pins.
-    ,state://for output pins this is the value of the pin on the board, for digital input it's the status of the pullup resistor (1 = pullup enabled, 0 = pullup disabled)
-    }
+*pins*
+
+This is an array of all the pins on the arduino board.
+
+Each value in the array is an object:
+
+```js
+{
+  mode: Number, // Current mode of pin which is on the the board.MODES.
+  value: Number, // Current value of the pin. when pin is digital and set to output it will be Board.HIGH or Board.LOW. If the pin is an analog pin it will be an numeric value between 0 and 1023.
+  supportedModes: [ ...Number ], // Array of modes from board.MODES that are supported on this pin.
+  analogChannel: Number, // Will be 127 for digital pins and the pin number for analog pins.
+  state: Number // For output pins this is the value of the pin on the board, for digital input it's the status of the pullup resistor (1 = pullup enabled, 0 = pullup disabled)
+}
+```
 
   This array holds all pins digital and analog. To get the analog pin number as seen on the arduino board use the analogChannel attribute.
 
-  *Board.analogPins*
+  *analogPins*
 
-  This is an array of all the array indexes of the analog pins in the *Board.pins* array.  
+  This is an array of all the array indexes of the analog pins in the *Board.pins* array. 
   For example to get the analog pin 5 from the *Board.pins* attributes use:
 
-`board.pins[board.analogPins[5]];`
+`pins[board.analogPins[5]];`
 
 
-## API
+## Board Prototype API
 
 ### Pin
 
-`board.pinMode(pin,mode)`
+`pinMode(pin,mode)`
 
-  Set a mode for a pin.  pin is the number of the pin and the mode is on of the Board.MODES values.
+  Set a mode for a pin. pin is the number of the pin and the mode is on of the Board.MODES values.
 
-`board.digitalWrite(pin,value)`
+`digitalWrite(pin,value)`
 
-  Write an output to a digital pin.  pin is the number of the pin and the value is either board.HGH or board.LOW.
+  Write an output to a digital pin. pin is the number of the pin and the value is either board.HGH or board.LOW.
 
-`board.digitalRead(pin,callback)`
+`digitalRead(pin,callback)`
 
-  Read a digital value from the pin.  Evertime there is data for the pin the callback will be fired with a value argument.  
+  Read a digital value from the pin. Evertime there is data for the pin the callback will be fired with a value argument. 
 
-`board.analogWrite(pin,value)`
+`analogWrite(pin,value)`
 
-  Write an output to an analog pin.  pin is the number of the pin and the value is between 0 and 255.  
+  Write an output to an analog pin. pin is the number of the pin and the value is between 0 and 255. 
 
-`board.analogRead(pin,callback)`
+`analogRead(pin,callback)`
 
-  Read an input for an analog pin.  Every time there is data on the pin the callback will be fired with a value argument. 
+  Read an input for an analog pin. Every time there is data on the pin the callback will be fired with a value argument. 
 
 ### Servo 
 
-`board.servoWrite(pin, degree)`
+`servoWrite(pin, degree)`
 
   Write a degree value to a servo pin.
 
-`board.servoConfig(pin, min, max)`
+`servoConfig(pin, min, max)`
 
   Setup a servo with a specific min and max pulse (call instead of `pinMode`, which will provide default).
   
 ### I2C
   
-`board.i2cConfig([delay])` 
+`i2cConfig([delay])` 
 
   Configure and enable I2C, optionally set a delay (defaults to `0`). Required to enable I2C communication. 
 
-`board.i2cWrite(address, [...bytes])` 
+`i2cWrite(address, [...bytes])` 
 
   Write an arbitrary number of bytes. May not exceed 64 Bytes.
 
-`board.i2cWrite(address, register, [...bytes])` 
+`i2cWrite(address, register, [...bytes])` 
 
   Write an arbitrary number of bytes to the specified register. May not exceed 64 Bytes.
 
-`board.i2cWriteReg(address, register, byte)` 
+`i2cWriteReg(address, register, byte)` 
 
   Write a byte value to a specific register. 
 
-`board.i2cRead(address, numberOfBytesToRead, handler(data))` 
+`i2cRead(address, numberOfBytesToRead, handler(data))` 
 
   Read a specified number of bytes, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
 
-`board.i2cRead(address, register, numberOfBytesToRead, handler(data))` 
+`i2cRead(address, register, numberOfBytesToRead, handler(data))` 
 
   Read a specified number of bytes from a register, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
 
-`board.i2cReadOnce(address, numberOfBytesToRead, handler(data))` 
+`i2cReadOnce(address, numberOfBytesToRead, handler(data))` 
 
   Read a specified number of bytes, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
 
-`board.i2cReadOnce(address, register, numberOfBytesToRead, handler(data))` 
+`i2cReadOnce(address, register, numberOfBytesToRead, handler(data))` 
 
   Read a specified number of bytes from a register, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes. 
 
 
-`board.sendI2CConfig(delay)` **Deprecated**
+`sendI2CConfig(delay)` **Deprecated**
 
   Set I2C Config on the arduino
 
-`board.sendI2CWriteRequest(slaveAddress,[bytes])` **Deprecated**
+`sendI2CWriteRequest(slaveAddress,[bytes])` **Deprecated**
 
   Write an array of bytes to a an I2C device.
 
-`board.sendI2CReadRequest(slaveAddress,numBytes,function(data))` **Deprecated**
+`sendI2CReadRequest(slaveAddress,numBytes,function(data))` **Deprecated**
 
-  Requests a number of bytes from a slave I2C device.  When the bytes are received from the I2C device the callback is called with the byte array.
+  Requests a number of bytes from a slave I2C device. When the bytes are received from the I2C device the callback is called with the byte array.
 
 ### Debug
 
-`board.sendString("a string")`
+`sendString("a string")`
     
   Send an arbitrary string.
 
