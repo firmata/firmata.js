@@ -463,13 +463,32 @@ describe("board", function() {
     done();
   });
 
+  it("throws if i2c not enabled", function(done) {
+
+    should.throws(function() {
+      board.i2cRead(1, 1, function() {});
+    });
+    should.throws(function() {
+      board.i2cReadOnce(1, 1, function() {});
+    });
+    should.throws(function() {
+      board.i2cWrite(1, [1, 2, 3]);
+    });
+    should.throws(function() {
+      board.i2cWriteReg(1, 1, 1);
+    });
+
+    done();
+  });
+
   it("should be able to send an i2c config", function(done) {
-    board.sendI2CConfig(1);
+    board.i2cConfig(1);
     should.deepEqual(serialPort.lastWrite, [0xF0, 0x78, 1 & 0xFF, (1 >> 8) & 0xFF, 0xF7]);
     done();
   });
 
   it("should be able to send an i2c request", function(done) {
+    board.i2cConfig(1);
     board.sendI2CWriteRequest(0x68, [1, 2, 3]);
     var request = [0xF0, 0x76, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, 0xF7];
     should.deepEqual(serialPort.lastWrite, request);
@@ -478,7 +497,7 @@ describe("board", function() {
 
   it("should be able to receive an i2c reply", function(done) {
     var handler = sinon.spy(function() {});
-
+    board.i2cConfig(1);
     board.sendI2CReadRequest(0x68, 4, handler);
     should.deepEqual(serialPort.lastWrite, [0xF0, 0x76, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, 0xF7]);
 
@@ -903,10 +922,11 @@ describe("board", function() {
   it("has an i2cWrite method, that writes a data array", function(done) {
     var spy = sinon.spy(serialPort, "write");
 
+    board.i2cConfig(0);
     board.i2cWrite(0x53, [1, 2]);
 
     should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 2, 0, 247 ]);
-    should.equal(spy.callCount, 1);
+    should.equal(spy.callCount, 2);
     spy.restore();
     done();
   });
@@ -914,10 +934,11 @@ describe("board", function() {
   it("has an i2cWrite method, that writes a byte", function(done) {
     var spy = sinon.spy(serialPort, "write");
 
+    board.i2cConfig(0);
     board.i2cWrite(0x53, 1);
 
     should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 247 ]);
-    should.equal(spy.callCount, 1);
+    should.equal(spy.callCount, 2);
     spy.restore();
     done();
   });
@@ -925,10 +946,11 @@ describe("board", function() {
   it("has an i2cWrite method, that writes a data array to a register", function(done) {
     var spy = sinon.spy(serialPort, "write");
 
+    board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, [1, 2]);
 
     should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247 ]);
-    should.equal(spy.callCount, 1);
+    should.equal(spy.callCount, 2);
     spy.restore();
     done();
   });
@@ -936,10 +958,11 @@ describe("board", function() {
   it("has an i2cWrite method, that writes a data byte to a register", function(done) {
     var spy = sinon.spy(serialPort, "write");
 
+    board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, 1);
 
     should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
-    should.equal(spy.callCount, 1);
+    should.equal(spy.callCount, 2);
     spy.restore();
     done();
   });
@@ -947,10 +970,11 @@ describe("board", function() {
   it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
     var spy = sinon.spy(serialPort, "write");
 
+    board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, 1);
 
     should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
-    should.equal(spy.callCount, 1);
+    should.equal(spy.callCount, 2);
     spy.restore();
     done();
   });
