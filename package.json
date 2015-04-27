@@ -18,6 +18,7 @@
     "grunt-jsbeautifier": "~0.2.7",
     "grunt-jscs": "~0.8.1",
     "grunt-mocha-test": "~0.2.2",
+    "johnny-five": "^0.8.62",
     "mocha": ">=0.13.x",
     "rewire": "~2.1.2",
     "should": ">=0.5.x",

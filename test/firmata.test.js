@@ -50,6 +50,59 @@ describe("board", function() {
     done();
   });
 
+  it("emits 'connect' when the transport is opened.", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+
+    board.on("connect", function() {
+      done();
+    });
+
+    serialPort.emit("open");
+  });
+
+  it("emits 'ready' after handshakes complete (skipCapabilities)", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, {skipCapabilities: true}, function(err) {});
+    var connected = false;
+
+    board.on("connect", function() {
+      connected = true;
+    });
+
+    board.on("ready", function() {
+      should.equal(connected, true);
+      should.equal(this.isReady, true);
+      done();
+    });
+
+    serialPort.emit("open");
+    board.emit("reportversion");
+    board.emit("queryfirmware");
+  });
+
+  it("emits 'ready' after handshakes complete", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+    var connected = false;
+
+    board.on("connect", function() {
+      connected = true;
+    });
+
+    board.on("ready", function() {
+      should.equal(connected, true);
+      should.equal(this.isReady, true);
+      done();
+    });
+
+    serialPort.emit("open");
+    board.emit("reportversion");
+    board.emit("queryfirmware");
+    board.emit("capability-query");
+    board.emit("analog-mapping-query");
+  });
+
   it("reports errors", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
     var board = new Board(serialPort, function(err) {
