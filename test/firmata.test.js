@@ -627,8 +627,8 @@ describe("board", function() {
     serialPort.emit("data", [0xF7]);
   });
 
-  it("can send a pulseIn without a timeout and without a pulse out", function(done) {
-    board.pulseIn({
+  it("can send a pingRead without a timeout and without a pulse out", function(done) {
+    board.pingRead({
       pin: 3,
       value: board.HIGH,
       timeout: 1000000
@@ -653,8 +653,8 @@ describe("board", function() {
     serialPort.emit("data", [0xF7]);
   });
 
-  it("can send a pulseIn with a timeout and a pulse out", function(done) {
-    board.pulseIn({
+  it("can send a pingRead with a timeout and a pulse out", function(done) {
+    board.pingRead({
       pin: 3,
       value: board.HIGH,
       pulseOut: 5,
@@ -679,8 +679,8 @@ describe("board", function() {
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0xF7]);
   });
-  it("can send a pulseIn with a pulse out and without a timeout ", function(done) {
-    board.pulseIn({
+  it("can send a pingRead with a pulse out and without a timeout ", function(done) {
+    board.pingRead({
       pin: 3,
       value: board.HIGH,
       pulseOut: 5
