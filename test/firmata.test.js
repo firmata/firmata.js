@@ -10,6 +10,47 @@ var sinon = require("sinon");
 var Board = firmata.Board;
 var spy;
 
+var ANALOG_MAPPING_QUERY = 0x69;
+var ANALOG_MAPPING_RESPONSE = 0x6A;
+var ANALOG_MESSAGE = 0xE0;
+var CAPABILITY_QUERY = 0x6B;
+var CAPABILITY_RESPONSE = 0x6C;
+var DIGITAL_MESSAGE = 0x90;
+var END_SYSEX = 0xF7;
+var EXTENDED_ANALOG = 0x6F;
+var I2C_CONFIG = 0x78;
+var I2C_REPLY = 0x77;
+var I2C_REQUEST = 0x76;
+var ONEWIRE_CONFIG_REQUEST = 0x41;
+var ONEWIRE_DATA = 0x73;
+var ONEWIRE_DELAY_REQUEST_BIT = 0x10;
+var ONEWIRE_READ_REPLY = 0x43;
+var ONEWIRE_READ_REQUEST_BIT = 0x08;
+var ONEWIRE_RESET_REQUEST_BIT = 0x01;
+var ONEWIRE_SEARCH_ALARMS_REPLY = 0x45;
+var ONEWIRE_SEARCH_ALARMS_REQUEST = 0x44;
+var ONEWIRE_SEARCH_REPLY = 0x42;
+var ONEWIRE_SEARCH_REQUEST = 0x40;
+var ONEWIRE_WITHDATA_REQUEST_BITS = 0x3C;
+var ONEWIRE_WRITE_REQUEST_BIT = 0x20;
+var PIN_MODE = 0xF4;
+var PIN_STATE_QUERY = 0x6D;
+var PIN_STATE_RESPONSE = 0x6E;
+var PING_READ = 0x75;
+var PULSE_IN = 0x74;
+var PULSE_OUT = 0x73;
+var QUERY_FIRMWARE = 0x79;
+var REPORT_ANALOG = 0xC0;
+var REPORT_DIGITAL = 0xD0;
+var REPORT_VERSION = 0xF9;
+var SAMPLING_INTERVAL = 0x7A;
+var SERVO_CONFIG = 0x70;
+var START_SYSEX = 0xF0;
+var STEPPER = 0x72;
+var STRING_DATA = 0x71;
+var SYSTEM_RESET = 0xFF;
+
+
 describe("board", function() {
 
   var serialPort = new SerialPort("/path/to/fake/usb");
@@ -123,7 +164,7 @@ describe("board", function() {
 
     // rcheck for report version
     serialPort.once("write", function(data) {
-      should.deepEqual(data, [0xF9]);
+      should.deepEqual(data, [REPORT_VERSION]);
       // check for query firmware
       serialPort.once("write", function(data) {
         should.deepEqual(data, [240, 121, 247]);
@@ -163,7 +204,7 @@ describe("board", function() {
 
   it("receives the version on startup", function(done) {
     //"send" report version command back from arduino
-    serialPort.emit("data", [0xF9]);
+    serialPort.emit("data", [REPORT_VERSION]);
     serialPort.emit("data", [0x02]);
 
     //subscribe to the "data" event to capture the event
@@ -237,7 +278,7 @@ describe("board", function() {
     });
 
     // Trigger fake "reportversion"
-    serialPort.emit("data", [0xF9, 0x02, 0x03]);
+    serialPort.emit("data", [REPORT_VERSION, 0x02, 0x03]);
 
     // Trigger fake "queryfirmware"
     serialPort.emit("data", [
@@ -249,12 +290,12 @@ describe("board", function() {
 
   it("gets the capabilities after the firmware", function(done) {
     //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x6B, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, CAPABILITY_QUERY, END_SYSEX]);
 
     //report back mock capabilities
     //taken from boards.h for arduino uno
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x6C]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [CAPABILITY_RESPONSE]);
 
     for (var i = 0; i < 20; i++) {
       // if "pin" is digital it can be input and output
@@ -312,7 +353,7 @@ describe("board", function() {
       done();
     });
     //end the sysex message
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("capabilities response is an idempotent operation", function(done) {
@@ -334,26 +375,26 @@ describe("board", function() {
 
     // Fake two capabilities responses...
     // 1
-    serialPort.emit("data", [0xF0, 0x6C]);
+    serialPort.emit("data", [START_SYSEX, CAPABILITY_RESPONSE]);
     for (i = 0; i < 20; i++) {
       serialPort.emit("data", [0, 1, 1, 1, 127]);
     }
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
     // 2
-    serialPort.emit("data", [0xF0, 0x6C]);
+    serialPort.emit("data", [START_SYSEX, CAPABILITY_RESPONSE]);
     for (i = 0; i < 20; i++) {
       serialPort.emit("data", [0, 1, 1, 1, 127]);
     }
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
 
   it("querys analog mappings after capabilities", function(done) {
     //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x69, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]);
 
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x6A]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [ANALOG_MAPPING_RESPONSE]);
     for (var i = 0; i < 20; i++) {
       if (i >= 14 && i < 20) {
         serialPort.emit("data", [i - 14]);
@@ -378,7 +419,7 @@ describe("board", function() {
       board.analogPins[5].should.equal(19);
       done();
     });
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("should now be started", function() {
@@ -387,7 +428,7 @@ describe("board", function() {
 
   it("should be able to set pin mode on digital pin", function(done) {
     board.pinMode(2, board.MODES.INPUT);
-    serialPort.lastWrite[0].should.equal(0xF4);
+    serialPort.lastWrite[0].should.equal(PIN_MODE);
     serialPort.lastWrite[1].should.equal(2);
     serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
     board.pins[2].mode.should.equal(board.MODES.INPUT);
@@ -417,22 +458,22 @@ describe("board", function() {
     should.deepEqual(serialPort.lastWrite, [ 208, 1 ]);
 
     // Single Byte
-    serialPort.emit("data", [0x90]);
+    serialPort.emit("data", [DIGITAL_MESSAGE]);
     serialPort.emit("data", [4 % 128]);
     serialPort.emit("data", [4 >> 7]);
 
-    serialPort.emit("data", [0x90]);
+    serialPort.emit("data", [DIGITAL_MESSAGE]);
     serialPort.emit("data", [0x00]);
     serialPort.emit("data", [0x00]);
 
     // Multi Byte
-    serialPort.emit("data", [0x90, 4 % 128, 4 >> 7]);
-    serialPort.emit("data", [0x90, 0x00, 0x00]);
+    serialPort.emit("data", [DIGITAL_MESSAGE, 4 % 128, 4 >> 7]);
+    serialPort.emit("data", [DIGITAL_MESSAGE, 0x00, 0x00]);
   });
 
   it("should be able to set mode on analog pins", function(done) {
     board.pinMode(board.analogPins[0], board.MODES.INPUT);
-    serialPort.lastWrite[0].should.equal(0xF4);
+    serialPort.lastWrite[0].should.equal(PIN_MODE);
     serialPort.lastWrite[1].should.equal(board.analogPins[0]);
     serialPort.lastWrite[2].should.equal(board.MODES.INPUT);
     done();
@@ -461,35 +502,35 @@ describe("board", function() {
     should.deepEqual(serialPort.lastWrite, [ 193, 1 ]);
 
     // Single Byte
-    serialPort.emit("data", [0xE0 | (1 & 0xF)]);
+    serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
     serialPort.emit("data", [1023 % 128]);
     serialPort.emit("data", [1023 >> 7]);
 
-    serialPort.emit("data", [0xE0 | (1 & 0xF)]);
+    serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
     serialPort.emit("data", [0 % 128]);
     serialPort.emit("data", [0 >> 7]);
 
     // Multi Byte
-    serialPort.emit("data", [0xE0 | (1 & 0xF), 1023 % 128, 1023 >> 7]);
-    serialPort.emit("data", [0xE0 | (1 & 0xF), 0 % 128, 0 >> 7]);
+    serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 1023 % 128, 1023 >> 7]);
+    serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 0 % 128, 0 >> 7]);
   });
 
   it("should be able to write a value to a digital output", function(done) {
     board.digitalWrite(3, board.HIGH);
-    should.deepEqual(serialPort.lastWrite, [0x90, 8, 0]);
+    should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 8, 0]);
 
     board.digitalWrite(3, board.LOW);
-    should.deepEqual(serialPort.lastWrite, [0x90, 0, 0]);
+    should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 0, 0]);
 
     done();
   });
 
   it("should be able to write a value to a analog output", function(done) {
     board.analogWrite(board.analogPins[1], 1023);
-    should.deepEqual(serialPort.lastWrite, [0xE0 | board.analogPins[1], 127, 7]);
+    should.deepEqual(serialPort.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 127, 7]);
 
     board.analogWrite(board.analogPins[1], 0);
-    should.deepEqual(serialPort.lastWrite, [0xE0 | board.analogPins[1], 0, 0]);
+    should.deepEqual(serialPort.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 0, 0]);
     done();
   });
 
@@ -505,10 +546,10 @@ describe("board", function() {
     };
 
     board.analogWrite(46, 180);
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x6F, 46, 52, 1, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 52, 1, END_SYSEX]);
 
     board.analogWrite(46, 0);
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x6F, 46, 0, 0, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 0, 0, END_SYSEX]);
 
     // Restore to original length
     board.pins.length = length;
@@ -536,14 +577,14 @@ describe("board", function() {
 
   it("should be able to send an i2c config", function(done) {
     board.i2cConfig(1);
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x78, 1 & 0xFF, (1 >> 8) & 0xFF, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
     done();
   });
 
   it("should be able to send an i2c request", function(done) {
     board.i2cConfig(1);
     board.sendI2CWriteRequest(0x68, [1, 2, 3]);
-    var request = [0xF0, 0x76, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, 0xF7];
+    var request = [START_SYSEX, I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, END_SYSEX];
     should.deepEqual(serialPort.lastWrite, request);
     done();
   });
@@ -552,12 +593,12 @@ describe("board", function() {
     var handler = sinon.spy(function() {});
     board.i2cConfig(1);
     board.sendI2CReadRequest(0x68, 4, handler);
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x76, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_REQUEST, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, END_SYSEX]);
 
     // Start
-    serialPort.emit("data", [0xF0]);
+    serialPort.emit("data", [START_SYSEX]);
     // Reply
-    serialPort.emit("data", [0x77]);
+    serialPort.emit("data", [I2C_REPLY]);
     // Address
     serialPort.emit("data", [0x68 % 128]);
     serialPort.emit("data", [0x68 >> 7]);
@@ -577,7 +618,7 @@ describe("board", function() {
     serialPort.emit("data", [4 & 0x7F]);
     serialPort.emit("data", [(4 >> 7) & 0x7F]);
     // End
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
 
     should.equal(handler.callCount, 1);
     should.deepEqual(handler.getCall(0).args[0], [1, 2, 3, 4]);
@@ -588,15 +629,15 @@ describe("board", function() {
     var bytes = new Buffer("test string", "utf8");
     var length = bytes.length;
     board.sendString(bytes);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x71);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(STRING_DATA);
     for (var i = 0; i < length; i++) {
       serialPort.lastWrite[i * 2 + 2].should.equal(bytes[i] & 0x7F);
       serialPort.lastWrite[i * 2 + 3].should.equal((bytes[i + 1] >> 7) & 0x7F);
     }
     serialPort.lastWrite[length * 2 + 2].should.equal(0);
     serialPort.lastWrite[length * 2 + 3].should.equal(0);
-    serialPort.lastWrite[length * 2 + 4].should.equal(0xF7);
+    serialPort.lastWrite[length * 2 + 4].should.equal(END_SYSEX);
     done();
   });
   it("should emit a string event", function(done) {
@@ -604,13 +645,13 @@ describe("board", function() {
       string.should.equal("test string");
       done();
     });
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x71]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [STRING_DATA]);
     var bytes = new Buffer("test string", "utf8");
     Array.prototype.forEach.call(bytes, function(value, index) {
       serialPort.emit("data", [value]);
     });
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("can query pin state", function(done) {
@@ -618,13 +659,13 @@ describe("board", function() {
       board.pins[2].state.should.equal(1024);
       done();
     });
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x6D, 2, 0xF7]);
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x6E]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, PIN_STATE_QUERY, 2, END_SYSEX]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [PIN_STATE_RESPONSE]);
     serialPort.emit("data", [2]);
     serialPort.emit("data", [board.MODES.INPUT]);
     serialPort.emit("data", [1024]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("can send a pingRead without a timeout and without a pulse out", function(done) {
@@ -636,10 +677,10 @@ describe("board", function() {
       duration.should.equal(0);
       done();
     });
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x74, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 66, 0, 64, 0, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, PING_READ, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 66, 0, 64, 0, END_SYSEX]);
 
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x74]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [PING_READ]);
     serialPort.emit("data", [3]);
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0]);
@@ -650,7 +691,7 @@ describe("board", function() {
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("can send a pingRead with a timeout and a pulse out", function(done) {
@@ -663,10 +704,10 @@ describe("board", function() {
       duration.should.equal(1000000);
       done();
     });
-    should.deepEqual(serialPort.lastWrite, [0xF0, 0x74, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 15, 0, 66, 0, 64, 0, 0xF7]);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, PING_READ, 3, board.HIGH, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 15, 0, 66, 0, 64, 0, END_SYSEX]);
 
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x74]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [PING_READ]);
     serialPort.emit("data", [3]);
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0]);
@@ -677,7 +718,7 @@ describe("board", function() {
     serialPort.emit("data", [0]);
     serialPort.emit("data", [64]);
     serialPort.emit("data", [0]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
   it("can send a pingRead with a pulse out and without a timeout ", function(done) {
     board.pingRead({
@@ -688,8 +729,8 @@ describe("board", function() {
       duration.should.equal(1000000);
       done();
     });
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x74);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PING_READ);
     serialPort.lastWrite[2].should.equal(3);
     serialPort.lastWrite[3].should.equal(board.HIGH);
     serialPort.lastWrite[4].should.equal(0);
@@ -708,9 +749,9 @@ describe("board", function() {
     serialPort.lastWrite[17].should.equal(0);
     serialPort.lastWrite[18].should.equal(64);
     serialPort.lastWrite[19].should.equal(0);
-    serialPort.lastWrite[20].should.equal(0xF7);
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x74]);
+    serialPort.lastWrite[20].should.equal(END_SYSEX);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [PING_READ]);
     serialPort.emit("data", [3]);
     serialPort.emit("data", [0]);
     serialPort.emit("data", [0]);
@@ -721,13 +762,13 @@ describe("board", function() {
     serialPort.emit("data", [0]);
     serialPort.emit("data", [64]);
     serialPort.emit("data", [0]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("can send a stepper config for a driver configuration", function(done) {
     board.stepperConfig(0, board.STEPPER.TYPE.DRIVER, 200, 2, 3);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x72);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(STEPPER);
     serialPort.lastWrite[2].should.equal(0);
     serialPort.lastWrite[3].should.equal(0);
     serialPort.lastWrite[4].should.equal(board.STEPPER.TYPE.DRIVER);
@@ -735,14 +776,14 @@ describe("board", function() {
     serialPort.lastWrite[6].should.equal((200 >> 7) & 0x7F);
     serialPort.lastWrite[7].should.equal(2);
     serialPort.lastWrite[8].should.equal(3);
-    serialPort.lastWrite[9].should.equal(0xF7);
+    serialPort.lastWrite[9].should.equal(END_SYSEX);
     done();
   });
 
   it("can send a stepper config for a two wire configuration", function(done) {
     board.stepperConfig(0, board.STEPPER.TYPE.TWO_WIRE, 200, 2, 3);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x72);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(STEPPER);
     serialPort.lastWrite[2].should.equal(0);
     serialPort.lastWrite[3].should.equal(0);
     serialPort.lastWrite[4].should.equal(board.STEPPER.TYPE.TWO_WIRE);
@@ -750,14 +791,14 @@ describe("board", function() {
     serialPort.lastWrite[6].should.equal((200 >> 7) & 0x7F);
     serialPort.lastWrite[7].should.equal(2);
     serialPort.lastWrite[8].should.equal(3);
-    serialPort.lastWrite[9].should.equal(0xF7);
+    serialPort.lastWrite[9].should.equal(END_SYSEX);
     done();
   });
 
   it("can send a stepper config for a four wire configuration", function(done) {
     board.stepperConfig(0, board.STEPPER.TYPE.FOUR_WIRE, 200, 2, 3, 4, 5);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x72);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(STEPPER);
     serialPort.lastWrite[2].should.equal(0);
     serialPort.lastWrite[3].should.equal(0);
     serialPort.lastWrite[4].should.equal(board.STEPPER.TYPE.FOUR_WIRE);
@@ -767,7 +808,7 @@ describe("board", function() {
     serialPort.lastWrite[8].should.equal(3);
     serialPort.lastWrite[9].should.equal(4);
     serialPort.lastWrite[10].should.equal(5);
-    serialPort.lastWrite[11].should.equal(0xF7);
+    serialPort.lastWrite[11].should.equal(END_SYSEX);
     done();
   });
 
@@ -776,8 +817,8 @@ describe("board", function() {
       complete.should.equal(true);
       done();
     });
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x72);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(STEPPER);
     serialPort.lastWrite[2].should.equal(1);
     serialPort.lastWrite[3].should.equal(2);
     serialPort.lastWrite[4].should.equal(board.STEPPER.DIRECTION.CCW);
@@ -787,11 +828,11 @@ describe("board", function() {
     serialPort.lastWrite[8].should.equal(2000 & 0x7F);
     serialPort.lastWrite[9].should.equal((2000 >> 7) & 0x7F);
     serialPort.lastWrite[9].should.equal((2000 >> 7) & 0x7F);
-    serialPort.lastWrite[10].should.equal(0xF7);
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x72]);
+    serialPort.lastWrite[10].should.equal(END_SYSEX);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [STEPPER]);
     serialPort.emit("data", [2]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
 
   it("can send a stepper move with acceleration and deceleration", function(done) {
@@ -800,32 +841,32 @@ describe("board", function() {
       done();
     });
 
-    var message = [0xF0, 0x72, 1, 3, board.STEPPER.DIRECTION.CCW, 10000 & 0x7F, (10000 >> 7) & 0x7F, (10000 >> 14) & 0x7F, 2000 & 0x7F, (2000 >> 7) & 0x7F, 3000 & 0x7F, (3000 >> 7) & 0x7F, 8000 & 0x7F, (8000 >> 7) & 0x7F, 0xF7];
+    var message = [START_SYSEX, STEPPER, 1, 3, board.STEPPER.DIRECTION.CCW, 10000 & 0x7F, (10000 >> 7) & 0x7F, (10000 >> 14) & 0x7F, 2000 & 0x7F, (2000 >> 7) & 0x7F, 3000 & 0x7F, (3000 >> 7) & 0x7F, 8000 & 0x7F, (8000 >> 7) & 0x7F, END_SYSEX];
     should.deepEqual(serialPort.lastWrite, message);
 
-    serialPort.emit("data", [0xF0]);
-    serialPort.emit("data", [0x72]);
+    serialPort.emit("data", [START_SYSEX]);
+    serialPort.emit("data", [STEPPER]);
     serialPort.emit("data", [3]);
-    serialPort.emit("data", [0xF7]);
+    serialPort.emit("data", [END_SYSEX]);
   });
   it("should be able to send a 1-wire config with parasitic power enabled", function(done) {
     board.sendOneWireConfig(1, true);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x41);
-    serialPort.lastWrite[3].should.equal(0x01);
-    serialPort.lastWrite[4].should.equal(0x01);
-    serialPort.lastWrite[5].should.equal(0xF7);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_CONFIG_REQUEST);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
+    serialPort.lastWrite[4].should.equal(ONEWIRE_RESET_REQUEST_BIT);
+    serialPort.lastWrite[5].should.equal(END_SYSEX);
     done();
   });
   it("should be able to send a 1-wire config with parasitic power disabled", function(done) {
     board.sendOneWireConfig(1, false);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x41);
-    serialPort.lastWrite[3].should.equal(0x01);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_CONFIG_REQUEST);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
     serialPort.lastWrite[4].should.equal(0x00);
-    serialPort.lastWrite[5].should.equal(0xF7);
+    serialPort.lastWrite[5].should.equal(END_SYSEX);
     done();
   });
   it("should be able to send a 1-wire search request and recieve a reply", function(done) {
@@ -834,13 +875,13 @@ describe("board", function() {
 
       done();
     });
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x40);
-    serialPort.lastWrite[3].should.equal(0x01);
-    serialPort.lastWrite[4].should.equal(0xF7);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_SEARCH_REQUEST);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
+    serialPort.lastWrite[4].should.equal(END_SYSEX);
 
-    serialPort.emit("data", [0xF0, 0x73, 0x42, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
+    serialPort.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
   it("should be able to send a 1-wire search alarm request and recieve a reply", function(done) {
     board.sendOneWireAlarmsSearch(1, function(error, devices) {
@@ -848,21 +889,21 @@ describe("board", function() {
 
       done();
     });
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x44);
-    serialPort.lastWrite[3].should.equal(0x01);
-    serialPort.lastWrite[4].should.equal(0xF7);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_SEARCH_ALARMS_REQUEST);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
+    serialPort.lastWrite[4].should.equal(END_SYSEX);
 
-    serialPort.emit("data", [0xF0, 0x73, 0x45, 0x01, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, 0xF7]);
+    serialPort.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_ALARMS_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
   it("should be able to send a 1-wire reset request", function(done) {
     board.sendOneWireReset(1);
 
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x01);
-    serialPort.lastWrite[3].should.equal(0x01);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_RESET_REQUEST_BIT);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
 
     done();
   });
@@ -871,10 +912,10 @@ describe("board", function() {
 
     board.sendOneWireDelay(1, delay);
 
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x3C);
-    serialPort.lastWrite[3].should.equal(0x01);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_WITHDATA_REQUEST_BITS);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
     var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
@@ -889,10 +930,10 @@ describe("board", function() {
 
     board.sendOneWireWrite(1, device, data);
 
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x3C);
-    serialPort.lastWrite[3].should.equal(0x01);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_WITHDATA_REQUEST_BITS);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
     var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
@@ -915,7 +956,7 @@ describe("board", function() {
   it("should be able to send a 1-wire write and read request and recieve a reply", function(done) {
     var device = [40, 219, 239, 33, 5, 0, 0, 93];
     var data = 0x33;
-    var output = [0x01, 0x02];
+    var output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
 
     board.sendOneWireWriteAndRead(1, device, data, 2, function(error, receieved) {
       receieved.should.eql(output);
@@ -923,10 +964,10 @@ describe("board", function() {
       done();
     });
 
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x73);
-    serialPort.lastWrite[2].should.equal(0x3C);
-    serialPort.lastWrite[3].should.equal(0x01);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(PULSE_OUT);
+    serialPort.lastWrite[2].should.equal(ONEWIRE_WITHDATA_REQUEST_BITS);
+    serialPort.lastWrite[3].should.equal(ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
     var request = Encoder7Bit.from7BitArray(serialPort.lastWrite.slice(4, serialPort.lastWrite.length - 1));
@@ -954,13 +995,13 @@ describe("board", function() {
     dataSentFromBoard[2] = output[0];
     dataSentFromBoard[3] = output[1];
 
-    serialPort.emit("data", [0xF0, 0x73, 0x43, 0x01].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([0xF7]));
+    serialPort.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
   });
 
   it("can configure a servo pwm range", function(done) {
     board.servoConfig(3, 1000, 2000);
-    serialPort.lastWrite[0].should.equal(0xF0);
-    serialPort.lastWrite[1].should.equal(0x70);
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
     serialPort.lastWrite[2].should.equal(0x03);
 
     serialPort.lastWrite[3].should.equal(1000 & 0x7F);
@@ -1040,7 +1081,7 @@ describe("board", function() {
 
     for (var i = 0; i < 5; i++) {
       serialPort.emit("data", [
-        0xF0, 0x77, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+        START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
     }
 
@@ -1062,7 +1103,7 @@ describe("board", function() {
 
     for (var i = 0; i < 5; i++) {
       serialPort.emit("data", [
-        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
     }
 
@@ -1085,7 +1126,7 @@ describe("board", function() {
 
     for (var i = 0; i < 5; i++) {
       serialPort.emit("data", [
-        0xF0, 0x77, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+        START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
     }
 
@@ -1108,7 +1149,7 @@ describe("board", function() {
     // Emit data enough times to potentially break it.
     for (var i = 0; i < 5; i++) {
       serialPort.emit("data", [
-        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
     }
 
@@ -1126,7 +1167,7 @@ describe("board", function() {
     // Emit data enough times to potentially break it.
     for (var i = 0; i < 5; i++) {
       serialPort.emit("data", [
-        0xF0, 0x77, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, 0xF7
+        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
     }
 
