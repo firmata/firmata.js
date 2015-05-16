@@ -525,6 +525,17 @@ describe("board", function() {
     done();
   });
 
+  it("should be able to write a value to an analog pin being used as a digital output", function(done) {
+    board.digitalWrite(19, board.HIGH);
+    // `DIGITAL_MESSAGE | 2` => Digital Message on Port 2
+    should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE | 2, 8, 0]);
+
+    board.digitalWrite(19, board.LOW);
+    should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE | 2, 0, 0]);
+
+    done();
+  });
+
   it("should be able to write a value to a analog output", function(done) {
     board.analogWrite(board.analogPins[1], 1023);
     should.deepEqual(serialPort.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 127, 7]);
