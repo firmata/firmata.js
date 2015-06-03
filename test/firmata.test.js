@@ -517,7 +517,7 @@ describe("board", function() {
 
   it("should be able to read value of analog pin on a board that skipped capabilities check", function(done) {
     var serialPort = new SerialPort("/path/to/fake/usb");
-    var board = new Board(serialPort, {skipCapabilities: true}, function(err) {});
+    var board = new Board(serialPort, {skipCapabilities: true, analogPins: [14,15,16,17,18,19]}, function(err) {});
 
     board.on("ready", function() {
       var counter = 0;
