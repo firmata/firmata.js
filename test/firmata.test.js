@@ -515,6 +515,51 @@ describe("board", function() {
     serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 0 % 128, 0 >> 7]);
   });
 
+  it("should be able to read value of analog pin on a board that skipped capabilities check", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, {skipCapabilities: true, analogPins: [14,15,16,17,18,19]}, function(err) {});
+
+    board.on("ready", function() {
+      var counter = 0;
+      var order = [1023, 0, 1023, 0];
+      board.analogRead(1, function(value) {
+        if (value === 1023) {
+          counter++;
+        }
+        if (value === 0) {
+          counter++;
+        }
+        if (order[0] === value) {
+          order.shift();
+        }
+        if (counter === 4) {
+          order.length.should.equal(0);
+          done();
+        }
+      });
+
+      // Analog reporting turned on...
+      should.deepEqual(serialPort.lastWrite, [ 193, 1 ]);
+
+      // Single Byte
+      serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
+      serialPort.emit("data", [1023 % 128]);
+      serialPort.emit("data", [1023 >> 7]);
+
+      serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
+      serialPort.emit("data", [0 % 128]);
+      serialPort.emit("data", [0 >> 7]);
+
+      // Multi Byte
+      serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 1023 % 128, 1023 >> 7]);
+      serialPort.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 0 % 128, 0 >> 7]);
+    });
+
+    serialPort.emit("open");
+    board.emit("reportversion");
+    board.emit("queryfirmware");
+  });
+
   it("should be able to write a value to a digital output", function(done) {
     board.digitalWrite(3, board.HIGH);
     should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 8, 0]);
@@ -523,6 +568,25 @@ describe("board", function() {
     should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 0, 0]);
 
     done();
+  });
+
+  it("should be able to write a value to a digital output to a board that skipped capabilities check", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, {skipCapabilities: true}, function(err) {});
+
+    board.on("ready", function() {
+      board.digitalWrite(3, board.HIGH);
+      should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 8, 0]);
+
+      board.digitalWrite(3, board.LOW);
+      should.deepEqual(serialPort.lastWrite, [DIGITAL_MESSAGE, 0, 0]);
+      done();
+    });
+
+    serialPort.emit("open");
+    board.emit("reportversion");
+    board.emit("queryfirmware");
+
   });
 
   it("should be able to write a value to an analog pin being used as a digital output", function(done) {
