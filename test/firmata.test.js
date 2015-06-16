@@ -274,6 +274,32 @@ describe("board", function() {
       should.deepEqual(serialPort.lastWrite, [ 240, 122, 100, 0, 247 ]);
       should.equal(spy.callCount, 1);
       should.ok(spy.calledWith(100));
+
+      spy.restore();
+      done();
+    });
+
+    // Trigger fake "reportversion"
+    serialPort.emit("data", [REPORT_VERSION, 0x02, 0x03]);
+
+    // Trigger fake "queryfirmware"
+    serialPort.emit("data", [
+      240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0,
+      97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0,
+      97, 0, 116, 0, 97, 0, 247
+    ]);
+  });
+
+  it("Does not call setSamplingInterval after queryfirmware by default", function(done) {
+    var spy = sinon.spy(Board.prototype, "setSamplingInterval");
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var options = {
+      skipCapabilities: true,
+    };
+
+    var board = new Board(serialPort, options, function() {
+      should.equal(spy.callCount, 0);
+      spy.restore();
       done();
     });
 
@@ -424,6 +450,27 @@ describe("board", function() {
 
   it("should now be started", function() {
     boardStarted.should.equal(true);
+  });
+
+  it("allows setting a valid sampling interval", function(done) {
+    var spy = sinon.spy(board.transport, "write");
+
+    // Valid sampling interval
+    board.setSamplingInterval(20);
+    should.ok((new Buffer([0xf0, 0x7a, 0x14, 0x00, 0xf7])).equals(spy.lastCall.args[0]));
+
+    // Invalid sampling interval is constrained to a valid interval
+    // > 65535 => 65535
+    board.setSamplingInterval(65540);
+    should.ok((new Buffer([0xf0, 0x7a, 0x7f, 0x7f, 0xf7])).equals(spy.lastCall.args[0]));
+
+    // Invalid sampling interval is constrained to a valid interval
+    // < 10 => 10
+    board.setSamplingInterval(0);
+    should.ok((new Buffer([0xf0, 0x7a, 0x0a, 0x00, 0xf7])).equals(spy.lastCall.args[0]));
+
+    spy.restore();
+    done();
   });
 
   it("should be able to set pin mode on digital pin", function(done) {
