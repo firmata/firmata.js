@@ -697,8 +697,20 @@ describe("board", function() {
     done();
   });
 
-  it("should be able to send an i2c config", function(done) {
+  it("should be able to send an i2c config (empty)", function(done) {
+    board.i2cConfig();
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 0, 0, END_SYSEX]);
+    done();
+  });
+
+  it("should be able to send an i2c config (number)", function(done) {
     board.i2cConfig(1);
+    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
+    done();
+  });
+
+  it("should be able to send an i2c config (object with delay property)", function(done) {
+    board.i2cConfig({ delay: 1 });
     should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
     done();
   });

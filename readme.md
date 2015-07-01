@@ -98,9 +98,18 @@ Each value in the array is an object:
   
 ### I2C
   
-`i2cConfig([delay])` 
+`i2cConfig()` 
 
-  Configure and enable I2C, optionally set a delay (defaults to `0`). Required to enable I2C communication. 
+  Configure and enable I2C, provide no options or delay. Required to enable I2C communication. 
+
+`i2cConfig(delay)` 
+
+  Configure and enable I2C, optionally provide a value in μs to delay between reads (defaults to `0`). Required to enable I2C communication. 
+
+`i2cConfig(options)` 
+
+  Configure and enable I2C, optionally provide an object that contains a `delay` property whose value is a number in μs to delay between reads. Required to enable I2C communication. 
+
 
 `i2cWrite(address, [...bytes])` 
 
