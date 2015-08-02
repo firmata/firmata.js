@@ -35,24 +35,28 @@ board.on("ready", function() {
   var hwSerial1 = board.SERIAL_PORT_IDs.HW_SERIAL1;
 
   // portId, baud, bytesToRead
-  board.serialConfig(hwSerial1, 57600, 0);
-
-  board.on("serial-data", function(data) {
-    console.log("serial data received from port " + data.portId + " : " + data.data);
+  board.serialConfig({
+    portId: hwSerial1,
+    baud: 57600,
+    bytesToRead: 0
   });
 
-  board.serialStartReading(hwSerial1);
+  var logSerialData = function(data) {
+    console.log("serial data received: " + data);
+  };
+
+  board.serialRead(hwSerial1, logSerialData);
 
   // stop reading after 2 seconds
   setTimeout(function() {
     console.log("stop reading hwSerial1");
-    board.serialStopReading(hwSerial1);
+    board.serialStop(hwSerial1);
   }, 2000);
 
   // restart reading after 4 seconds
   setTimeout(function() {
     console.log("continue reading hwSerial1");
-    board.serialStartReading(hwSerial1);
+    board.serialRead(hwSerial1, logSerialData);
   }, 4000);
 
   // TODO - test flush and close

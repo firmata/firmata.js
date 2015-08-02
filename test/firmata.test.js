@@ -1330,7 +1330,13 @@ describe("board", function() {
   });
 
   it("can configure a software serial port", function(done) {
-    board.serialConfig(0x08, 9600, 0, 10, 11);
+    board.serialConfig({
+      portId: 0x08,
+      baud: 9600,
+      bytesToRead: 0,
+      rxPin: 10,
+      txPin: 11
+    });
     serialPort.lastWrite[0].should.equal(START_SYSEX);
     serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x08);
 
@@ -1348,7 +1354,11 @@ describe("board", function() {
   });
 
   it("can configure a hardware serial port", function(done) {
-    board.serialConfig(0x01, 57600, 0);
+    board.serialConfig({
+      portId: 0x01,
+      buad: 57600,
+      bytesToRead: 0
+    });
     serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x01);
 
     serialPort.lastWrite[3].should.equal(57600 & 0x007F);
@@ -1358,6 +1368,16 @@ describe("board", function() {
     // skipping bytes 6 and 7 since they are currently unused
 
     serialPort.lastWrite[8].should.equal(END_SYSEX);
+    done();
+  });
+
+  it("throws an error if no serial port id is passed", function(done) {
+    should.throws(function() {
+      board.serialConfig({
+        buad: 57600,
+        bytesToRead: 0
+      });
+    });
     done();
   });
 
@@ -1381,16 +1401,58 @@ describe("board", function() {
     done();
   });
 
-  it("has a serialStartReading method that sets READ_CONTINUOUS mode", function(done) {
-    board.serialStartReading(0x08);
+  it("has a serialRead method that sets READ_CONTINUOUS mode", function(done) {
+    var handler = sinon.spy(function() {});
+    board.serialRead(0x08, handler);
+
     serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
     serialPort.lastWrite[3].should.equal(0);
     serialPort.lastWrite[4].should.equal(END_SYSEX);
+
     done();
   });
 
-  it("has a serialStopReading method that sets STOP_READING mode", function(done) {
-    board.serialStopReading(0x08);
+  it("has a serialRead method that reads continuously", function(done) {
+    var inBytes = [
+      242 & 0x7F,
+      (242 >> 7) & 0x7F,
+      243 & 0x7F,
+      (243 >> 7) & 0x7F,
+      244 & 0x7F,
+      (244 >> 7) & 0x7F,
+    ];
+
+    var handler = sinon.spy(function() {});
+    board.serialRead(0x08, handler);
+
+    for (var i = 0; i < 5; i++) {
+      serialPort.emit("data", [
+        START_SYSEX,
+        SERIAL_MESSAGE,
+        SERIAL_REPLY | 0x08,
+        inBytes[0],
+        inBytes[1],
+        inBytes[2],
+        inBytes[3],
+        inBytes[4],
+        inBytes[5],
+        END_SYSEX
+      ]);
+    }
+
+    should.equal(handler.callCount, 5);
+    should.equal(handler.getCall(0).args[0].length, 3);
+    should.equal(handler.getCall(0).args[0][0], 242);
+    should.equal(handler.getCall(0).args[0][2], 244);
+    should.equal(handler.getCall(1).args[0].length, 3);
+    should.equal(handler.getCall(2).args[0].length, 3);
+    should.equal(handler.getCall(3).args[0].length, 3);
+    should.equal(handler.getCall(4).args[0].length, 3);
+    done();
+  });
+
+  it("has a serialStop method that sets STOP_READING mode", function(done) {
+    board.serialStop(0x08);
     serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
     serialPort.lastWrite[3].should.equal(1);
     serialPort.lastWrite[4].should.equal(END_SYSEX);
@@ -1425,70 +1487,6 @@ describe("board", function() {
     should.equal(spy.callCount, 0);
     spy.restore();
     done();
-  });
-
-  it("can read a single byte from a serial port", function(done) {
-    var lsb = 242 & 0x7F;
-    var msb = (242 >> 7) & 0x7F;
-
-    serialPort.once("data", function(buffer) {
-      should.deepEqual(buffer, [START_SYSEX, SERIAL_MESSAGE, SERIAL_REPLY | 0x08, lsb, msb, END_SYSEX]);
-      done();
-    });
-
-    serialPort.emit("data", [START_SYSEX, SERIAL_MESSAGE, SERIAL_REPLY | 0x08, lsb, msb, END_SYSEX]);
-  });
-
-  it("can read a byte array from a serial port", function(done) {
-    var inBytes = [
-      242 & 0x7F,
-      (242 >> 7) & 0x7F,
-      243 & 0x7F,
-      (243 >> 7) & 0x7F,
-      244 & 0x7F,
-      (244 >> 7) & 0x7F,
-    ];
-
-    serialPort.once("data", function(buffer) {
-      should.deepEqual(buffer, [
-        START_SYSEX,
-        SERIAL_MESSAGE,
-        SERIAL_REPLY | 0x08,
-        inBytes[0],
-        inBytes[1],
-        inBytes[2],
-        inBytes[3],
-        inBytes[4],
-        inBytes[5],
-        END_SYSEX]);
-      done();
-    });
-
-    serialPort.emit("data", [
-      START_SYSEX,
-      SERIAL_MESSAGE,
-      SERIAL_REPLY | 0x08,
-      inBytes[0],
-      inBytes[1],
-      inBytes[2],
-      inBytes[3],
-      inBytes[4],
-      inBytes[5],
-      END_SYSEX
-    ]);
-  });
-
-  it("should emit serial-data when serial data is received", function(done) {
-    var lsb = 242 & 0x7F;
-    var msb = (242 >> 7) & 0x7F;
-
-    board.once("serial-data", function(buffer) {
-      should.equal(buffer.data, 242);
-      should.equal(buffer.portId, 8);
-      done();
-    });
-
-    serialPort.emit("data", [START_SYSEX, SERIAL_MESSAGE, SERIAL_REPLY | 0x08, lsb, msb, END_SYSEX]);
   });
 
 });

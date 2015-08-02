@@ -36,31 +36,44 @@ board.on("ready", function() {
 
   // create an unused port to test listen functionality
   // you can alternatively attach a 2nd serial test board but this will still run without it
-  board.serialConfig(swSerial1, 57600, 0, 12, 13);
-
-  // portId, baud, bytesToRead, rxPin, txPin
-  // since swSerial0 is last configed, it will be the current listening port
-  board.serialConfig(swSerial0, 57600, 0, 10, 11);
-
-  board.on("serial-data", function(data) {
-    console.log("serial data received from port " + data.portId + " : " + data.data);
+  board.serialConfig({
+    portId: swSerial1,
+    baud: 57600,
+    bytesToRead: 0,
+    rxPin: 12,
+    txPin: 13
   });
 
-  board.serialStartReading(swSerial0);
+  // since swSerial0 is last configed, it will be the current listening port
+  board.serialConfig({
+    portId: swSerial0,
+    baud: 57600,
+    bytesToRead: 0,
+    rxPin: 10,
+    txPin: 11
+  });
+
+  var logSerial0Data = function (data) {
+    console.log("serial0 data: " + data);
+  };
+
+  board.serialRead(swSerial0, logSerial0Data);
 
   // won't actually report anything unless you connect a second serial test board
-  board.serialStartReading(swSerial1);
+  board.serialRead(swSerial1, function (data) {
+    console.log("serial1 data: " + data);
+  });
 
   // stop reading after 2 seconds
   setTimeout(function() {
     console.log("stop reading swSerial0");
-    board.serialStopReading(swSerial0);
+    board.serialStop(swSerial0);
   }, 2000);
 
   // restart reading after 4 seconds
   setTimeout(function() {
     console.log("continue reading swSerial0");
-    board.serialStartReading(swSerial0);
+    board.serialRead(swSerial0, logSerial0Data);
   }, 4000);
 
   // switch to SW_SERIAL_1 (output from SW_SERIAL0 will stop)
