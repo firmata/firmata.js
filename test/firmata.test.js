@@ -1370,6 +1370,28 @@ describe("board", function() {
     done();
   });
 
+  it("throws an error if both RX and TX pins are not defined when using Software Serial", function(done) {
+    // throw error if both pins are not specified
+    should.throws(function() {
+      board.serialConfig({
+        portId: 8,
+        buad: 57600,
+        bytesToRead: 0
+      });
+    });
+
+    // throw error if only one pin is specified
+    should.throws(function() {
+      board.serialConfig({
+        portId: 8,
+        buad: 57600,
+        bytesToRead: 0,
+        txPin: 0
+      });
+    });
+    done();
+  });
+
   it("can write a single byte to a serial port", function(done) {
     board.serialWrite(0x08, [1]);
     serialPort.lastWrite[2].should.equal(SERIAL_WRITE | 0x08);
