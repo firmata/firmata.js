@@ -1322,7 +1322,6 @@ describe("board", function() {
     board.serialConfig({
       portId: 0x08,
       baud: 9600,
-      bytesToRead: 0,
       rxPin: 10,
       txPin: 11
     });
@@ -1333,20 +1332,17 @@ describe("board", function() {
     serialPort.lastWrite[4].should.equal((9600 >> 7) & 0x007F);
     serialPort.lastWrite[5].should.equal((9600 >> 14) & 0x007F);
 
-    // skipping bytes 6 and 7 since they are currently unused
+    serialPort.lastWrite[6].should.equal(10);
+    serialPort.lastWrite[7].should.equal(11);
 
-    serialPort.lastWrite[8].should.equal(10);
-    serialPort.lastWrite[9].should.equal(11);
-
-    serialPort.lastWrite[10].should.equal(END_SYSEX);
+    serialPort.lastWrite[8].should.equal(END_SYSEX);
     done();
   });
 
   it("can configure a hardware serial port", function(done) {
     board.serialConfig({
       portId: 0x01,
-      buad: 57600,
-      bytesToRead: 0
+      buad: 57600
     });
     serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x01);
 
@@ -1354,17 +1350,14 @@ describe("board", function() {
     serialPort.lastWrite[4].should.equal((57600 >> 7) & 0x007F);
     serialPort.lastWrite[5].should.equal((57600 >> 14) & 0x007F);
 
-    // skipping bytes 6 and 7 since they are currently unused
-
-    serialPort.lastWrite[8].should.equal(END_SYSEX);
+    serialPort.lastWrite[6].should.equal(END_SYSEX);
     done();
   });
 
   it("throws an error if no serial port id is passed", function(done) {
     should.throws(function() {
       board.serialConfig({
-        buad: 57600,
-        bytesToRead: 0
+        buad: 57600
       });
     });
     done();
@@ -1375,17 +1368,15 @@ describe("board", function() {
     should.throws(function() {
       board.serialConfig({
         portId: 8,
-        buad: 57600,
-        bytesToRead: 0
+        buad: 57600
       });
     });
 
-    // throw error if only one pin is specified
+    // throw error if only one serial pin is specified
     should.throws(function() {
       board.serialConfig({
         portId: 8,
         buad: 57600,
-        bytesToRead: 0,
         txPin: 0
       });
     });
@@ -1459,6 +1450,17 @@ describe("board", function() {
     should.equal(handler.getCall(2).args[0].length, 3);
     should.equal(handler.getCall(3).args[0].length, 3);
     should.equal(handler.getCall(4).args[0].length, 3);
+    done();
+  });
+
+  it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
+    var maxBytesToRead = 4;
+    var handler = sinon.spy(function () {});
+    board.serialRead(0x08, maxBytesToRead, handler);
+
+    serialPort.lastWrite[4].should.equal(4);
+    serialPort.lastWrite[5].should.equal(0);
+    serialPort.lastWrite[6].should.equal(END_SYSEX);
     done();
   });
 
