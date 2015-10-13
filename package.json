@@ -1,7 +1,7 @@
 {
   "name": "firmata",
   "description": "A library to control an arduino running firmata",
-  "version": "0.5.5",
+  "version": "0.6.0",
   "author": "Julian Gautier",
   "homepage": "http://www.github.com/jgautier/firmata",
   "repository": {
@@ -28,7 +28,7 @@
     "browser-serialport": "*",
     "es6-map": "~0.1.1",
     "object-assign": "~1.0.0",
-    "serialport": ">=0.7.5"
+    "serialport": "1.7.4"
   },
   "optionalDependencies": {},
   "scripts": {
