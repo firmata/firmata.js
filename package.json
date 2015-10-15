@@ -26,8 +26,7 @@
   },
   "dependencies": {
     "browser-serialport": "*",
-    "es6-map": "~0.1.1",
-    "object-assign": "~4.0.1",
+    "es6-shim": "^0.33.6",
     "serialport": "^2.0.1"
   },
   "optionalDependencies": {},
