@@ -16,28 +16,11 @@ if (semver.gte(process.version, "3.0.0")) {
 var npm = spawn("npm", ["install", sp.atVersion]);
 
 npm.stdout.on("data", function(data) {
-  var received = data.toString("utf8");
-  var matches;
-
-  if (received) {
-    console.log(received);
-
-    if (received.includes("serialport@")) {
-      matches = received.match(/@(.*) /);
-
-      if (matches.length) {
-        sp.version = matches[1];
-      }
-    }
-  }
+  console.log(data.toString("utf8"));
 });
 
 npm.on("close", function(code) {
-  var result;
   if (code !== 0) {
-    result = "installation failed. Error Code: " + code;
-  } else {
-    result = "installed.";
+    console.log("serialport installation failed. Error Code:", code);
   }
-  console.log(sp.atVersion, result);
 });
