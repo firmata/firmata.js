@@ -13,8 +13,6 @@ if (semver.gte(process.version, "4.2.1")) {
   sp.version = "latest";
 }
 
-sp.atVersion = "serialport@" + sp.version;
-
 var npm = spawn("npm", ["install", sp.atVersion]);
 
 npm.stdout.on("data", function(data) {
