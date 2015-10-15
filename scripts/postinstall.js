@@ -9,7 +9,7 @@ var sp = {
   },
 };
 
-if (semver.gte(process.version, "4.2.1")) {
+if (semver.gte(process.version, "3.0.0")) {
   sp.version = "latest";
 }
 
