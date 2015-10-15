@@ -16,7 +16,7 @@ if (semver.gte(process.version, "4.2.1")) {
 var npm = spawn("npm", ["install", sp.atVersion]);
 
 npm.stdout.on("data", function(data) {
-  var received = data.toString("ascii").split("\n")[0].trim();
+  var received = data.toString("utf8");
   var matches;
 
   if (received) {
