@@ -18,7 +18,6 @@
     "grunt-jsbeautifier": "~0.2.10",
     "grunt-jscs": "~2.1.0",
     "grunt-mocha-test": "~0.12.7",
-    "johnny-five": "^0.8.104",
     "mocha": "^2.3.x",
     "rewire": "~2.3.4",
     "should": "^7.1.x",
@@ -27,11 +26,13 @@
   "dependencies": {
     "browser-serialport": "*",
     "es6-shim": "^0.33.6",
+    "semver": "^5.0.3",
     "serialport": "^2.0.1"
   },
   "optionalDependencies": {},
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "postinstall": "node scripts/postinstall"
   },
   "engines": {
     "node": "*"
