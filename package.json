@@ -27,10 +27,10 @@
   "dependencies": {
     "browser-serialport": "*",
     "es6-map": "~0.1.1",
-    "object-assign": "~1.0.0",
-    "serialport": "1.7.4"
+    "grunt-cli": "^0.1.13",
+    "metaserialport": "^1.0.0",
+    "object-assign": "~1.0.0"
   },
-  "optionalDependencies": {},
   "scripts": {
     "test": "grunt"
   },
