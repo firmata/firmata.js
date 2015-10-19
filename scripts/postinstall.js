@@ -1,3 +1,8 @@
+try {
+  require("serialport");
+  return;
+} catch(error) {}
+
 require("es6-shim");
 
 var semver = require("semver");
