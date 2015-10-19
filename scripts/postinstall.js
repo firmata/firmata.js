@@ -1,7 +1,3 @@
-if (process.env.SERIAL_PORT_INSTALLED) {
-  return;
-}
-
 require("es6-shim");
 
 var semver = require("semver");
