@@ -1,7 +1,6 @@
-try {
-  require("serialport");
+if (process.env.SERIAL_PORT_INSTALLED) {
   return;
-} catch(error) {}
+}
 
 require("es6-shim");
 
