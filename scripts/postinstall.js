@@ -1,7 +1,7 @@
 require("es6-shim");
 
 var semver = require("semver");
-var spawn = require("child_process").spawn;
+var spawn = require("win-spawn");
 var sp = {
   version: "1.7.4",
   get atVersion() {
