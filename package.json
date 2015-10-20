@@ -30,7 +30,6 @@
     "win-spawn": "2.0.0"
   },
   "scripts": {
-    "test": "grunt",
-    "postinstall": "node scripts/postinstall"
+    "test": "grunt"
   }
 }
