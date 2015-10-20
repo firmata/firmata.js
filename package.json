@@ -25,10 +25,11 @@
   },
   "dependencies": {
     "browser-serialport": "*",
-    "es6-shim": "^0.33.6"
+    "es6-shim": "^0.33.6",
+    "serialport": "^2.0.1"
   },
   "optionalDependencies": {
-    "serialport": "^2.0.1"
+
   },
   "scripts": {
     "test": "grunt"
