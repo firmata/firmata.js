@@ -1,3 +1,7 @@
+if (process.env.NO_SERIALPORT_INSTALL) {
+  process.exit(0);
+}
+
 require("es6-shim");
 
 var semver = require("semver");
