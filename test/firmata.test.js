@@ -802,7 +802,18 @@ describe("board", function() {
     serialPort.emit("data", [END_SYSEX]);
   });
 
+  it("cannot pingRead without PingFirmata", function(done) {
+    should.throws(function() {
+      board.pingRead({
+        pin: 3
+      });
+    });
+
+    done();
+  });
+
   it("can send a pingRead without a timeout and without a pulse out", function(done) {
+    board.pins[3].supportedModes.push(PING_READ);
     board.pingRead({
       pin: 3,
       value: board.HIGH,
