@@ -460,7 +460,7 @@ describe("board", function() {
     boardStarted.should.equal(true);
   });
 
-  it.skip("allows setting a valid sampling interval", function(done) {
+  it("allows setting a valid sampling interval", function(done) {
     var spy = sinon.spy(board.transport, "write");
 
     // Valid sampling interval
