@@ -1,37 +1,16 @@
-/**
- * Sample script to blink LED 13
- */
+var Board = require("../");
 
+Board.requestPort(function(error, port) {
+  var board = new Board(port.comName);
 
-console.log("blink start ...");
+  board.on("ready", function() {
+    var pin = 13;
+    var state = 1;
 
-var ledPin = 13;
+    board.pinMode(pin, board.MODES.OUTPUT);
 
-var firmata = require("../lib/firmata");
-var board = new firmata.Board("/dev/cu.usbmodem1411", function(err) {
-  if (err) {
-    console.log(err);
-    return;
-  }
-  console.log("connected");
-
-  console.log("Firmware: " + board.firmware.name + "-" + board.firmware.version.major + "." + board.firmware.version.minor);
-
-  var ledOn = true;
-  board.pinMode(ledPin, board.MODES.OUTPUT);
-
-  setInterval(function() {
-
-    if (ledOn) {
-      console.log("+");
-      board.digitalWrite(ledPin, board.HIGH);
-    } else {
-      console.log("-");
-      board.digitalWrite(ledPin, board.LOW);
-    }
-
-    ledOn = !ledOn;
-
-  }, 500);
-
+    setInterval(function() {
+      board.digitalWrite(pin, (state ^= 1));
+    }, 500);
+  });
 });
