@@ -62,6 +62,92 @@ var SYSTEM_RESET = 0xFF;
 
 var sandbox = sinon.sandbox.create();
 
+describe("Board.requestPort", function() {
+
+  var response = {
+    error: null,
+    port: {
+      comName: null
+    },
+  };
+
+  beforeEach(function() {
+    sandbox.stub(com, "list", function(callback) {
+      process.nextTick(function() {
+        callback(response.error, [response.port]);
+      });
+    });
+  });
+
+  afterEach(function() {
+    sandbox.restore();
+    response.error = null;
+    response.port.comName = null;
+  });
+
+  it("can identify an acceptable port", function(done) {
+    response.port.comName = "/dev/usb.whatever";
+    should.equal(Board.isAcceptablePort(response.port), true);
+
+    response.port.comName = "/dev/ttyACM0";
+    should.equal(Board.isAcceptablePort(response.port), true);
+
+    response.port.comName = "COM0";
+    should.equal(Board.isAcceptablePort(response.port), true);
+
+    done();
+  });
+
+  it("can identify an unacceptable port", function(done) {
+    response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
+    should.equal(Board.isAcceptablePort(response.port), false);
+
+    response.port.comName = "/dev/someotherthing";
+    should.equal(Board.isAcceptablePort(response.port), false);
+
+    done();
+  });
+
+  it("calls callback with an acceptable port: usb", function(done) {
+    response.port.comName = "/dev/usb.whatever";
+
+    Board.requestPort(function(error, port) {
+      should.equal(port, response.port);
+      done();
+    });
+  });
+
+  it("calls callback with an acceptable port: acm", function(done) {
+    response.port.comName = "/dev/ttyACM0";
+
+    Board.requestPort(function(error, port) {
+      should.equal(port, response.port);
+      done();
+    });
+  });
+
+  it("calls callback with an acceptable port: com", function(done) {
+    response.port.comName = "COM0";
+
+    Board.requestPort(function(error, port) {
+      should.equal(port, response.port);
+      done();
+    });
+  });
+
+  it("doesn't call callback with an unacceptable port: Bluetooth-Incoming-Port", function(done) {
+    response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
+
+    Board.requestPort(function(error, port) {
+      should.equal(port, null);
+      should.equal(error.message, "No Acceptable Port Found");
+      done();
+    });
+  });
+
+});
+
+
 describe("board", function() {
 
   var spy;
