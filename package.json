@@ -20,7 +20,6 @@
     "grunt-jscs": "~2.1.0",
     "grunt-mocha-test": "~0.12.7",
     "mocha": "^2.3.x",
-    "rewire": "~2.3.4",
     "should": "^7.1.x",
     "sinon": "~1.17.1"
   },

@@ -1,12 +1,13 @@
-var util = require("util"), events = require("events");
+var util = require("util");
+var Emitter = require("events").EventEmitter;
 
-var MockSerialPort = function (path) {
+function SerialPort(path) {
   this.isClosed = false;
-};
+}
 
-util.inherits(MockSerialPort, events.EventEmitter);
+util.inherits(SerialPort, Emitter);
 
-MockSerialPort.prototype.write = function (buffer) {
+SerialPort.prototype.write = function (buffer) {
   // Tests are written to work with arrays not buffers
   // this shouldn"t impact the data, just the container
   // This also should be changed in future test rewrites
@@ -18,8 +19,9 @@ MockSerialPort.prototype.write = function (buffer) {
   this.emit("write", buffer);
 };
 
-MockSerialPort.prototype.close = function () {
+SerialPort.prototype.close = function () {
   this.isClosed = true;
 };
 
-module.exports.SerialPort = MockSerialPort;
+module.exports.SerialPort = SerialPort;
+module.exports.list = function(callback) {};

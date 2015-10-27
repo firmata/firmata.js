@@ -1,14 +1,15 @@
-var rewire = require("rewire");
+global.IS_TEST_MODE = true;
+
 var firmata = process.env.FIRMATA_COV ?
-  rewire("../lib-cov/firmata") :
-  rewire("../lib/firmata");
-var SerialPort = require("./MockSerialPort").SerialPort;
+  require("../lib-cov/firmata") :
+  require("../lib/firmata");
+var com = require("../test/MockSerialPort");
 var Encoder7Bit = require("../lib/encoder7bit");
 var should = require("should");
 var sinon = require("sinon");
 
 var Board = firmata.Board;
-var spy;
+var SerialPort = com.SerialPort;
 
 var ANALOG_MAPPING_QUERY = 0x69;
 var ANALOG_MAPPING_RESPONSE = 0x6A;
@@ -59,8 +60,11 @@ var STRING_DATA = 0x71;
 var SYSTEM_RESET = 0xFF;
 
 
+var sandbox = sinon.sandbox.create();
+
 describe("board", function() {
 
+  var spy;
   var serialPort = new SerialPort("/path/to/fake/usb");
   var boardStarted = false;
   var board = new Board(serialPort, function(err) {
@@ -70,11 +74,13 @@ describe("board", function() {
 
 
   beforeEach(function() {
-    spy = sinon.spy(SerialPort);
+    spy = sandbox.spy(com, "SerialPort");
 
     board._events.length = 0;
+  });
 
-    firmata.__set__("SerialPort", spy);
+  afterEach(function() {
+    sandbox.restore();
   });
 
   it("uses serialport defaults", function(done) {
@@ -271,7 +277,7 @@ describe("board", function() {
   });
 
   it("Optionally call setSamplingInterval after queryfirmware", function(done) {
-    var spy = sinon.spy(Board.prototype, "setSamplingInterval");
+    var spy = sandbox.spy(Board.prototype, "setSamplingInterval");
     var serialPort = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
@@ -299,7 +305,7 @@ describe("board", function() {
   });
 
   it("Does not call setSamplingInterval after queryfirmware by default", function(done) {
-    var spy = sinon.spy(Board.prototype, "setSamplingInterval");
+    var spy = sandbox.spy(Board.prototype, "setSamplingInterval");
     var serialPort = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
@@ -461,7 +467,7 @@ describe("board", function() {
   });
 
   it("allows setting a valid sampling interval", function(done) {
-    var spy = sinon.spy(board.transport, "write");
+    var spy = sandbox.spy(board.transport, "write");
 
     // Valid sampling interval
     board.setSamplingInterval(20);
@@ -732,7 +738,7 @@ describe("board", function() {
   });
 
   it("should be able to receive an i2c reply", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
     board.i2cConfig(1);
     board.sendI2CReadRequest(0x68, 4, handler);
     should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_REQUEST, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, END_SYSEX]);
@@ -1167,7 +1173,7 @@ describe("board", function() {
   });
 
   it("has an i2cWrite method, that writes a data array", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
 
     board.i2cConfig(0);
     board.i2cWrite(0x53, [1, 2]);
@@ -1179,7 +1185,7 @@ describe("board", function() {
   });
 
   it("has an i2cWrite method, that writes a byte", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
 
     board.i2cConfig(0);
     board.i2cWrite(0x53, 1);
@@ -1191,7 +1197,7 @@ describe("board", function() {
   });
 
   it("has an i2cWrite method, that writes a data array to a register", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
 
     board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, [1, 2]);
@@ -1203,7 +1209,7 @@ describe("board", function() {
   });
 
   it("has an i2cWrite method, that writes a data byte to a register", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
 
     board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, 1);
@@ -1215,7 +1221,7 @@ describe("board", function() {
   });
 
   it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
 
     board.i2cConfig(0);
     board.i2cWrite(0x53, 0xB2, 1);
@@ -1227,7 +1233,7 @@ describe("board", function() {
   });
 
   it("has an i2cRead method that reads continuously", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
 
     board.i2cConfig(0);
     board.i2cRead(0x53, 0x04, handler);
@@ -1249,7 +1255,7 @@ describe("board", function() {
   });
 
   it("has an i2cRead method that reads a register continuously", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
 
     board.i2cConfig(0);
     board.i2cRead(0x53, 0xB2, 0x04, handler);
@@ -1272,7 +1278,7 @@ describe("board", function() {
 
 
   it("has an i2cRead method that reads continuously", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
 
     board.i2cConfig(0);
     board.i2cRead(0x53, 0x04, handler);
@@ -1294,7 +1300,7 @@ describe("board", function() {
   });
 
   it("has an i2cReadOnce method that reads a register once", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
 
     board.i2cConfig(0);
     board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
@@ -1312,7 +1318,7 @@ describe("board", function() {
   });
 
   it("has an i2cReadOnce method that reads a register once", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
 
     board.i2cConfig(0);
     board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
@@ -1415,7 +1421,7 @@ describe("board", function() {
   });
 
   it("has a serialRead method that sets READ_CONTINUOUS mode", function(done) {
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
     board.serialRead(0x08, handler);
 
     serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
@@ -1435,7 +1441,7 @@ describe("board", function() {
       (244 >> 7) & 0x7F,
     ];
 
-    var handler = sinon.spy(function() {});
+    var handler = sandbox.spy(function() {});
     board.serialRead(0x08, handler);
 
     for (var i = 0; i < 5; i++) {
@@ -1466,7 +1472,7 @@ describe("board", function() {
 
   it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
     var maxBytesToRead = 4;
-    var handler = sinon.spy(function () {});
+    var handler = sandbox.spy(function () {});
     board.serialRead(0x08, maxBytesToRead, handler);
 
     serialPort.lastWrite[4].should.equal(4);
@@ -1496,7 +1502,7 @@ describe("board", function() {
   });
 
   it("has a serialListen method that switches software serial port", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
     board.serialListen(0x08);
     serialPort.lastWrite[2].should.equal(SERIAL_LISTEN | 0x08);
     serialPort.lastWrite[3].should.equal(END_SYSEX);
@@ -1506,7 +1512,7 @@ describe("board", function() {
   });
 
   it("should not send a SERIAL_LISTEN message for a hardware serial port", function(done) {
-    var spy = sinon.spy(serialPort, "write");
+    var spy = sandbox.spy(serialPort, "write");
     board.serialListen(0x01);
     should.equal(spy.callCount, 0);
     spy.restore();
