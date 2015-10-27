@@ -9,9 +9,9 @@ before_script:
 env:
   - CXX=g++-4.8
 addons:
- apt:
-   sources:
-     - ubuntu-toolchain-r-test
-   packages:
-     - gcc-4.8
-     - g++-4.8
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
