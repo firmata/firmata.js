@@ -1,6 +1,10 @@
 var Board = require("../");
 
 Board.requestPort(function(error, port) {
+  if (error) {
+    console.log(error);
+    return;
+  }
 
   var register = {
     POWER: 0x2D,
