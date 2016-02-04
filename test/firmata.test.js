@@ -11,6 +11,7 @@ var sinon = require("sinon");
 var Board = firmata.Board;
 var SerialPort = com.SerialPort;
 
+
 var ANALOG_MAPPING_QUERY = 0x69;
 var ANALOG_MAPPING_RESPONSE = 0x6A;
 var ANALOG_MESSAGE = 0xE0;
@@ -22,6 +23,8 @@ var EXTENDED_ANALOG = 0x6F;
 var I2C_CONFIG = 0x78;
 var I2C_REPLY = 0x77;
 var I2C_REQUEST = 0x76;
+var I2C_READ_MASK = 0x18;   // 0b00011000
+var I2C_END_TX_MASK = 0x40; // 0b01000000
 var ONEWIRE_CONFIG_REQUEST = 0x41;
 var ONEWIRE_DATA = 0x73;
 var ONEWIRE_DELAY_REQUEST_BIT = 0x10;
@@ -158,8 +161,9 @@ describe("board", function() {
     (typeof err).should.equal("undefined");
   });
 
-
   beforeEach(function() {
+    Board.test.i2cActive.clear();
+
     spy = sandbox.spy(com, "SerialPort");
 
     board._events.length = 0;
@@ -1339,6 +1343,252 @@ describe("board", function() {
     should.throws(function() {
       board.servoConfig({});
     });
+
+    done();
+  });
+
+  it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", function(done) {
+    board.i2cConfig();
+
+    should.deepEqual(Board.test.i2cActive.get(board), { delay: 0 });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, with call to i2cConfig that includes address", function(done) {
+    board.i2cConfig({
+      address: 0x00
+    });
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWrite)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cWrite(0x00, [0x01, 0x02]);
+    board.i2cWrite(0x05, [0x06, 0x07]);
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWriteReg)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cWriteReg(0x00, 0x01, 0x02);
+    board.i2cWriteReg(0x05, 0x06, 0x07);
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/ Register)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cRead(0x00, 0x01, 1, function() {});
+    board.i2cRead(0x05, 0x06, 1, function() {});
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/o Register)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cRead(0x00, 1, function() {});
+    board.i2cRead(0x05, 1, function() {});
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cReadOnce(0x00, 0x01, 1, function() {});
+    board.i2cReadOnce(0x05, 0x06, 1, function() {});
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/o Register)", function(done) {
+    // This has to be called no matter what,
+    // but it might be the case that it's called once in a program,
+    // where there are several different i2c peripherals.
+    board.i2cConfig();
+
+    board.i2cReadOnce(0x00, 1, function() {});
+    board.i2cReadOnce(0x05, 1, function() {});
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: true,
+      },
+      5: {
+        stopTX: true,
+      },
+      delay: 0,
+    });
+
+    done();
+  });
+
+  it("can store arbitrary settings for an i2c peripheral via i2cConfig", function(done) {
+    board.i2cConfig({
+      address: 0x00,
+      settings: {
+        whatever: true,
+      }
+    });
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      delay: 0,
+      0: {
+        stopTX: true,
+        whatever: true,
+      }
+    });
+
+    done();
+  });
+
+  it("allows stored i2c peripheral settings to be reconfigured via i2cConfig", function(done) {
+    board.i2cConfig({
+      address: 0x00,
+      settings: {
+        stopTX: false,
+      }
+    });
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: false,
+      },
+      delay: 0,
+    });
+
+    board.i2cConfig({
+      address: 0x00,
+      settings: {
+        stopTX: true,
+      }
+    });
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      delay: 0,
+      0: {
+        stopTX: true,
+      }
+    });
+
+    done();
+  });
+
+  it("allows an i2c peripheral's stopTX to be overridden", function(done) {
+    // var spy = sandbox.spy(board.transport, "write");
+    var mask = 0b01001000;
+
+    board.i2cConfig({
+      address: 0x00,
+      settings: {
+        stopTX: true,
+      }
+    });
+
+    board.i2cReadOnce(0x00, 0x01, 1, function() {});
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 8, 1, 0, 1, 0, 247 ]);
+
+    board.i2cConfig({
+      address: 0x00,
+      settings: {
+        stopTX: false,
+      }
+    });
+
+    should.deepEqual(Board.test.i2cActive.get(board), {
+      0: {
+        stopTX: false,
+      },
+      delay: 0,
+    });
+
+    board.i2cReadOnce(0x00, 0x01, 1, function() {});
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 72, 1, 0, 1, 0, 247 ]);
+
+    board.i2cRead(0x00, 0x01, 1, function() {});
+
+    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 80, 1, 0, 1, 0, 247 ]);
 
     done();
   });

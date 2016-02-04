@@ -139,23 +139,25 @@ If you run *firmata* from the command line it will prompt you for the serial por
   
 ### I2C
   
-- `i2cConfig(options)` 
-
-  Configure and enable I2C, provide no options or delay. Required to enable I2C communication. 
-  ```js
-  options {
-    delay: Number in μs
-  }
-  ```
-
 - `i2cConfig(delay)` 
 
   Configure and enable I2C, optionally provide a value in μs to delay between reads (defaults to `0`). Required to enable I2C communication. 
 
 - `i2cConfig(options)` 
 
-  Configure and enable I2C, optionally provide an object that contains a `delay` property whose value is a number in μs to delay between reads. Required to enable I2C communication. 
+  Configure and enable I2C, optionally provide an object that contains properties to use for  whose value is a number in μs to delay between reads. Required to enable I2C communication. 
+  
+  | Option  | Description | Default | Required? |
+  |---------|-------------|---------|-----------|
+  | delay   | µS delay between setting a register and requesting bytes from the register | 0 | No |
+  | address | Valid I2C address, used when there are specific configurations for a given address | none | No |
+  | settings | An object of properties to associate with a given address. | none | No |
 
+
+  | Setting | Description | Default | Required? |
+  |---------|-------------|---------|-----------|
+  | stopTX  | Stop transmission after setting a register to read from. Setting to `false` will keep the transmission connection active. An example of the `false` behavior is the [MMA8452](https://github.com/sparkfun/MMA8452_Accelerometer/blob/master/Libraries/Arduino/src/SparkFun_MMA8452Q.cpp#L242-L270) | true | No |
+  
 
 - `i2cWrite(address, [...bytes])` 
 
