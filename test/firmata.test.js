@@ -54,6 +54,7 @@ var SERIAL_REPLY = 0x40;
 var SERIAL_CLOSE = 0x50;
 var SERIAL_FLUSH = 0x60;
 var SERIAL_LISTEN = 0x70;
+var SERIAL_UPDATE_BAUD = 0x80;
 var START_SYSEX = 0xF0;
 var STEPPER = 0x72;
 var STRING_DATA = 0x71;
@@ -1602,6 +1603,15 @@ describe("board", function() {
     board.serialListen(0x01);
     should.equal(spy.callCount, 0);
     spy.restore();
+    done();
+  });
+
+  it("has a serialBaud method for updating the baud rate", function (done) {
+    board.serialBaud(0x08, 38400);
+    serialPort.lastWrite[2].should.equal(SERIAL_UPDATE_BAUD | 0x08);
+    serialPort.lastWrite[3].should.equal(38400 & 0x007F);
+    serialPort.lastWrite[4].should.equal((38400 >> 7) & 0x007F);
+    serialPort.lastWrite[5].should.equal((38400 >> 14) & 0x007F);
     done();
   });
 
