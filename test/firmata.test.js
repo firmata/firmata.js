@@ -263,6 +263,25 @@ describe("board", function() {
     serialPort.emit("close");
   });
 
+  it("forwards disconnect events", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+
+    board.on("disconnect", done);
+
+    serialPort.emit("disconnect");
+  });
+
+  it("forwards error events", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+
+    board.on("error", done);
+
+    board.isReady = true;
+    serialPort.emit("error");
+  });
+
   it("sends report version and query firmware if it hasnt received the version within the timeout", function(done) {
     this.timeout(50000);
     var serialPort = new SerialPort("/path/to/fake/usb");
