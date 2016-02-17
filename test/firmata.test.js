@@ -254,6 +254,15 @@ describe("board", function() {
     serialPort.emit("error", "test error");
   });
 
+  it("forwards close events", function(done) {
+    var serialPort = new SerialPort("/path/to/fake/usb");
+    var board = new Board(serialPort, function(err) {});
+
+    board.on("close", done);
+
+    serialPort.emit("close");
+  });
+
   it("sends report version and query firmware if it hasnt received the version within the timeout", function(done) {
     this.timeout(50000);
     var serialPort = new SerialPort("/path/to/fake/usb");
