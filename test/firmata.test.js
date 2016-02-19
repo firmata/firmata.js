@@ -1286,6 +1286,63 @@ describe("board", function() {
     done();
   });
 
+  it("can configure a servo pwm range, with object", function(done) {
+    board.servoConfig({
+      pin: 3,
+      min: 1000,
+      max: 2000,
+    });
+    serialPort.lastWrite[0].should.equal(START_SYSEX);
+    serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
+    serialPort.lastWrite[2].should.equal(0x03);
+
+    serialPort.lastWrite[3].should.equal(1000 & 0x7F);
+    serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
+
+    serialPort.lastWrite[5].should.equal(2000 & 0x7F);
+    serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
+
+    done();
+  });
+
+  it("will throw if servoConfig is missing any parameters", function(done) {
+
+    should.throws(function() {
+      board.servoConfig();
+    });
+
+    should.throws(function() {
+      board.servoConfig(3, 1000);
+    });
+
+    should.throws(function() {
+      board.servoConfig({
+        min: 1000,
+        max: 2000,
+      });
+    });
+
+    should.throws(function() {
+      board.servoConfig({
+        pin: 3,
+        max: 2000,
+      });
+    });
+
+    should.throws(function() {
+      board.servoConfig({
+        pin: 3,
+        min: 1000,
+      });
+    });
+
+    should.throws(function() {
+      board.servoConfig({});
+    });
+
+    done();
+  });
+
   it("has an i2cWrite method, that writes a data array", function(done) {
     var spy = sandbox.spy(serialPort, "write");
 
