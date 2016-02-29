@@ -62,6 +62,8 @@ var STEPPER = 0x72;
 var STRING_DATA = 0x71;
 var SYSTEM_RESET = 0xFF;
 
+// Used by custom sysex tests
+var NON_STANDARD_REPLY = 0x11;
 
 var sandbox = sinon.sandbox.create();
 
@@ -170,6 +172,7 @@ describe("board", function() {
   });
 
   afterEach(function() {
+    Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = undefined;
     sandbox.restore();
   });
 
@@ -811,86 +814,7 @@ describe("board", function() {
     done();
   });
 
-  it("throws if i2c not enabled", function(done) {
 
-    should.throws(function() {
-      board.i2cRead(1, 1, function() {});
-    });
-    should.throws(function() {
-      board.i2cReadOnce(1, 1, function() {});
-    });
-    should.throws(function() {
-      board.i2cWrite(1, [1, 2, 3]);
-    });
-    should.throws(function() {
-      board.i2cWriteReg(1, 1, 1);
-    });
-
-    done();
-  });
-
-  it("should be able to send an i2c config (empty)", function(done) {
-    board.i2cConfig();
-    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 0, 0, END_SYSEX]);
-    done();
-  });
-
-  it("should be able to send an i2c config (number)", function(done) {
-    board.i2cConfig(1);
-    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
-    done();
-  });
-
-  it("should be able to send an i2c config (object with delay property)", function(done) {
-    board.i2cConfig({ delay: 1 });
-    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
-    done();
-  });
-
-  it("should be able to send an i2c request", function(done) {
-    board.i2cConfig(1);
-    board.sendI2CWriteRequest(0x68, [1, 2, 3]);
-    var request = [START_SYSEX, I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, END_SYSEX];
-    should.deepEqual(serialPort.lastWrite, request);
-    done();
-  });
-
-  it("should be able to receive an i2c reply", function(done) {
-    var handler = sandbox.spy(function() {});
-    board.i2cConfig(1);
-    board.sendI2CReadRequest(0x68, 4, handler);
-    should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_REQUEST, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, END_SYSEX]);
-
-    // Start
-    serialPort.emit("data", [START_SYSEX]);
-    // Reply
-    serialPort.emit("data", [I2C_REPLY]);
-    // Address
-    serialPort.emit("data", [0x68 % 128]);
-    serialPort.emit("data", [0x68 >> 7]);
-    // Register
-    serialPort.emit("data", [0]);
-    serialPort.emit("data", [0]);
-    // Data 0
-    serialPort.emit("data", [1 & 0x7F]);
-    serialPort.emit("data", [(1 >> 7) & 0x7F]);
-    // Data 1
-    serialPort.emit("data", [2 & 0x7F]);
-    serialPort.emit("data", [(2 >> 7) & 0x7F]);
-    // Data 2
-    serialPort.emit("data", [3 & 0x7F]);
-    serialPort.emit("data", [(3 >> 7) & 0x7F]);
-    // Data 3
-    serialPort.emit("data", [4 & 0x7F]);
-    serialPort.emit("data", [(4 >> 7) & 0x7F]);
-    // End
-    serialPort.emit("data", [END_SYSEX]);
-
-    should.equal(handler.callCount, 1);
-    should.deepEqual(handler.getCall(0).args[0], [1, 2, 3, 4]);
-
-    done();
-  });
   it("should be able to send a string", function(done) {
     var bytes = new Buffer("test string", "utf8");
     var length = bytes.length;
@@ -1275,669 +1199,862 @@ describe("board", function() {
     serialPort.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
   });
 
-  it("can configure a servo pwm range", function(done) {
-    board.servoConfig(3, 1000, 2000);
-    serialPort.lastWrite[0].should.equal(START_SYSEX);
-    serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
-    serialPort.lastWrite[2].should.equal(0x03);
+  describe("servo", function() {
+    it("can configure a servo pwm range", function(done) {
+      board.servoConfig(3, 1000, 2000);
+      serialPort.lastWrite[0].should.equal(START_SYSEX);
+      serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
+      serialPort.lastWrite[2].should.equal(0x03);
 
-    serialPort.lastWrite[3].should.equal(1000 & 0x7F);
-    serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
+      serialPort.lastWrite[3].should.equal(1000 & 0x7F);
+      serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
 
-    serialPort.lastWrite[5].should.equal(2000 & 0x7F);
-    serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
+      serialPort.lastWrite[5].should.equal(2000 & 0x7F);
+      serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
 
-    done();
-  });
-
-  it("can configure a servo pwm range, with object", function(done) {
-    board.servoConfig({
-      pin: 3,
-      min: 1000,
-      max: 2000,
-    });
-    serialPort.lastWrite[0].should.equal(START_SYSEX);
-    serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
-    serialPort.lastWrite[2].should.equal(0x03);
-
-    serialPort.lastWrite[3].should.equal(1000 & 0x7F);
-    serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
-
-    serialPort.lastWrite[5].should.equal(2000 & 0x7F);
-    serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
-
-    done();
-  });
-
-  it("will throw if servoConfig is missing any parameters", function(done) {
-
-    should.throws(function() {
-      board.servoConfig();
+      done();
     });
 
-    should.throws(function() {
-      board.servoConfig(3, 1000);
-    });
-
-    should.throws(function() {
-      board.servoConfig({
-        min: 1000,
-        max: 2000,
-      });
-    });
-
-    should.throws(function() {
-      board.servoConfig({
-        pin: 3,
-        max: 2000,
-      });
-    });
-
-    should.throws(function() {
+    it("can configure a servo pwm range, with object", function(done) {
       board.servoConfig({
         pin: 3,
         min: 1000,
+        max: 2000,
       });
+      serialPort.lastWrite[0].should.equal(START_SYSEX);
+      serialPort.lastWrite[1].should.equal(SERVO_CONFIG);
+      serialPort.lastWrite[2].should.equal(0x03);
+
+      serialPort.lastWrite[3].should.equal(1000 & 0x7F);
+      serialPort.lastWrite[4].should.equal((1000 >> 7) & 0x7F);
+
+      serialPort.lastWrite[5].should.equal(2000 & 0x7F);
+      serialPort.lastWrite[6].should.equal((2000 >> 7) & 0x7F);
+
+      done();
     });
 
-    should.throws(function() {
-      board.servoConfig({});
-    });
+    it("will throw if servoConfig is missing any parameters", function(done) {
 
-    done();
+      should.throws(function() {
+        board.servoConfig();
+      });
+
+      should.throws(function() {
+        board.servoConfig(3, 1000);
+      });
+
+      should.throws(function() {
+        board.servoConfig({
+          min: 1000,
+          max: 2000,
+        });
+      });
+
+      should.throws(function() {
+        board.servoConfig({
+          pin: 3,
+          max: 2000,
+        });
+      });
+
+      should.throws(function() {
+        board.servoConfig({
+          pin: 3,
+          min: 1000,
+        });
+      });
+
+      should.throws(function() {
+        board.servoConfig({});
+      });
+
+      done();
+    });
   });
 
-  it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", function(done) {
-    board.i2cConfig();
+  describe("I2C", function() {
 
-    should.deepEqual(Board.test.i2cActive.get(board), { delay: 0 });
+    it("throws if i2c not enabled", function(done) {
 
-    done();
-  });
+      should.throws(function() {
+        board.i2cRead(1, 1, function() {});
+      });
+      should.throws(function() {
+        board.i2cReadOnce(1, 1, function() {});
+      });
+      should.throws(function() {
+        board.i2cWrite(1, [1, 2, 3]);
+      });
+      should.throws(function() {
+        board.i2cWriteReg(1, 1, 1);
+      });
 
-  it("creates default settings for an i2c peripheral, with call to i2cConfig that includes address", function(done) {
-    board.i2cConfig({
-      address: 0x00
+      done();
     });
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      delay: 0,
+    it("should be able to send an i2c config (empty)", function(done) {
+      board.i2cConfig();
+      should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 0, 0, END_SYSEX]);
+      done();
     });
 
-    done();
-  });
-
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWrite)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
-
-    board.i2cWrite(0x00, [0x01, 0x02]);
-    board.i2cWrite(0x05, [0x06, 0x07]);
-
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+    it("should be able to send an i2c config (number)", function(done) {
+      board.i2cConfig(1);
+      should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
+      done();
     });
 
-    done();
-  });
-
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWriteReg)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
-
-    board.i2cWriteReg(0x00, 0x01, 0x02);
-    board.i2cWriteReg(0x05, 0x06, 0x07);
-
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+    it("should be able to send an i2c config (object with delay property)", function(done) {
+      board.i2cConfig({ delay: 1 });
+      should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
+      done();
     });
 
-    done();
-  });
-
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/ Register)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
-
-    board.i2cRead(0x00, 0x01, 1, function() {});
-    board.i2cRead(0x05, 0x06, 1, function() {});
-
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+    it("should be able to send an i2c request", function(done) {
+      board.i2cConfig(1);
+      board.sendI2CWriteRequest(0x68, [1, 2, 3]);
+      var request = [START_SYSEX, I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, END_SYSEX];
+      should.deepEqual(serialPort.lastWrite, request);
+      done();
     });
 
-    done();
-  });
+    it("should be able to receive an i2c reply", function(done) {
+      var handler = sandbox.spy(function() {});
+      board.i2cConfig(1);
+      board.sendI2CReadRequest(0x68, 4, handler);
+      should.deepEqual(serialPort.lastWrite, [START_SYSEX, I2C_REQUEST, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, END_SYSEX]);
 
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/o Register)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
+      // Start
+      serialPort.emit("data", [START_SYSEX]);
+      // Reply
+      serialPort.emit("data", [I2C_REPLY]);
+      // Address
+      serialPort.emit("data", [0x68 % 128]);
+      serialPort.emit("data", [0x68 >> 7]);
+      // Register
+      serialPort.emit("data", [0]);
+      serialPort.emit("data", [0]);
+      // Data 0
+      serialPort.emit("data", [1 & 0x7F]);
+      serialPort.emit("data", [(1 >> 7) & 0x7F]);
+      // Data 1
+      serialPort.emit("data", [2 & 0x7F]);
+      serialPort.emit("data", [(2 >> 7) & 0x7F]);
+      // Data 2
+      serialPort.emit("data", [3 & 0x7F]);
+      serialPort.emit("data", [(3 >> 7) & 0x7F]);
+      // Data 3
+      serialPort.emit("data", [4 & 0x7F]);
+      serialPort.emit("data", [(4 >> 7) & 0x7F]);
+      // End
+      serialPort.emit("data", [END_SYSEX]);
 
-    board.i2cRead(0x00, 1, function() {});
-    board.i2cRead(0x05, 1, function() {});
+      should.equal(handler.callCount, 1);
+      should.deepEqual(handler.getCall(0).args[0], [1, 2, 3, 4]);
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+      done();
+    });
+    it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", function(done) {
+      board.i2cConfig();
+
+      should.deepEqual(Board.test.i2cActive.get(board), { delay: 0 });
+
+      done();
     });
 
-    done();
-  });
+    it("creates default settings for an i2c peripheral, with call to i2cConfig that includes address", function(done) {
+      board.i2cConfig({
+        address: 0x00
+      });
 
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
 
-    board.i2cReadOnce(0x00, 0x01, 1, function() {});
-    board.i2cReadOnce(0x05, 0x06, 1, function() {});
-
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+      done();
     });
 
-    done();
-  });
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWrite)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
 
-  it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/o Register)", function(done) {
-    // This has to be called no matter what,
-    // but it might be the case that it's called once in a program,
-    // where there are several different i2c peripherals.
-    board.i2cConfig();
+      board.i2cWrite(0x00, [0x01, 0x02]);
+      board.i2cWrite(0x05, [0x06, 0x07]);
 
-    board.i2cReadOnce(0x00, 1, function() {});
-    board.i2cReadOnce(0x05, 1, function() {});
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: true,
-      },
-      5: {
-        stopTX: true,
-      },
-      delay: 0,
+      done();
     });
 
-    done();
-  });
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWriteReg)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
 
-  it("can store arbitrary settings for an i2c peripheral via i2cConfig", function(done) {
-    board.i2cConfig({
-      address: 0x00,
-      settings: {
-        whatever: true,
+      board.i2cWriteReg(0x00, 0x01, 0x02);
+      board.i2cWriteReg(0x05, 0x06, 0x07);
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
+
+      done();
+    });
+
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/ Register)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
+
+      board.i2cRead(0x00, 0x01, 1, function() {});
+      board.i2cRead(0x05, 0x06, 1, function() {});
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
+
+      done();
+    });
+
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/o Register)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
+
+      board.i2cRead(0x00, 1, function() {});
+      board.i2cRead(0x05, 1, function() {});
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
+
+      done();
+    });
+
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
+
+      board.i2cReadOnce(0x00, 0x01, 1, function() {});
+      board.i2cReadOnce(0x05, 0x06, 1, function() {});
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
+
+      done();
+    });
+
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/o Register)", function(done) {
+      // This has to be called no matter what,
+      // but it might be the case that it's called once in a program,
+      // where there are several different i2c peripherals.
+      board.i2cConfig();
+
+      board.i2cReadOnce(0x00, 1, function() {});
+      board.i2cReadOnce(0x05, 1, function() {});
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: true,
+        },
+        5: {
+          stopTX: true,
+        },
+        delay: 0,
+      });
+
+      done();
+    });
+
+    it("can store arbitrary settings for an i2c peripheral via i2cConfig", function(done) {
+      board.i2cConfig({
+        address: 0x00,
+        settings: {
+          whatever: true,
+        }
+      });
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        delay: 0,
+        0: {
+          stopTX: true,
+          whatever: true,
+        }
+      });
+
+      done();
+    });
+
+    it("allows stored i2c peripheral settings to be reconfigured via i2cConfig", function(done) {
+      board.i2cConfig({
+        address: 0x00,
+        settings: {
+          stopTX: false,
+        }
+      });
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: false,
+        },
+        delay: 0,
+      });
+
+      board.i2cConfig({
+        address: 0x00,
+        settings: {
+          stopTX: true,
+        }
+      });
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        delay: 0,
+        0: {
+          stopTX: true,
+        }
+      });
+
+      done();
+    });
+
+    it("allows an i2c peripheral's stopTX to be overridden", function(done) {
+      // var spy = sandbox.spy(board.transport, "write");
+      var mask = 0b01001000;
+
+      board.i2cConfig({
+        address: 0x00,
+        settings: {
+          stopTX: true,
+        }
+      });
+
+      board.i2cReadOnce(0x00, 0x01, 1, function() {});
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 8, 1, 0, 1, 0, 247 ]);
+
+      board.i2cConfig({
+        address: 0x00,
+        settings: {
+          stopTX: false,
+        }
+      });
+
+      should.deepEqual(Board.test.i2cActive.get(board), {
+        0: {
+          stopTX: false,
+        },
+        delay: 0,
+      });
+
+      board.i2cReadOnce(0x00, 0x01, 1, function() {});
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 72, 1, 0, 1, 0, 247 ]);
+
+      board.i2cRead(0x00, 0x01, 1, function() {});
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 80, 1, 0, 1, 0, 247 ]);
+
+      done();
+    });
+
+    it("has an i2cWrite method, that writes a data array", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+
+      board.i2cConfig(0);
+      board.i2cWrite(0x53, [1, 2]);
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 2, 0, 247 ]);
+      should.equal(spy.callCount, 2);
+      spy.restore();
+      done();
+    });
+
+    it("has an i2cWrite method, that writes a byte", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+
+      board.i2cConfig(0);
+      board.i2cWrite(0x53, 1);
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 247 ]);
+      should.equal(spy.callCount, 2);
+      spy.restore();
+      done();
+    });
+
+    it("has an i2cWrite method, that writes a data array to a register", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+
+      board.i2cConfig(0);
+      board.i2cWrite(0x53, 0xB2, [1, 2]);
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247 ]);
+      should.equal(spy.callCount, 2);
+      spy.restore();
+      done();
+    });
+
+    it("has an i2cWrite method, that writes a data byte to a register", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+
+      board.i2cConfig(0);
+      board.i2cWrite(0x53, 0xB2, 1);
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+      should.equal(spy.callCount, 2);
+      spy.restore();
+      done();
+    });
+
+    it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+
+      board.i2cConfig(0);
+      board.i2cWrite(0x53, 0xB2, 1);
+
+      should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+      should.equal(spy.callCount, 2);
+      spy.restore();
+      done();
+    });
+
+    it("has an i2cRead method that reads continuously", function(done) {
+      var handler = sandbox.spy(function() {});
+
+      board.i2cConfig(0);
+      board.i2cRead(0x53, 0x04, handler);
+
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
+        ]);
       }
+
+      should.equal(handler.callCount, 5);
+      should.equal(handler.getCall(0).args[0].length, 4);
+      should.equal(handler.getCall(1).args[0].length, 4);
+      should.equal(handler.getCall(2).args[0].length, 4);
+      should.equal(handler.getCall(3).args[0].length, 4);
+      should.equal(handler.getCall(4).args[0].length, 4);
+
+      done();
     });
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      delay: 0,
-      0: {
-        stopTX: true,
-        whatever: true,
+    it("has an i2cRead method that reads a register continuously", function(done) {
+      var handler = sandbox.spy(function() {});
+
+      board.i2cConfig(0);
+      board.i2cRead(0x53, 0xB2, 0x04, handler);
+
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
+        ]);
       }
+
+      should.equal(handler.callCount, 5);
+      should.equal(handler.getCall(0).args[0].length, 4);
+      should.equal(handler.getCall(1).args[0].length, 4);
+      should.equal(handler.getCall(2).args[0].length, 4);
+      should.equal(handler.getCall(3).args[0].length, 4);
+      should.equal(handler.getCall(4).args[0].length, 4);
+
+      done();
     });
 
-    done();
-  });
 
-  it("allows stored i2c peripheral settings to be reconfigured via i2cConfig", function(done) {
-    board.i2cConfig({
-      address: 0x00,
-      settings: {
-        stopTX: false,
+    it("has an i2cRead method that reads continuously", function(done) {
+      var handler = sandbox.spy(function() {});
+
+      board.i2cConfig(0);
+      board.i2cRead(0x53, 0x04, handler);
+
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
+        ]);
       }
+
+      should.equal(handler.callCount, 5);
+      should.equal(handler.getCall(0).args[0].length, 4);
+      should.equal(handler.getCall(1).args[0].length, 4);
+      should.equal(handler.getCall(2).args[0].length, 4);
+      should.equal(handler.getCall(3).args[0].length, 4);
+      should.equal(handler.getCall(4).args[0].length, 4);
+
+      done();
     });
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: false,
-      },
-      delay: 0,
-    });
+    it("has an i2cReadOnce method that reads a register once", function(done) {
+      var handler = sandbox.spy(function() {});
 
-    board.i2cConfig({
-      address: 0x00,
-      settings: {
-        stopTX: true,
+      board.i2cConfig(0);
+      board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
+
+      // Emit data enough times to potentially break it.
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
+        ]);
       }
+
+      should.equal(handler.callCount, 1);
+      should.equal(handler.getCall(0).args[0].length, 4);
+      done();
     });
 
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      delay: 0,
-      0: {
-        stopTX: true,
+    it("has an i2cReadOnce method that reads a register once", function(done) {
+      var handler = sandbox.spy(function() {});
+
+      board.i2cConfig(0);
+      board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
+
+      // Emit data enough times to potentially break it.
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
+        ]);
       }
+
+      should.equal(handler.callCount, 1);
+      should.equal(handler.getCall(0).args[0].length, 4);
+      done();
     });
-
-    done();
   });
 
-  it("allows an i2c peripheral's stopTX to be overridden", function(done) {
-    // var spy = sandbox.spy(board.transport, "write");
-    var mask = 0b01001000;
-
-    board.i2cConfig({
-      address: 0x00,
-      settings: {
-        stopTX: true,
-      }
-    });
-
-    board.i2cReadOnce(0x00, 0x01, 1, function() {});
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 8, 1, 0, 1, 0, 247 ]);
-
-    board.i2cConfig({
-      address: 0x00,
-      settings: {
-        stopTX: false,
-      }
-    });
-
-    should.deepEqual(Board.test.i2cActive.get(board), {
-      0: {
-        stopTX: false,
-      },
-      delay: 0,
-    });
-
-    board.i2cReadOnce(0x00, 0x01, 1, function() {});
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 72, 1, 0, 1, 0, 247 ]);
-
-    board.i2cRead(0x00, 0x01, 1, function() {});
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 0, 80, 1, 0, 1, 0, 247 ]);
-
-    done();
-  });
-
-  it("has an i2cWrite method, that writes a data array", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-
-    board.i2cConfig(0);
-    board.i2cWrite(0x53, [1, 2]);
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 2, 0, 247 ]);
-    should.equal(spy.callCount, 2);
-    spy.restore();
-    done();
-  });
-
-  it("has an i2cWrite method, that writes a byte", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-
-    board.i2cConfig(0);
-    board.i2cWrite(0x53, 1);
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 1, 0, 247 ]);
-    should.equal(spy.callCount, 2);
-    spy.restore();
-    done();
-  });
-
-  it("has an i2cWrite method, that writes a data array to a register", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-
-    board.i2cConfig(0);
-    board.i2cWrite(0x53, 0xB2, [1, 2]);
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247 ]);
-    should.equal(spy.callCount, 2);
-    spy.restore();
-    done();
-  });
-
-  it("has an i2cWrite method, that writes a data byte to a register", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-
-    board.i2cConfig(0);
-    board.i2cWrite(0x53, 0xB2, 1);
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
-    should.equal(spy.callCount, 2);
-    spy.restore();
-    done();
-  });
-
-  it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-
-    board.i2cConfig(0);
-    board.i2cWrite(0x53, 0xB2, 1);
-
-    should.deepEqual(serialPort.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
-    should.equal(spy.callCount, 2);
-    spy.restore();
-    done();
-  });
-
-  it("has an i2cRead method that reads continuously", function(done) {
-    var handler = sandbox.spy(function() {});
-
-    board.i2cConfig(0);
-    board.i2cRead(0x53, 0x04, handler);
-
-    for (var i = 0; i < 5; i++) {
-      serialPort.emit("data", [
-        START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
-    }
-
-    should.equal(handler.callCount, 5);
-    should.equal(handler.getCall(0).args[0].length, 4);
-    should.equal(handler.getCall(1).args[0].length, 4);
-    should.equal(handler.getCall(2).args[0].length, 4);
-    should.equal(handler.getCall(3).args[0].length, 4);
-    should.equal(handler.getCall(4).args[0].length, 4);
-
-    done();
-  });
-
-  it("has an i2cRead method that reads a register continuously", function(done) {
-    var handler = sandbox.spy(function() {});
-
-    board.i2cConfig(0);
-    board.i2cRead(0x53, 0xB2, 0x04, handler);
-
-    for (var i = 0; i < 5; i++) {
-      serialPort.emit("data", [
-        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
-    }
-
-    should.equal(handler.callCount, 5);
-    should.equal(handler.getCall(0).args[0].length, 4);
-    should.equal(handler.getCall(1).args[0].length, 4);
-    should.equal(handler.getCall(2).args[0].length, 4);
-    should.equal(handler.getCall(3).args[0].length, 4);
-    should.equal(handler.getCall(4).args[0].length, 4);
-
-    done();
-  });
-
-
-  it("has an i2cRead method that reads continuously", function(done) {
-    var handler = sandbox.spy(function() {});
-
-    board.i2cConfig(0);
-    board.i2cRead(0x53, 0x04, handler);
-
-    for (var i = 0; i < 5; i++) {
-      serialPort.emit("data", [
-        START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
-    }
-
-    should.equal(handler.callCount, 5);
-    should.equal(handler.getCall(0).args[0].length, 4);
-    should.equal(handler.getCall(1).args[0].length, 4);
-    should.equal(handler.getCall(2).args[0].length, 4);
-    should.equal(handler.getCall(3).args[0].length, 4);
-    should.equal(handler.getCall(4).args[0].length, 4);
-
-    done();
-  });
-
-  it("has an i2cReadOnce method that reads a register once", function(done) {
-    var handler = sandbox.spy(function() {});
-
-    board.i2cConfig(0);
-    board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
-
-    // Emit data enough times to potentially break it.
-    for (var i = 0; i < 5; i++) {
-      serialPort.emit("data", [
-        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
-    }
-
-    should.equal(handler.callCount, 1);
-    should.equal(handler.getCall(0).args[0].length, 4);
-    done();
-  });
-
-  it("has an i2cReadOnce method that reads a register once", function(done) {
-    var handler = sandbox.spy(function() {});
-
-    board.i2cConfig(0);
-    board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
-
-    // Emit data enough times to potentially break it.
-    for (var i = 0; i < 5; i++) {
-      serialPort.emit("data", [
-        START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
-    }
-
-    should.equal(handler.callCount, 1);
-    should.equal(handler.getCall(0).args[0].length, 4);
-    done();
-  });
-
-  it("can configure a software serial port", function(done) {
-    board.serialConfig({
-      portId: 0x08,
-      baud: 9600,
-      rxPin: 10,
-      txPin: 11
-    });
-    serialPort.lastWrite[0].should.equal(START_SYSEX);
-    serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x08);
-
-    serialPort.lastWrite[3].should.equal(9600 & 0x007F);
-    serialPort.lastWrite[4].should.equal((9600 >> 7) & 0x007F);
-    serialPort.lastWrite[5].should.equal((9600 >> 14) & 0x007F);
-
-    serialPort.lastWrite[6].should.equal(10);
-    serialPort.lastWrite[7].should.equal(11);
-
-    serialPort.lastWrite[8].should.equal(END_SYSEX);
-    done();
-  });
-
-  it("can configure a hardware serial port", function(done) {
-    board.serialConfig({
-      portId: 0x01,
-      buad: 57600
-    });
-    serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x01);
-
-    serialPort.lastWrite[3].should.equal(57600 & 0x007F);
-    serialPort.lastWrite[4].should.equal((57600 >> 7) & 0x007F);
-    serialPort.lastWrite[5].should.equal((57600 >> 14) & 0x007F);
-
-    serialPort.lastWrite[6].should.equal(END_SYSEX);
-    done();
-  });
-
-  it("throws an error if no serial port id is passed", function(done) {
-    should.throws(function() {
+  describe("serial", function() {
+    it("can configure a software serial port", function(done) {
       board.serialConfig({
+        portId: 0x08,
+        baud: 9600,
+        rxPin: 10,
+        txPin: 11
+      });
+      serialPort.lastWrite[0].should.equal(START_SYSEX);
+      serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x08);
+
+      serialPort.lastWrite[3].should.equal(9600 & 0x007F);
+      serialPort.lastWrite[4].should.equal((9600 >> 7) & 0x007F);
+      serialPort.lastWrite[5].should.equal((9600 >> 14) & 0x007F);
+
+      serialPort.lastWrite[6].should.equal(10);
+      serialPort.lastWrite[7].should.equal(11);
+
+      serialPort.lastWrite[8].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("can configure a hardware serial port", function(done) {
+      board.serialConfig({
+        portId: 0x01,
         buad: 57600
       });
-    });
-    done();
-  });
+      serialPort.lastWrite[2].should.equal(SERIAL_CONFIG | 0x01);
 
-  it("throws an error if both RX and TX pins are not defined when using Software Serial", function(done) {
-    // throw error if both pins are not specified
-    should.throws(function() {
-      board.serialConfig({
-        portId: 8,
-        buad: 57600
+      serialPort.lastWrite[3].should.equal(57600 & 0x007F);
+      serialPort.lastWrite[4].should.equal((57600 >> 7) & 0x007F);
+      serialPort.lastWrite[5].should.equal((57600 >> 14) & 0x007F);
+
+      serialPort.lastWrite[6].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("throws an error if no serial port id is passed", function(done) {
+      should.throws(function() {
+        board.serialConfig({
+          buad: 57600
+        });
       });
+      done();
     });
 
-    // throw error if only one serial pin is specified
-    should.throws(function() {
-      board.serialConfig({
-        portId: 8,
-        buad: 57600,
-        txPin: 0
+    it("throws an error if both RX and TX pins are not defined when using Software Serial", function(done) {
+      // throw error if both pins are not specified
+      should.throws(function() {
+        board.serialConfig({
+          portId: 8,
+          buad: 57600
+        });
       });
+
+      // throw error if only one serial pin is specified
+      should.throws(function() {
+        board.serialConfig({
+          portId: 8,
+          buad: 57600,
+          txPin: 0
+        });
+      });
+      done();
     });
-    done();
+
+    it("can write a single byte to a serial port", function(done) {
+      board.serialWrite(0x08, [1]);
+      serialPort.lastWrite[2].should.equal(SERIAL_WRITE | 0x08);
+      serialPort.lastWrite[3].should.equal(1 & 0x7F);
+      serialPort.lastWrite[4].should.equal((1 >> 7) & 0x7F);
+      serialPort.lastWrite[5].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("can write a byte array to a serial port", function(done) {
+      board.serialWrite(0x08, [252, 253, 254]);
+      serialPort.lastWrite[2].should.equal(SERIAL_WRITE | 0x08);
+      serialPort.lastWrite[3].should.equal(252 & 0x7F);
+      serialPort.lastWrite[4].should.equal((252 >> 7) & 0x7F);
+      serialPort.lastWrite[7].should.equal(254 & 0x7F);
+      serialPort.lastWrite[8].should.equal((254 >> 7) & 0x7F);
+      serialPort.lastWrite[9].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("has a serialRead method that sets READ_CONTINUOUS mode", function(done) {
+      var handler = sandbox.spy(function() {});
+      board.serialRead(0x08, handler);
+
+      serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
+      serialPort.lastWrite[3].should.equal(0);
+      serialPort.lastWrite[4].should.equal(END_SYSEX);
+
+      done();
+    });
+
+    it("has a serialRead method that reads continuously", function(done) {
+      var inBytes = [
+        242 & 0x7F,
+        (242 >> 7) & 0x7F,
+        243 & 0x7F,
+        (243 >> 7) & 0x7F,
+        244 & 0x7F,
+        (244 >> 7) & 0x7F,
+      ];
+
+      var handler = sandbox.spy(function() {});
+      board.serialRead(0x08, handler);
+
+      for (var i = 0; i < 5; i++) {
+        serialPort.emit("data", [
+          START_SYSEX,
+          SERIAL_MESSAGE,
+          SERIAL_REPLY | 0x08,
+          inBytes[0],
+          inBytes[1],
+          inBytes[2],
+          inBytes[3],
+          inBytes[4],
+          inBytes[5],
+          END_SYSEX
+        ]);
+      }
+
+      should.equal(handler.callCount, 5);
+      should.equal(handler.getCall(0).args[0].length, 3);
+      should.equal(handler.getCall(0).args[0][0], 242);
+      should.equal(handler.getCall(0).args[0][2], 244);
+      should.equal(handler.getCall(1).args[0].length, 3);
+      should.equal(handler.getCall(2).args[0].length, 3);
+      should.equal(handler.getCall(3).args[0].length, 3);
+      should.equal(handler.getCall(4).args[0].length, 3);
+      done();
+    });
+
+    it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
+      var maxBytesToRead = 4;
+      var handler = sandbox.spy(function () {});
+      board.serialRead(0x08, maxBytesToRead, handler);
+
+      serialPort.lastWrite[4].should.equal(4);
+      serialPort.lastWrite[5].should.equal(0);
+      serialPort.lastWrite[6].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("has a serialStop method that sets STOP_READING mode", function(done) {
+      board.serialStop(0x08);
+      serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
+      serialPort.lastWrite[3].should.equal(1);
+      serialPort.lastWrite[4].should.equal(END_SYSEX);
+      done();
+    });
+
+    it("has a serialClose method", function(done) {
+      board.serialClose(0x09);
+      serialPort.lastWrite[2].should.equal(SERIAL_CLOSE | 0x09);
+      done();
+    });
+
+    it("has a serialFlush method", function(done) {
+      board.serialFlush(0x02);
+      serialPort.lastWrite[2].should.equal(SERIAL_FLUSH | 0x02);
+      done();
+    });
+
+    it("has a serialListen method that switches software serial port", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+      board.serialListen(0x08);
+      serialPort.lastWrite[2].should.equal(SERIAL_LISTEN | 0x08);
+      serialPort.lastWrite[3].should.equal(END_SYSEX);
+      should.equal(spy.callCount, 1);
+      spy.restore();
+      done();
+    });
+
+    it("should not send a SERIAL_LISTEN message for a hardware serial port", function(done) {
+      var spy = sandbox.spy(serialPort, "write");
+      board.serialListen(0x01);
+      should.equal(spy.callCount, 0);
+      spy.restore();
+      done();
+    });
+
   });
 
-  it("can write a single byte to a serial port", function(done) {
-    board.serialWrite(0x08, [1]);
-    serialPort.lastWrite[2].should.equal(SERIAL_WRITE | 0x08);
-    serialPort.lastWrite[3].should.equal(1 & 0x7F);
-    serialPort.lastWrite[4].should.equal((1 >> 7) & 0x7F);
-    serialPort.lastWrite[5].should.equal(END_SYSEX);
-    done();
-  });
+  describe("sysex: custom messages and response handlers", function() {
 
-  it("can write a byte array to a serial port", function(done) {
-    board.serialWrite(0x08, [252, 253, 254]);
-    serialPort.lastWrite[2].should.equal(SERIAL_WRITE | 0x08);
-    serialPort.lastWrite[3].should.equal(252 & 0x7F);
-    serialPort.lastWrite[4].should.equal((252 >> 7) & 0x7F);
-    serialPort.lastWrite[7].should.equal(254 & 0x7F);
-    serialPort.lastWrite[8].should.equal((254 >> 7) & 0x7F);
-    serialPort.lastWrite[9].should.equal(END_SYSEX);
-    done();
-  });
+    it("should allow custom SYSEX_RESPONSE handlers", function(done) {
 
-  it("has a serialRead method that sets READ_CONTINUOUS mode", function(done) {
-    var handler = sandbox.spy(function() {});
-    board.serialRead(0x08, handler);
+      should.equal(Board.SYSEX_RESPONSE[NON_STANDARD_REPLY], undefined);
 
-    serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
-    serialPort.lastWrite[3].should.equal(0);
-    serialPort.lastWrite[4].should.equal(END_SYSEX);
+      Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = function(board) {
+        var payload = [];
+        var sub = board.currentBuffer[2];
 
-    done();
-  });
+        for (var i = 3, length = board.currentBuffer.length - 1; i < length; i += 2) {
+          payload.push(board.currentBuffer[i] | (board.currentBuffer[i + 1] << 7));
+        }
 
-  it("has a serialRead method that reads continuously", function(done) {
-    var inBytes = [
-      242 & 0x7F,
-      (242 >> 7) & 0x7F,
-      243 & 0x7F,
-      (243 >> 7) & 0x7F,
-      244 & 0x7F,
-      (244 >> 7) & 0x7F,
-    ];
+        board.emit("non-standard-reply-" + sub, payload);
+      };
 
-    var handler = sandbox.spy(function() {});
-    board.serialRead(0x08, handler);
+      // User code may add this emitter
+      board.on("non-standard-reply-4", function(payload) {
+        should.deepEqual(payload, [0, 1, 2, 3, 4]);
+        done();
+      });
 
-    for (var i = 0; i < 5; i++) {
+      // Emit mock data to trigger the NON_STANDARD_REPLY handler
       serialPort.emit("data", [
-        START_SYSEX,
-        SERIAL_MESSAGE,
-        SERIAL_REPLY | 0x08,
-        inBytes[0],
-        inBytes[1],
-        inBytes[2],
-        inBytes[3],
-        inBytes[4],
-        inBytes[5],
-        END_SYSEX
+        //                               SUB   Data...
+        START_SYSEX, NON_STANDARD_REPLY, 0x04, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
       ]);
-    }
+    });
 
-    should.equal(handler.callCount, 5);
-    should.equal(handler.getCall(0).args[0].length, 3);
-    should.equal(handler.getCall(0).args[0][0], 242);
-    should.equal(handler.getCall(0).args[0][2], 244);
-    should.equal(handler.getCall(1).args[0].length, 3);
-    should.equal(handler.getCall(2).args[0].length, 3);
-    should.equal(handler.getCall(3).args[0].length, 3);
-    should.equal(handler.getCall(4).args[0].length, 3);
-    done();
+    it("should provide a SAFE API to define custom SYSEX_RESPONSE handlers", function(done) {
+
+      var incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
+
+      board.sysexResponse(NON_STANDARD_REPLY, function(data) {
+        // Data does NOT include:
+        // [0] START_SYSEX
+        // [1] NON_STANDARD_REPLY
+        // [n] END_SYSEX
+
+        should.deepEqual(data, [0, 0, 1, 0, 2, 0, 3, 0, 4, 0]);
+        should.deepEqual(Board.decode(data), [0, 1, 2, 3, 4]);
+
+        done();
+      });
+
+      serialPort.emit("data", incoming);
+    });
+
+    it("should allow sending arbitrary sysex commands", function(done) {
+
+      var write = sandbox.stub(serialPort, "write");
+
+      board.sysexCommand([
+        I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F,
+      ]);
+
+      var sent = write.lastCall.args[0];
+
+      should.equal(sent[0], START_SYSEX);
+      should.equal(sent[1], I2C_REQUEST);
+      should.equal(sent[2], 0x68);
+      should.equal(sent[3], 0 << 3);
+      should.equal(sent[4], 1 & 0x7F);
+      should.equal(sent[5], (1 >> 7) & 0x7F);
+      should.equal(sent[6], END_SYSEX);
+
+      done();
+    });
+
   });
+});
 
-  it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
-    var maxBytesToRead = 4;
-    var handler = sandbox.spy(function () {});
-    board.serialRead(0x08, maxBytesToRead, handler);
+describe("Board.encode/Board.decode", function() {
 
-    serialPort.lastWrite[4].should.equal(4);
-    serialPort.lastWrite[5].should.equal(0);
-    serialPort.lastWrite[6].should.equal(END_SYSEX);
-    done();
+  describe("Board.encode", function() {
+    it("should encode arbitrary data", function(done) {
+      should.deepEqual(Board.encode([0, 1, 2, 3, 4]), [0, 0, 1, 0, 2, 0, 3, 0, 4, 0]);
+      done();
+    });
+    it("returns a fresh array", function(done) {
+      var data = [];
+      should.notEqual(Board.encode(data), data);
+      done();
+    });
   });
+  describe("Board.decode", function() {
+    it("should decode arbitrary data", function(done) {
+      should.deepEqual(Board.decode([0, 0, 1, 0, 2, 0, 3, 0, 4, 0]), [0, 1, 2, 3, 4]);
+      done();
+    });
 
-  it("has a serialStop method that sets STOP_READING mode", function(done) {
-    board.serialStop(0x08);
-    serialPort.lastWrite[2].should.equal(SERIAL_READ | 0x08);
-    serialPort.lastWrite[3].should.equal(1);
-    serialPort.lastWrite[4].should.equal(END_SYSEX);
-    done();
+    it("must fail to decode uneven data", function(done) {
+      should.throws(function() {
+        Board.decode([0, 0, 1, 0, 2, 0, 3, 0, 4]);
+      });
+      done();
+    });
+
+    it("returns a fresh array", function(done) {
+      var data = [];
+      should.notEqual(Board.decode(data), data);
+      done();
+    });
   });
-
-  it("has a serialClose method", function(done) {
-    board.serialClose(0x09);
-    serialPort.lastWrite[2].should.equal(SERIAL_CLOSE | 0x09);
-    done();
-  });
-
-  it("has a serialFlush method", function(done) {
-    board.serialFlush(0x02);
-    serialPort.lastWrite[2].should.equal(SERIAL_FLUSH | 0x02);
-    done();
-  });
-
-  it("has a serialListen method that switches software serial port", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-    board.serialListen(0x08);
-    serialPort.lastWrite[2].should.equal(SERIAL_LISTEN | 0x08);
-    serialPort.lastWrite[3].should.equal(END_SYSEX);
-    should.equal(spy.callCount, 1);
-    spy.restore();
-    done();
-  });
-
-  it("should not send a SERIAL_LISTEN message for a hardware serial port", function(done) {
-    var spy = sandbox.spy(serialPort, "write");
-    board.serialListen(0x01);
-    should.equal(spy.callCount, 0);
-    spy.restore();
-    done();
-  });
-
 });
