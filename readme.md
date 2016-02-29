@@ -307,7 +307,32 @@ If you run *firmata* from the command line it will prompt you for the serial por
   **For SoftwareSerial only**. Only a single SoftwareSerial instance can read data at a time. Call this method to set this port to be the reading port in the case there are multiple SoftwareSerial instances.
 
 
+### Sysex
+
+- `board.sysexResponse(commandByte, handler)` 
   
+  Allow user code to handle arbitrary sysex responses. `commandByte` must be associated with some message that's expected from the slave device. The `handler` is called with an array of _raw_ data from the slave. Data decoding must be done within the handler itself.
+  
+  - Use `Board.decode(data)` to extract useful values from the incoming response data.
+ 
+- `board.sysexCommand(message)`
+  
+  Allow user code to send arbitrary sysex messages. The `message` array is expected to be all necessary bytes between START_SYSEX and END_SYSEX (non-inclusive). It will be assumed that the data in the message array is already encoded as 2 7-bit bytes LSB first.
+
+  - Use `Board.encode(data)` to encode data values into an array of 7 bit byte pairs.
+
+
+### Encode/Decode
+
+- `Board.encode(data)`
+  
+  Encode an array of 8 bit data values as two 7 bit byte pairs (each). (LSB first)
+
+- `Board.decode(data)`
+  
+  Decode an array of 7 bit byte pairs into a an array of 8 bit data values. (LSB first)
+
+
 ## License 
 
 (The MIT License)
