@@ -1,4 +1,6 @@
 [![Travis Build Status](https://travis-ci.org/jgautier/firmata.svg?branch=master)](https://travis-ci.org/jgautier/firmata) 
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/w026oorwsq44223j?svg=true)](https://ci.appveyor.com/project/rwaldron/firmata)
+
 
 
 # Firmata.js
