@@ -152,7 +152,204 @@ describe("Board.requestPort", function() {
 });
 
 
-describe("Board: instances", function() {
+describe("Board: data handling", function() {
+
+  var SerialPort;
+  var transportWrite;
+  var transport;
+  var initCallback;
+  var board;
+
+  beforeEach(function() {
+    initCallback = sandbox.spy();
+    SerialPort = sandbox.spy(com, "SerialPort");
+    transportWrite = sandbox.spy(SerialPort.prototype, "write");
+    transport = new SerialPort("/path/to/fake/usb");
+    board = new Board(transport, initCallback);
+  });
+
+  afterEach(function() {
+    Board.test.i2cActive.clear();
+    sandbox.restore();
+  });
+
+  describe("SYSEX_RESPONSE", function() {
+    it("QUERY_FIRMWARE", function(done) {
+      var qf = sandbox.spy(Board.SYSEX_RESPONSE, QUERY_FIRMWARE);
+
+      board.versionReceived = true;
+
+      transport.emit("data", [
+        START_SYSEX,
+        QUERY_FIRMWARE,
+        // Version
+        2,
+        3,
+        // Firmware name
+        // "StandardFirmata"
+        83, 0,
+        116, 0,
+        97, 0,
+        110, 0,
+        100, 0,
+        97, 0,
+        114, 0,
+        100, 0,
+        70, 0,
+        105, 0,
+        114, 0,
+        109, 0,
+        97, 0,
+        116, 0,
+        97, 0,
+        END_SYSEX
+      ]);
+
+      assert.equal(qf.callCount, 1);
+      assert.deepEqual(board.firmware, {
+        name: "StandardFirmata",
+        version: {
+          major: 2,
+          minor: 3
+        }
+      });
+
+      done();
+    });
+
+    it("CAPABILITY_RESPONSE", function(done) {
+      var cr = sandbox.spy(Board.SYSEX_RESPONSE, CAPABILITY_RESPONSE);
+
+      board.versionReceived = true;
+
+      // Received over multiple data events
+      transport.emit("data", [
+        START_SYSEX,
+        CAPABILITY_RESPONSE,
+        0, 1, 1, 1, 4, 14, 127,
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+      ]);
+      transport.emit("data", [
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+        0, 1, 1, 1, 4, 14, 127,
+        END_SYSEX
+      ]);
+
+      assert.equal(cr.callCount, 1);
+
+      done();
+    });
+
+    it("PIN_STATE_RESPONSE", function(done) {
+      var cr = sandbox.spy(Board.SYSEX_RESPONSE, PIN_STATE_RESPONSE);
+
+      board.versionReceived = true;
+
+      transport.emit("data", [
+        START_SYSEX,
+        CAPABILITY_RESPONSE,
+        0, 1, 1, 1, 4, 14, 127,
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+        0, 1, 1, 1, 4, 14, 127,
+        END_SYSEX
+      ]);
+
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        0, 1,
+        END_SYSEX
+      ]);
+
+      // Garbage data...
+      transport.emit("data", [
+        1, 1, 1, 1,
+      ]);
+
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        1, 1,
+        END_SYSEX
+      ]);
+
+      // Garbage data followed by valid data
+      transport.emit("data", [
+        1, 1, 1, 1,
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        2, 1,
+        END_SYSEX
+      ]);
+
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        3, 1,
+        END_SYSEX
+      ]);
+
+      assert.equal(cr.callCount, 4);
+
+      done();
+    });
+
+    it("ANALOG_MAPPING_RESPONSE", function(done) {
+      var amr = sandbox.spy(Board.SYSEX_RESPONSE, ANALOG_MAPPING_RESPONSE);
+
+      board.versionReceived = true;
+
+      transport.emit("data", [
+        START_SYSEX,
+        CAPABILITY_RESPONSE,
+        0, 1, 1, 1, 4, 14, 127,
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+        0, 1, 1, 1, 3, 8, 4, 14, 127,
+        0, 1, 1, 1, 4, 14, 127,
+        END_SYSEX
+      ]);
+
+      transport.emit("data", [
+        START_SYSEX,
+        ANALOG_MAPPING_RESPONSE,
+        127, 127, 0, 1,
+        END_SYSEX
+      ]);
+
+      // Garbage data...
+      transport.emit("data", [
+        1, 1, 1, 1,
+      ]);
+
+      transport.emit("data", [
+        START_SYSEX,
+        ANALOG_MAPPING_RESPONSE,
+        0, 1,
+      ]);
+
+      transport.emit("data", [
+        2, 3,
+        END_SYSEX
+      ]);
+
+      // Garbage data followed by valid data
+      transport.emit("data", [
+        1, 1, 1, 1,
+        START_SYSEX,
+        ANALOG_MAPPING_RESPONSE,
+        2, 1,
+        END_SYSEX
+      ]);
+
+      assert.equal(amr.callCount, 3);
+
+      done();
+    });
+  });
+});
+
+describe("Board: lifecycle", function() {
 
   var SerialPort = sandbox.spy(com, "SerialPort");
   var transportWrite = sandbox.spy(SerialPort.prototype, "write");
