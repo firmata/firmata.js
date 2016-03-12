@@ -1590,7 +1590,7 @@ describe("Board: instances", function() {
 
     it("allows an i2c peripheral's stopTX to be overridden", function(done) {
       // var spy = sandbox.spy(board.transport, "write");
-      var mask = 0b01001000;
+      var mask = 0x48; // 01001000
 
       board.i2cConfig({
         address: 0x00,
@@ -2046,6 +2046,131 @@ describe("Board: instances", function() {
       assert.equal(sent[5], (1 >> 7) & 0x7F);
       assert.equal(sent[6], END_SYSEX);
 
+      done();
+    });
+
+  });
+
+  describe("parser", function() {
+
+    beforeEach(function() {
+      board.currentBuffer = [];
+    });
+
+    it("must parse a command from the beginning of a data packet", function (done) {
+      var spy = sandbox.spy();
+      var incoming = [REPORT_VERSION, 0x02, 0x03];
+      board.versionReceived = false;
+      board.on("reportversion", spy);
+      transport.emit("data", incoming);
+      assert.equal(spy.callCount, 1);
+      done();
+    });
+
+    it("must parse a command from the middle of a data packet", function (done) {
+      var spy = sandbox.spy();
+      // includes: analog input, report version, query firmware (incomplete)
+      var incoming = [
+        0xe0, 0x07, 0x07, 0xf9, 0x02, 0x05, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61,
+        0x00, 0x6e, 0x00, 0x64, 0x00
+      ];
+      board.versionReceived = false;
+      board.on("reportversion", spy);
+      transport.emit("data", incoming);
+      assert.equal(spy.callCount, 1);
+      done();
+    });
+
+    it("must not emit command events until REPORT_VERSION is received", function (done) {
+      var spyAnalog = sandbox.spy();
+      var spyVersion = sandbox.spy();
+      // includes: analog input, report version, query firmware (incomplete) and junk
+      // between analog input and report version
+      var incoming = [
+        0xe0, 0x00, 0x71, 0xf9, 0x02, 0x05, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74,
+        0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00
+      ];
+      board.versionReceived = false;
+      board.on("analog-read-0", spyAnalog);
+      board.on("reportversion", spyVersion);
+      transport.emit("data", incoming);
+      assert.equal(spyAnalog.callCount, 0);
+      assert.equal(spyVersion.callCount, 1);
+      done();
+    });
+
+    it("must parse multiple commands from a single packet", function (done) {
+      var spyAnalog = sandbox.spy();
+      var spyVersion = sandbox.spy();
+      // includes: report version, analog input, query firmware (incomplete) and junk
+      // between analog input and report version
+      var incoming = [
+        0xf9, 0x02, 0x05, 0xe0, 0x00, 0x71, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74,
+        0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00
+      ];
+      board.versionReceived = false;
+      board.on("reportversion", spyVersion);
+      board.on("analog-read-0", spyAnalog);
+      transport.emit("data", incoming);
+      assert.equal(spyVersion.callCount, 1);
+      assert.equal(spyAnalog.callCount, 1);
+      done();
+    });
+
+    it("must parse a complete sysex command after an incomplete sysex command", function (done) {
+      var spy = sandbox.spy();
+      // includes: query firmware (incomplete sysex), pin state response (pin 2)
+      var incoming = [
+        0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00,
+        0xf0, 0x6e, 0x02, 0x01, 0x01, 0xf7
+      ];
+      board.versionReceived = true;
+      board.on("pin-state-2", spy);
+      transport.emit("data", incoming);
+      assert.equal(spy.callCount, 1);
+      done();
+    });
+
+    it("must parse a non-sysex command after an incomplete sysex command", function (done) {
+      var spy = sandbox.spy();
+      // includes: query firmware (incomplete sysex), analog input
+      var incoming = [
+        0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00,
+        0xe0, 0x00, 0x71
+      ];
+      board.versionReceived = true;
+      board.on("analog-read-0", spy);
+      transport.emit("data", incoming);
+      assert.equal(spy.callCount, 1);
+      done();
+    });
+
+    it("must parse a command spread across multiple data packets", function (done) {
+      var spy = sandbox.spy();
+      // query firmware split across 3 packets with first packet preceeded by junk
+      var incoming1 = [0x07, 0x04, 240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0];
+      var incoming2 = [97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0];
+      var incoming3 = [97, 0, 116, 0, 97, 0, 247];
+
+      board.versionReceived = true;
+      board.on("queryfirmware", spy);
+      transport.emit("data", incoming1);
+      transport.emit("data", incoming2);
+      transport.emit("data", incoming3);
+      assert.equal(spy.callCount, 1);
+      done();
+    });
+
+    it("must parse a command spread across multiple single byte transfers", function (done) {
+      var spy = sandbox.spy();
+      var incoming = [REPORT_VERSION, 0x02, 0x03];
+
+      board.versionReceived = true;
+      board.on("reportversion", spy);
+      for (var i = 0; i < incoming.length; i++) {
+        transport.emit("data", [incoming[i]]);
+      }
+      assert.equal(spy.callCount, 1);
       done();
     });
 
