@@ -5,7 +5,7 @@
 
 # Firmata.js
 
-[Firmata protocol](https://github.com/firmata) implementation for programmatic interaction with Arduino and Arduino compatible development boards.
+[Firmata protocol](https://github.com/firmata/protocol) implementation for programmatic interaction with Arduino and Arduino compatible development boards.
 
 # Install
 
