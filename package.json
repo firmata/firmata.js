@@ -4,10 +4,10 @@
   "version": "0.10.0",
   "author": "Julian Gautier",
   "license": "MIT",
-  "homepage": "http://www.github.com/jgautier/firmata",
+  "homepage": "http://www.github.com/firmata/firmata.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jgautier/firmata.git"
+    "url": "git://github.com/firmata/firmata.js.git"
   },
   "main": "lib/firmata",
   "bin": {
