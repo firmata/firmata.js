@@ -2024,6 +2024,51 @@ describe("Board: lifecycle", function() {
   });
 
   describe("serial", function() {
+
+    it("has a SERIAL_MODES property", function(done) {
+
+      assert.deepEqual(board.SERIAL_MODES, {
+        CONTINUOUS_READ: 0x00,
+        STOP_READING: 0x01,
+      });
+
+      done();
+    });
+
+    it("has a SERIAL_PORT_IDs property", function(done) {
+
+      assert.deepEqual(board.SERIAL_PORT_IDs, {
+        HW_SERIAL0: 0x00,
+        HW_SERIAL1: 0x01,
+        HW_SERIAL2: 0x02,
+        HW_SERIAL3: 0x03,
+        SW_SERIAL0: 0x08,
+        SW_SERIAL1: 0x09,
+        SW_SERIAL2: 0x10,
+        SW_SERIAL3: 0x11,
+        DEFAULT: 0x08,
+      });
+
+      done();
+    });
+
+    // SERIAL_PIN_TYPES is currently unused.
+    // it("has a SERIAL_PIN_TYPES property", function(done) {
+
+    //   assert.deepEqual(board.SERIAL_PORT_IDs, {
+    //     RES_RX0: 0x00,
+    //     RES_TX0: 0x01,
+    //     RES_RX1: 0x02,
+    //     RES_TX1: 0x03,
+    //     RES_RX2: 0x04,
+    //     RES_TX2: 0x05,
+    //     RES_RX3: 0x06,
+    //     RES_TX3: 0x07,
+    //   });
+
+    //   done();
+    // });
+
     it("can configure a software serial port", function(done) {
       board.serialConfig({
         portId: 0x08,
