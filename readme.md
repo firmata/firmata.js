@@ -22,10 +22,6 @@ For global cli use:
 npm install -g firmata
 ```
 
-# Tests
-
-The tests are written with expresso and assume you have the async library install globally. It also assumes you have an Arduino Uno running firmata 2.2 with a photocell and an LED hooked up.
-
 # Usage
 
 ```js    
