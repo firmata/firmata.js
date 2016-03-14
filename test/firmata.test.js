@@ -355,6 +355,34 @@ describe("Board: data handling", function() {
   });
 });
 
+describe("Board: initialization", function() {
+  it("Always returns a Board instance", function(done) {
+    var boards = [
+      new Board("/path/to/fake1"),
+      Board("/path/to/fake2"),
+    ];
+
+    boards.forEach(function(board) {
+      assert.equal(board instanceof Board, true);
+    });
+
+    done();
+  });
+
+  it("Is a subclass of EventEmitter", function(done) {
+
+    var boards = [
+      new Board("/path/to/fake1"),
+      Board("/path/to/fake2"),
+    ];
+
+    boards.forEach(function(board) {
+      assert.equal(board instanceof Emitter, true);
+    });
+    done();
+  });
+});
+
 describe("Board: lifecycle", function() {
 
   var SerialPort = sandbox.spy(com, "SerialPort");
