@@ -1001,13 +1001,181 @@ describe("Board: lifecycle", function() {
   });
 
   it("must be able to write a value to a digital output", function(done) {
-    board.digitalWrite(3, board.HIGH);
-    assert.deepEqual(transport.lastWrite, [DIGITAL_MESSAGE, 8, 0]);
 
-    board.digitalWrite(3, board.LOW);
-    assert.deepEqual(transport.lastWrite, [DIGITAL_MESSAGE, 0, 0]);
+    var write = sandbox.stub(SerialPort.prototype, "write");
+    var expect = [
+      [ 144, 1, 0 ],
+      [ 144, 2, 0 ],
+      [ 144, 4, 0 ],
+      [ 144, 8, 0 ],
+      [ 144, 16, 0 ],
+      [ 144, 32, 0 ],
+      [ 144, 64, 0 ],
+      [ 144, 0, 1 ],
+      [ 145, 1, 0 ],
+      [ 145, 2, 0 ],
+      [ 145, 4, 0 ],
+      [ 145, 8, 0 ],
+      [ 145, 16, 0 ],
+      [ 145, 32, 0 ],
+      [ 145, 64, 0 ],
+      [ 145, 0, 1 ],
+      [ 146, 1, 0 ],
+      [ 146, 2, 0 ],
+      [ 146, 4, 0 ],
+      [ 146, 8, 0 ],
+    ];
 
+    for (var i = 0; i < board.pins.length; i++) {
+      board.digitalWrite(i, board.HIGH);
+      assert.deepEqual(Array.from(write.lastCall.args[0]), expect[i]);
+
+      board.digitalWrite(i, board.LOW);
+    }
     done();
+  });
+
+  it("must be able to track digital writes via ports property", function(done) {
+    for (var i = 0; i < board.pins.length; i++) {
+      board.pins[i].mode = board.MODES.UNKNOWN;
+    }
+
+    var write = sandbox.stub(SerialPort.prototype, "write");
+    var expecting = [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      1,
+      2,
+      4,
+      8,
+    ];
+
+    for (var j = 0; j < board.pins.length; j++) {
+      var port = j >> 3;
+      var expect = expecting[j];
+
+      board.digitalWrite(j, board.HIGH);
+
+      assert.equal(board.ports[port], expect);
+
+      board.digitalWrite(j, board.LOW);
+    }
+    done();
+  });
+
+  it("must be able to write and read to a digital port without garbling state", function(done) {
+    /* This test will change the value of port 1 as follows:
+
+      0b00000001
+      0b00000000
+      0b00000001
+      0b00000101
+      0b00000000
+      0b00000101
+      0b00000001
+    */
+
+    var write = sandbox.stub(SerialPort.prototype, "write");
+    var state = 0;
+    var calls = 0;
+    var expecting = [
+      // 10 is high, 9 is low, 8 is high
+      "101",
+      // 10 is low, 9 is low, 8 is low
+      "0",
+      // 10 is high, 9 is low, 8 is (still) low
+      "100",
+      // 10 is low, 9 is low, 8 is high
+      "1"
+    ];
+
+    for (var i = 0; i < board.pins.length; i++) {
+      board.pins[i].mode = board.MODES.UNKNOWN;
+    }
+
+    for (var j = 0; j < board.ports.length; j++) {
+      board.ports[j] = 0;
+    }
+
+    // No Pins are high on this port
+    assert.equal(board.ports[1].toString(2), "0");
+
+
+    board.pinMode(8, board.MODES.OUTPUT);
+    board.pinMode(10, board.MODES.INPUT);
+    board.digitalRead(10, function(data) {
+      assert.equal(board.ports[1].toString(2), expecting[calls++]);
+
+      if (calls === 4) {
+        done();
+      }
+    });
+    /*
+      Pin   Byte high   Value
+      8     0b00000001  1
+      9     0b00000010  2
+      10    0b00000100  4
+      11    0b00001000  8
+      12    0b00010000  16
+      13    0b00100000  32
+      14    0b01000000  64
+      15    0b10000000  128
+     */
+
+    // Pin 8 is bit 0 of port byte 1, it should now be ON
+    board.digitalWrite(8, 1);
+    assert.equal(board.ports[1].toString(2), "1");
+
+
+    // Pin 8 is bit 0 of port byte 1, it should now be OFF
+    board.digitalWrite(8, 0);
+    assert.equal(board.ports[1].toString(2), "0");
+
+
+    // Pin 8 is bit 0 of port byte 1, it should now be ON
+    board.digitalWrite(8, 1);
+    assert.equal(board.ports[1].toString(2), "1");
+
+
+    transport.emit("data", [DIGITAL_MESSAGE | 1, 4, 0]);
+    board.digitalWrite(8, 0);
+    // Pin 10 is bit 2 (value = 4) of port byte 1, it should now be ON
+    // Pin 8  is bit 0 (value = 1) of port byte 1, it should now be OFF
+    assert.equal(board.ports[1].toString(2), "100");
+
+
+    transport.emit("data", [DIGITAL_MESSAGE | 1, 0, 0]);
+    // Pin 10 is bit 2 (value = 4) of port byte 1, it should now be OFF
+    // Pin 8  is bit 0 (value = 1) of port byte 1, it should now be OFF
+    assert.equal(board.ports[1].toString(2), "0");
+
+
+    // Pin 10 is bit 2 (value = 4) of port byte 1, it should now be ON
+    // Pin 8  is bit 0 (value = 1) of port byte 1, it should now be ON
+    transport.emit("data", [DIGITAL_MESSAGE | 1, 4, 0]);
+    board.digitalWrite(8, 1);
+    assert.equal(board.ports[1].toString(2), "101");
+
+
+    // Pin 10 is bit 2 (value = 4) of port byte 1, it should now be OFF
+    // Pin 8  is bit 0 (value = 1) of port byte 1, it should now be ON
+    transport.emit("data", [DIGITAL_MESSAGE | 1, 0, 0]);
+    board.digitalWrite(8, 1);
+    assert.equal(board.ports[1].toString(2), "1");
   });
 
   it("must be able to write a value to a digital output to a board that skipped capabilities check", function(done) {
@@ -1030,8 +1198,11 @@ describe("Board: lifecycle", function() {
   });
 
   it("must be able to write a value to an analog pin being used as a digital output", function(done) {
-    board.digitalWrite(19, board.HIGH);
+    board.ports[2] = 0;
+
     // `DIGITAL_MESSAGE | 2` => Digital Message on Port 2
+    //
+    board.digitalWrite(19, board.HIGH);
     assert.deepEqual(transport.lastWrite, [DIGITAL_MESSAGE | 2, 8, 0]);
 
     board.digitalWrite(19, board.LOW);
