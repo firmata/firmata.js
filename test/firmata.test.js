@@ -1724,6 +1724,48 @@ describe("Board: lifecycle", function() {
       done();
     });
 
+    it("can stop a continuous read with i2cStop(address)", function(done) {
+      board.i2cConfig();
+
+      Object.keys(board._events).forEach(function(event) {
+        if (event.startsWith("I2C-reply-")) {
+          board.removeAllListeners(event);
+        }
+      });
+      var removeAllListeners = sandbox.spy(board, "removeAllListeners");
+
+
+      board.i2cRead(0x00, 1, initNoop);
+      board.i2cStop(0x00);
+
+      assert.equal(transport.lastWrite[2], 0x00);
+      assert.equal(transport.lastWrite[3], board.I2C_MODES.STOP_READING << 3);
+      assert.equal(transport.lastWrite[4], END_SYSEX);
+      assert.equal(removeAllListeners.callCount, 1);
+      done();
+    });
+
+    it("can stop a continuous read with i2cStop({address})", function(done) {
+      board.i2cConfig();
+
+      Object.keys(board._events).forEach(function(event) {
+        if (event.startsWith("I2C-reply-")) {
+          board.removeAllListeners(event);
+        }
+      });
+      var removeAllListeners = sandbox.spy(board, "removeAllListeners");
+
+      board.i2cRead(0x00, 1, initNoop);
+      board.i2cStop({ address: 0x00 });
+
+      assert.equal(transport.lastWrite[2], 0x00);
+      assert.equal(transport.lastWrite[3], board.I2C_MODES.STOP_READING << 3);
+      assert.equal(transport.lastWrite[4], END_SYSEX);
+      assert.equal(removeAllListeners.callCount, 1);
+      done();
+    });
+
+
     it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", function(done) {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
