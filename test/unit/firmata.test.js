@@ -1,20 +1,5 @@
-// Global Environment Dependencies
-global.IS_TEST_MODE = true;
-
-// Built-in Dependencies
-var Emitter = require("events").EventEmitter;
-
-// Third-Party Dependencies
-var assert = require("should");
-var sinon = require("sinon");
-
-// Internal Dependencies
-var firmata = process.env.FIRMATA_COV ?
-  require("../lib-cov/firmata") :
-  require("../lib/firmata");
-var com = require("../test/MockSerialPort");
-var Encoder7Bit = require("../lib/encoder7bit");
-
+// Test specific internals
+//
 var Board = firmata.Board;
 
 var ANALOG_MAPPING_QUERY = 0x69;

@@ -1,11 +1,12 @@
-var util = require("util");
-var Emitter = require("events").EventEmitter;
-
 function SerialPort(path) {
   this.isClosed = false;
 }
 
-util.inherits(SerialPort, Emitter);
+SerialPort.prototype = Object.create(Emitter.prototype, {
+  constructor: {
+    value: SerialPort
+  }
+});
 
 SerialPort.prototype.write = function (buffer) {
   // Tests are written to work with arrays not buffers

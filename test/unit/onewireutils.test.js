@@ -1,7 +1,3 @@
-var assert = require("should");
-var OneWire = require("../lib/onewireutils");
-var Encoder7Bit = require("../lib/encoder7bit.js");
-
 describe("OneWire.crc8/OneWire.readDevices", function () {
   describe("OneWire.crc8", function () {
     it("must CRC check data read from firmata", function (done) {
