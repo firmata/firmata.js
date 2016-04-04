@@ -17,7 +17,7 @@ describe("Bundling", function() {
   });
 
   it("must browserify", function(done) {
-    this.timeout(2500);
+    this.timeout(1e5);
     var b = browserify(entry);
 
     b.bundle(function(error, buffer) {
@@ -31,7 +31,7 @@ describe("Bundling", function() {
   });
 
   it("must webpack", function(done) {
-    this.timeout(5000);
+    this.timeout(1e5);
     var w = webpack({
       entry: entry,
       output: {
