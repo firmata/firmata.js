@@ -1,3 +1,5 @@
+appveyor.yml
+coverage
 todo
 gruntfile.js
 .travis.yml
