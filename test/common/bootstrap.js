@@ -12,12 +12,10 @@ global.browserify = require("browserify");
 global.sinon = require("sinon");
 global.webpack = require("webpack");
 
-// Test Specific Internal Dependencies
-global.com = require("./MockSerialPort");
-
 // Internal Dependencies
 global.Encoder7Bit = require("../../lib/encoder7bit");
 global.OneWire = require("../../lib/onewireutils");
+global.com = require("../../lib/com");
 global.firmata = process.env.FIRMATA_COV ?
   require("../../lib-cov/firmata") :
   require("../../lib/firmata");
