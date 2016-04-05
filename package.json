@@ -31,6 +31,7 @@
     "serialport": "^2.0.1"
   },
   "scripts": {
-    "test": "grunt"
+    "test": "grunt",
+    "attempt-timeout": "node examples/test-i2c-read.js && node examples/test-i2c-read.js && node examples/test-analog-read.js && node examples/test-analog-read.js && node examples/test-serial-read.js && node examples/test-serial-read.js"
   }
 }
