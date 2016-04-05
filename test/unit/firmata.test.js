@@ -164,6 +164,239 @@ describe("Board: data handling", function() {
     sandbox.restore();
   });
 
+  describe("MIDI_RESPONSE", function() {
+    describe("REPORT_VERSION", function() {
+
+      it("must ignore unexpected adc data until REPORT_VERSION", function(done) {
+
+        var parts = [
+          fixtures.unexpected.adc.slice(0, 200),
+          fixtures.unexpected.adc.slice(200, 400),
+          fixtures.unexpected.adc.slice(400, 513),
+        ];
+
+        var am = sandbox.spy(Board.MIDI_RESPONSE, ANALOG_MESSAGE);
+        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+
+        assert.equal(am.callCount, 0);
+        assert.equal(rv.callCount, 0);
+        assert.equal(board.currentBuffer.length, 0);
+
+        for (var i = 0; i < parts[0].length; i++) {
+          transport.emit("data", [parts[0][i]]);
+        }
+
+        // There are several I2C_REPLY messages in this data,
+        // none should trigger the I2C_REPLY handler.
+        assert.equal(am.callCount, 0);
+        assert.equal(rv.callCount, 0);
+
+
+        // The REPORT_VERSION byte is at index 38
+        var reportVersionAtByteIndex = 38;
+        // We won't know it's been seen until all three
+        // bytes have been read and processed.
+        var reportVersionCalledAtIndex = -1;
+        var isVersioned = false;
+        // This contains a valid REPORT_VERSION message
+        //
+        for (var j = 0; j < parts[1].length; j++) {
+          transport.emit("data", [parts[1][j]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = j;
+          }
+        }
+
+        // There are several I2C_REPLY messages in this data,
+        // none should trigger the I2C_REPLY handler.
+        assert.equal(am.callCount, 0);
+
+        // The REPORT_VERSION was received near the end (index 38)
+        assert.equal(rv.callCount, 1);
+        assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
+
+
+        for (var k = 0; k < parts[2].length; k++) {
+          transport.emit("data", [parts[2][k]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = k;
+          }
+        }
+
+        // A single I2C_REPLY exists in the third data set
+        assert.equal(am.callCount, 1);
+        // No more REPORT_VERSION calls arrived
+        assert.equal(rv.callCount, 1);
+        // The buffer is empty
+        assert.equal(board.currentBuffer.length, 0);
+
+        // Another complete I2C_REPLY arrives...
+        transport.emit("data", [0xe0, 0x7f, 0x03]);
+
+        assert.equal(am.callCount, 2);
+        assert.equal(board.currentBuffer.length, 0);
+
+        done();
+      });
+
+      it("must ignore unexpected i2c data until REPORT_VERSION", function(done) {
+
+        var parts = [
+          fixtures.unexpected.i2c.slice(0, 200),
+          fixtures.unexpected.i2c.slice(200, 400),
+          fixtures.unexpected.i2c.slice(400, 697),
+        ];
+
+        var ir = sandbox.spy(Board.SYSEX_RESPONSE, I2C_REPLY);
+        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+
+        assert.equal(ir.callCount, 0);
+        assert.equal(rv.callCount, 0);
+        assert.equal(board.currentBuffer.length, 0);
+
+        for (var i = 0; i < parts[0].length; i++) {
+          transport.emit("data", [parts[0][i]]);
+        }
+
+        // There are several I2C_REPLY messages in this data,
+        // none should trigger the I2C_REPLY handler.
+        assert.equal(ir.callCount, 0);
+        assert.equal(rv.callCount, 0);
+
+
+        // The REPORT_VERSION byte is at index 194
+        var reportVersionAtByteIndex = 194;
+        // We won't know it's been seen until all three
+        // bytes have been read and processed.
+        var reportVersionCalledAtIndex = -1;
+        var isVersioned = false;
+        // This contains a valid REPORT_VERSION message
+        //
+        for (var j = 0; j < parts[1].length; j++) {
+          transport.emit("data", [parts[1][j]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = j;
+          }
+        }
+
+        // There are several I2C_REPLY messages in this data,
+        // none should trigger the I2C_REPLY handler.
+        assert.equal(ir.callCount, 0);
+
+        // The REPORT_VERSION was received near the end (index 194)
+        assert.equal(rv.callCount, 1);
+        assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
+
+
+        for (var k = 0; k < parts[2].length; k++) {
+          transport.emit("data", [parts[2][k]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = k;
+          }
+        }
+
+        // A single I2C_REPLY exists in the third data set
+        assert.equal(ir.callCount, 1);
+        // No more REPORT_VERSION calls arrived
+        assert.equal(rv.callCount, 1);
+        // The buffer is empty
+        assert.equal(board.currentBuffer.length, 0);
+
+        // Another complete I2C_REPLY arrives...
+        transport.emit("data", [0xf0, 0x77, 0x0a, 0x00, 0x00, 0x00, 0x06, 0x00, 0x5e, 0x00, 0x05, 0x00, 0x48, 0x01, 0x05, 0x00, 0x1b, 0x01, 0x05, 0x00, 0x3f, 0x01, 0x04, 0x00, 0x16, 0x00, 0x05, 0x00, 0x42, 0x01, 0xf7]);
+
+        assert.equal(ir.callCount, 2);
+        assert.equal(board.currentBuffer.length, 0);
+
+        done();
+      });
+
+      it("must ignore unexpected serial data until REPORT_VERSION", function(done) {
+
+        var parts = [
+          fixtures.unexpected.serial.slice(0, 200),
+          fixtures.unexpected.serial.slice(200, 400),
+          fixtures.unexpected.serial.slice(400, 697),
+        ];
+
+        var sr = sandbox.spy(Board.SYSEX_RESPONSE, SERIAL_MESSAGE);
+        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+
+        assert.equal(sr.callCount, 0);
+        assert.equal(rv.callCount, 0);
+        assert.equal(board.currentBuffer.length, 0);
+
+        for (var i = 0; i < parts[0].length; i++) {
+          transport.emit("data", [parts[0][i]]);
+        }
+
+        // There are several SERIAL_MESSAGE messages in this data,
+        // none should trigger the SERIAL_MESSAGE handler.
+        assert.equal(sr.callCount, 0);
+        assert.equal(rv.callCount, 0);
+
+
+        // The REPORT_VERSION byte is at index 86
+        var reportVersionAtByteIndex = 86;
+        // We won't know it's been seen until all three
+        // bytes have been read and processed.
+        var reportVersionCalledAtIndex = -1;
+        var isVersioned = false;
+        // This contains a valid REPORT_VERSION message
+        //
+        for (var j = 0; j < parts[1].length; j++) {
+          transport.emit("data", [parts[1][j]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = j;
+          }
+        }
+
+        // There are several SERIAL_MESSAGE messages in this data,
+        // none should trigger the SERIAL_MESSAGE handler.
+        assert.equal(sr.callCount, 0);
+
+        // The REPORT_VERSION was received near the end (index 86)
+        assert.equal(rv.callCount, 1);
+        assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
+
+
+        for (var k = 0; k < parts[2].length; k++) {
+          transport.emit("data", [parts[2][k]]);
+
+          if (rv.callCount === 1 && !isVersioned) {
+            isVersioned = true;
+            reportVersionCalledAtIndex = k;
+          }
+        }
+
+        // A single SERIAL_MESSAGE exists in the third data set
+        assert.equal(sr.callCount, 1);
+        // No more REPORT_VERSION calls arrived
+        assert.equal(rv.callCount, 1);
+        // The buffer is empty
+        assert.equal(board.currentBuffer.length, 0);
+
+        // Another complete SERIAL_MESSAGE arrives...
+        transport.emit("data", [0xf0, 0x60, 0x48, 0x19, 0x01, 0xf7]);
+
+        assert.equal(sr.callCount, 2);
+        assert.equal(board.currentBuffer.length, 0);
+
+        done();
+      });
+    });
+  });
+
   describe("SYSEX_RESPONSE", function() {
     it("QUERY_FIRMWARE", function(done) {
       var qf = sandbox.spy(Board.SYSEX_RESPONSE, QUERY_FIRMWARE);
@@ -559,7 +792,7 @@ describe("Board: lifecycle", function() {
     transport.emit("error");
   });
 
-  it("sends report version and query firmware if it hasnt received the version within the timeout", function(done) {
+  it("sends 'REPORT_VERSION' and 'QUERY_FIRMWARE' if it hasnt received the version within the timeout", function(done) {
     this.timeout(50000);
     var transport = new SerialPort("/path/to/fake/usb");
     var opt = {

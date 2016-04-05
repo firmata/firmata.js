@@ -20,4 +20,11 @@ global.firmata = process.env.FIRMATA_COV ?
   require("../../lib-cov/firmata") :
   require("../../lib/firmata");
 
-
+// Fixtures
+global.fixtures = {
+  unexpected: {
+    adc: require("../../test/unit/fixtures/unexpected-data-adc"),
+    i2c: require("../../test/unit/fixtures/unexpected-data-i2c"),
+    serial: require("../../test/unit/fixtures/unexpected-data-serial"),
+  }
+};
