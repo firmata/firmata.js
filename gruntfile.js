@@ -3,7 +3,7 @@ module.exports = function (grunt) {
     mochaTest: {
       files: [
         "test/common/bootstrap.js",
-        "test/unit/*.test.js"
+        "test/unit/*.js"
       ],
     },
     jshint: {
@@ -89,10 +89,23 @@ module.exports = function (grunt) {
     },
   });
 
+  grunt.registerTask("test", ["mochaTest"]);
   grunt.registerTask("default", ["jshint:all", "jscs", "mochaTest"]);
   grunt.loadNpmTasks("grunt-contrib-jshint");
   grunt.loadNpmTasks("grunt-mocha-test");
   grunt.loadNpmTasks("grunt-jsbeautifier");
   grunt.loadNpmTasks("grunt-jscs");
+
+
+  grunt.registerTask("test:file", "Run a single test specified by a target; usage: grunt test:file:<module-name>[.js]", function(file) {
+    if (file) {
+      grunt.config("mochaTest.files", [
+        "test/common/bootstrap.js",
+        "test/unit/" + file + ".js"
+      ]);
+    }
+
+    grunt.task.run("mochaTest");
+  });
 
 };
