@@ -632,10 +632,10 @@ describe("Board: lifecycle", function() {
     var b = new Board("/path/to/fake/usb2", initNoop);
 
     assert.equal(transport.spy.getCall(0).args[0], "/path/to/fake/usb1");
-    assert.deepEqual(transport.spy.getCall(0).args[1], { baudRate: 57600, bufferSize: 1 });
+    assert.deepEqual(transport.spy.getCall(0).args[1], { baudRate: 57600, bufferSize: 256 });
 
     assert.equal(transport.spy.getCall(1).args[0], "/path/to/fake/usb2");
-    assert.deepEqual(transport.spy.getCall(1).args[1], { baudRate: 57600, bufferSize: 1 });
+    assert.deepEqual(transport.spy.getCall(1).args[1], { baudRate: 57600, bufferSize: 256 });
 
     done();
   });
@@ -645,7 +645,7 @@ describe("Board: lifecycle", function() {
     var board = new Board(port, function (err) {});
 
     assert.deepEqual(
-      transport.spy.args, [ [ "fake port", { baudRate: 57600, bufferSize: 1 } ] ]
+      transport.spy.args, [ [ "fake port", { baudRate: 57600, bufferSize: 256 } ] ]
     );
 
     done();
