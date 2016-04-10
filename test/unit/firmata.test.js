@@ -1505,6 +1505,39 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
+  it("must ignore invalid query firmware data", function(done) {
+    board.once("queryfirmware", function() {
+      assert.equal(board.firmware.version.major, 2);
+      assert.equal(board.firmware.version.minor, 5);
+      assert.equal(board.firmware.name.substring(0, 3), "Sta");
+      done();
+    });
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [QUERY_FIRMWARE]);
+    transport.emit("data", [0x02]);
+    transport.emit("data", [0x05]);
+    transport.emit("data", [0x53]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x74]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x61]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x6e]); //<<<
+    transport.emit("data", [0x61]); //<<<
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x2e]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x69]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x6e]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x6f]);
+    transport.emit("data", [0x1]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [END_SYSEX]);
+  });
+
   it("cannot pingRead without PingFirmata", function(done) {
     assert.throws(function() {
       board.pingRead({
