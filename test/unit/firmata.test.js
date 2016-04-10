@@ -1493,7 +1493,7 @@ describe("Board: lifecycle", function() {
 
   it("can query pin state", function(done) {
     board.queryPinState(2, function() {
-      assert.equal(board.pins[2].state, 127);
+      assert.equal(board.pins[2].state, 1024);
       done();
     });
     assert.deepEqual(transport.lastWrite, [START_SYSEX, PIN_STATE_QUERY, 2, END_SYSEX]);
@@ -1501,7 +1501,8 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [PIN_STATE_RESPONSE]);
     transport.emit("data", [2]);
     transport.emit("data", [board.MODES.INPUT]);
-    transport.emit("data", [127]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x08]);
     transport.emit("data", [END_SYSEX]);
   });
 
