@@ -611,7 +611,7 @@ describe("Board: lifecycle", function() {
   var initNoop = sandbox.spy();
 
   var transport = new SerialPort("/path/to/fake/usb");
-  var board = new Board(transport, initCallback);
+  var board = new Board(transport, {firstWriteTimeout: 0}, initCallback);
 
 
   beforeEach(function() {
@@ -907,6 +907,7 @@ describe("Board: lifecycle", function() {
     var transport = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
+      firstWriteTimeout: 0
     };
 
     var board = new Board(transport, options, function() {
