@@ -15,7 +15,7 @@ global.webpack = require("webpack");
 // Internal Dependencies
 global.Encoder7Bit = require("../../lib/encoder7bit");
 global.OneWire = require("../../lib/onewireutils");
-global.com = require("../../lib/com");
+global.SerialPort = require("../../lib/com");
 global.firmata = process.env.FIRMATA_COV ?
   require("../../lib-cov/firmata") :
   require("../../lib/firmata");
