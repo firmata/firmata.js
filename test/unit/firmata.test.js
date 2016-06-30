@@ -67,7 +67,7 @@ describe("Board.requestPort", function() {
   };
 
   beforeEach(function() {
-    sandbox.stub(com, "list", function(callback) {
+    sandbox.stub(SerialPort, "list", function(callback) {
       process.nextTick(function() {
         callback(response.error, [response.port]);
       });
@@ -153,8 +153,8 @@ describe("Board: data handling", function() {
 
   beforeEach(function() {
     initCallback = sandbox.spy();
-    SerialPort = sandbox.spy(com, "SerialPort");
     transportWrite = sandbox.spy(SerialPort.prototype, "write");
+    SerialPort = sandbox.spy(SerialPort);
     transport = new SerialPort("/path/to/fake/usb");
     board = new Board(transport, initCallback);
   });
@@ -603,7 +603,7 @@ describe("Board: initialization", function() {
 
 describe("Board: lifecycle", function() {
 
-  var SerialPort = sandbox.spy(com, "SerialPort");
+  var SerialPort = sandbox.spy(SerialPort);
   var transportWrite = sandbox.spy(SerialPort.prototype, "write");
   var initCallback = sandbox.spy(function(error) {
     assert.equal(typeof error, "undefined");
@@ -617,7 +617,7 @@ describe("Board: lifecycle", function() {
   beforeEach(function() {
     Board.test.i2cActive.clear();
 
-    transport.spy = sandbox.spy(com, "SerialPort");
+    transport.spy = sandbox.spy(SerialPort);
 
     board._events.length = 0;
   });
