@@ -65,6 +65,7 @@ If you run *firmata* from the command line it will prompt you for the serial por
     ONEWIRE: 0x07,
     STEPPER: 0x08,
     SERIAL: 0x0A,
+    PULLUP: 0x0B,
     IGNORE: 0x7F,
     UNKOWN: 0x10
   }
