@@ -1084,7 +1084,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to set pin mode on digital pin", function(done) {
+  it("must be able to set pin mode on digital pin (INPUT)", function(done) {
     board.pinMode(2, board.MODES.INPUT);
     assert.equal(transport.lastWrite[0], PIN_MODE);
     assert.equal(transport.lastWrite[1], 2);
@@ -1093,9 +1093,55 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to read value of digital pin", function(done) {
+  it("must be able to read value of digital pin (INPUT)", function(done) {
     var counter = 0;
     var order = [1, 0, 1, 0];
+    board.digitalRead(2, function(value) {
+      if (value === 1) {
+        counter++;
+      }
+      if (value === 0) {
+        counter++;
+      }
+      if (order[0] === value) {
+        order.shift();
+      }
+      if (counter === 4) {
+        assert.equal(order.length, 0);
+        done();
+      }
+    });
+
+    // Digital reporting turned on...
+    assert.deepEqual(transport.lastWrite, [ 208, 1 ]);
+
+    // Single Byte
+    transport.emit("data", [DIGITAL_MESSAGE]);
+    transport.emit("data", [4 % 128]);
+    transport.emit("data", [4 >> 7]);
+
+    transport.emit("data", [DIGITAL_MESSAGE]);
+    transport.emit("data", [0x00]);
+    transport.emit("data", [0x00]);
+
+    // Multi Byte
+    transport.emit("data", [DIGITAL_MESSAGE, 4 % 128, 4 >> 7]);
+    transport.emit("data", [DIGITAL_MESSAGE, 0x00, 0x00]);
+  });
+
+  it("must be able to set pin mode on digital pin (PULLUP)", function(done) {
+    board.pinMode(3, board.MODES.PULLUP);
+    assert.equal(transport.lastWrite[0], PIN_MODE);
+    assert.equal(transport.lastWrite[1], 3);
+    assert.equal(transport.lastWrite[2], board.MODES.PULLUP);
+    assert.equal(board.pins[3].mode, board.MODES.PULLUP);
+    done();
+  });
+
+  it("must be able to read value of digital pin (PULLUP)", function(done) {
+    var counter = 0;
+    var order = [1, 0, 1, 0];
+    board.pinMode(2, board.MODES.PULLUP);
     board.digitalRead(2, function(value) {
       if (value === 1) {
         counter++;
@@ -1172,6 +1218,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 1023 % 128, 1023 >> 7]);
     transport.emit("data", [ANALOG_MESSAGE | (1 & 0xF), 0 % 128, 0 >> 7]);
   });
+
 
   it("must be able to read value of analog pin on a board that skipped capabilities check", function(done) {
     var transport = new SerialPort("/path/to/fake/usb");
