@@ -1,4 +1,4 @@
-global.IS_TEST_MODE = true;
+process.env.IS_TEST_MODE = true;
 
 // Built-in Dependencies
 global.cp = require("child_process");
