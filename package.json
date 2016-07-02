@@ -28,7 +28,7 @@
   "dependencies": {
     "browser-serialport": "*",
     "es6-shim": "^0.33.6",
-    "serialport": "4.0.0-rc1"
+    "serialport": "^4.0.0"
   },
   "scripts": {
     "test": "grunt",
