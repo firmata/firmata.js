@@ -640,9 +640,9 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("uses default baud rate and buffer size", function (done) {
+  it("uses default baud rate and buffer size", function(done) {
     var port = "fake port";
-    var board = new Board(port, function (err) {});
+    var board = new Board(port, function(err) {});
 
     assert.deepEqual(
       transport.spy.args, [ [ "fake port", { baudRate: 57600, bufferSize: 256 } ] ]
@@ -651,7 +651,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("overrides baud rate and buffer size", function (done) {
+  it("overrides baud rate and buffer size", function(done) {
     var port = "fake port";
     var opt = {
       reportVersionTimeout: 1,
@@ -660,7 +660,7 @@ describe("Board: lifecycle", function() {
         bufferSize: 10
       }
     };
-    var board = new Board(port, opt, function (err) {});
+    var board = new Board(port, opt, function(err) {});
 
     assert.deepEqual(
       transport.spy.args, [ [ "fake port", { baudRate: 5, bufferSize: 10 } ] ]
@@ -2718,7 +2718,7 @@ describe("Board: lifecycle", function() {
 
     it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
       var maxBytesToRead = 4;
-      var handler = sandbox.spy(function () {});
+      var handler = sandbox.spy(function() {});
       board.serialRead(0x08, maxBytesToRead, handler);
 
       assert.equal(transport.lastWrite[4], 4);
@@ -2845,7 +2845,7 @@ describe("Board: lifecycle", function() {
       board.currentBuffer = [];
     });
 
-    it("must parse a command from the beginning of a data packet", function (done) {
+    it("must parse a command from the beginning of a data packet", function(done) {
       var spy = sandbox.spy();
       var incoming = [REPORT_VERSION, 0x02, 0x03];
       board.versionReceived = false;
@@ -2855,7 +2855,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command from the middle of a data packet", function (done) {
+    it("must parse a command from the middle of a data packet", function(done) {
       var spy = sandbox.spy();
       // includes: analog input, report version, query firmware (incomplete)
       var incoming = [
@@ -2869,7 +2869,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must not emit command events until REPORT_VERSION is received", function (done) {
+    it("must not emit command events until REPORT_VERSION is received", function(done) {
       var spyAnalog = sandbox.spy();
       var spyVersion = sandbox.spy();
       // includes: analog input, report version, query firmware (incomplete) and junk
@@ -2887,7 +2887,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse multiple commands from a single packet", function (done) {
+    it("must parse multiple commands from a single packet", function(done) {
       var spyAnalog = sandbox.spy();
       var spyVersion = sandbox.spy();
       // includes: report version, analog input, query firmware (incomplete) and junk
@@ -2905,7 +2905,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a complete sysex command after an incomplete sysex command", function (done) {
+    it("must parse a complete sysex command after an incomplete sysex command", function(done) {
       var spy = sandbox.spy();
       // includes: query firmware (incomplete sysex), pin state response (pin 2)
       var incoming = [
@@ -2919,7 +2919,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a non-sysex command after an incomplete sysex command", function (done) {
+    it("must parse a non-sysex command after an incomplete sysex command", function(done) {
       var spy = sandbox.spy();
       // includes: query firmware (incomplete sysex), analog input
       var incoming = [
@@ -2933,7 +2933,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command spread across multiple data packets", function (done) {
+    it("must parse a command spread across multiple data packets", function(done) {
       var spy = sandbox.spy();
       // query firmware split across 3 packets with first packet preceeded by junk
       var incoming1 = [0x07, 0x04, 240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0];
@@ -2949,7 +2949,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command spread across multiple single byte transfers", function (done) {
+    it("must parse a command spread across multiple single byte transfers", function(done) {
       var spy = sandbox.spy();
       var incoming = [REPORT_VERSION, 0x02, 0x03];
 
