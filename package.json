@@ -26,8 +26,8 @@
     "webpack": "^1.12.14"
   },
   "dependencies": {
-    "browser-serialport": "*",
-    "es6-shim": "^0.33.6",
+    "browser-serialport": "latest",
+    "es6-shim": "latest",
     "serialport": "^4.0.0"
   },
   "scripts": {
