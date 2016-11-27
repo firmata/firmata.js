@@ -307,7 +307,7 @@ If you run *firmata* from the command line it will prompt you for the serial por
 
   ```
   options = {
-    portId: 1,      // <number> The serial port to use (HW_SERIAL1, HW_SERIAL2... )
+    portId: board.SERIAL_PORT_IDs.HW_SERIAL1, // <number> The serial port to use (HW_SERIAL2, SW_SERIAL0, SW_SERIAL1...)
     baud:   115200, // <number> (optional) The baud rate of the serial port; default is 57600
     rxPin:  5,      // <number> (optional)[SW Serial only] The RX pin of the SoftwareSerial instance
     txPin:  6       // <number> (optional)[SW Serial only] The TX pin of the SoftwareSerial instance
