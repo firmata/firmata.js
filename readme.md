@@ -303,19 +303,14 @@ If you run *firmata* from the command line it will prompt you for the serial por
 
 - `board.serialConfig(options)`
 
-  Configure a hardware or serial port
+  Configure a hardware or serial port -- required before using serial read/write functions
 
   ```
-  options {
-    portId {number}
-      The serial port to use
-      (HW_SERIAL1, HW_SERIAL2, HW_SERIAL3, SW_SERIAL0, SW_SERIAL1, SW_SERIAL2, SW_SERIAL3)
-    baud {number}
-      The baud rate of the serial port
-    rxPin {number}
-      [SW Serial only] The RX pin of the SoftwareSerial instance
-    txPin {number}
-      [SW Serial only] The TX pin of the SoftwareSerial instance
+  options = {
+    portId: 1,      // <number> The serial port to use (HW_SERIAL1, HW_SERIAL2... )
+    baud:   115200, // <number> (optional) The baud rate of the serial port; default is 57600
+    rxPin:  5,      // <number> (optional)[SW Serial only] The RX pin of the SoftwareSerial instance
+    txPin:  6       // <number> (optional)[SW Serial only] The TX pin of the SoftwareSerial instance
   }
   ```
 
