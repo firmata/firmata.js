@@ -974,16 +974,19 @@ describe("Board: lifecycle", function() {
         }
         if (index >= 14 && index <= 19) {
           pin.supportedModes.indexOf(0x02).should.not.equal(-1);
+          assert.equal(pin.analogResolution, 10);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x02), -1);
         }
         if ([3, 5, 6, 10, 11].indexOf(index) > -1) {
           pin.supportedModes.indexOf(0x03).should.not.equal(-1);
+          assert.equal(pin.pwmResolution, 8);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x03), -1);
         }
         if (index >= 2) {
           pin.supportedModes.indexOf(0x04).should.not.equal(-1);
+          assert.equal(pin.servoResolution, 14);
         }
       });
       done();
