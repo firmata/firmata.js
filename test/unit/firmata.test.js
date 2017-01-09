@@ -611,7 +611,7 @@ describe("Board: lifecycle", function() {
   var initNoop = sandbox.spy();
 
   var transport = new SerialPort("/path/to/fake/usb");
-  var board = new Board(transport, initCallback);
+  var board = new Board(transport, {firstWriteTimeout: 0}, initCallback);
 
 
   beforeEach(function() {
@@ -702,7 +702,7 @@ describe("Board: lifecycle", function() {
 
   it("emits 'ready' after handshakes complete (skipCapabilities)", function(done) {
     var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true}, initNoop);
+    var board = new Board(transport, {skipCapabilities: true, firstWriteTimeout: 0}, initNoop);
     var oc = 0;
 
     board.on("open", function() {
@@ -728,7 +728,7 @@ describe("Board: lifecycle", function() {
 
   it("emits 'ready' after handshakes complete", function(done) {
     var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+    var board = new Board(transport, {firstWriteTimeout: 0}, initNoop);
     var oc = 0;
 
     board.on("open", function() {
@@ -750,8 +750,10 @@ describe("Board: lifecycle", function() {
     transport.emit("open");
     board.emit("reportversion");
     board.emit("queryfirmware");
-    board.emit("capability-query");
-    board.emit("analog-mapping-query");
+    setTimeout(function() {
+      board.emit("capability-query");
+      board.emit("analog-mapping-query");
+    }, board.settings.firstWriteTimeout);
   });
 
   it("reports errors during connect/ready", function(done) {
@@ -876,7 +878,8 @@ describe("Board: lifecycle", function() {
     var transport = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
-      samplingInterval: 100
+      samplingInterval: 100,
+      firstWriteTimeout: 0
     };
 
     var board = new Board(transport, options, function(err) {
@@ -904,6 +907,7 @@ describe("Board: lifecycle", function() {
     var transport = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
+      firstWriteTimeout: 0
     };
 
     var board = new Board(transport, options, function() {
@@ -1222,7 +1226,7 @@ describe("Board: lifecycle", function() {
 
   it("must be able to read value of analog pin on a board that skipped capabilities check", function(done) {
     var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true, analogPins: [14,15,16,17,18,19]}, initNoop);
+    var board = new Board(transport, {skipCapabilities: true, analogPins: [14,15,16,17,18,19], firstWriteTimeout: 0}, initNoop);
 
     board.on("ready", function() {
       var counter = 0;
@@ -1445,7 +1449,7 @@ describe("Board: lifecycle", function() {
 
   it("must be able to write a value to a digital output to a board that skipped capabilities check", function(done) {
     var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true}, initNoop);
+    var board = new Board(transport, {skipCapabilities: true, firstWriteTimeout: 0}, initNoop);
 
     board.on("ready", function() {
       board.digitalWrite(3, board.HIGH);
