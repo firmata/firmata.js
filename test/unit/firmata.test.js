@@ -1,3 +1,5 @@
+require("../common/bootstrap");
+
 // Test specific internals
 //
 var Board = firmata.Board;

@@ -1,3 +1,5 @@
+require("../common/bootstrap");
+
 describe("OneWire.crc8/OneWire.readDevices", function () {
   describe("OneWire.crc8", function () {
     it("must CRC check data read from firmata", function (done) {
