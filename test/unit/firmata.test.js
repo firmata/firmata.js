@@ -968,7 +968,6 @@ describe("Board: lifecycle", function() {
       assert.equal(board.pins.length, 20);
       board.pins.forEach(function(pin, index) {
         if (index >= 2 && index <= 19) {
-
           pin.supportedModes.indexOf(0).should.not.equal(-1);
           pin.supportedModes.indexOf(1).should.not.equal(-1);
         } else {
@@ -976,16 +975,19 @@ describe("Board: lifecycle", function() {
         }
         if (index >= 14 && index <= 19) {
           pin.supportedModes.indexOf(0x02).should.not.equal(-1);
+          assert.equal(pin.analogResolution, 10);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x02), -1);
         }
         if ([3, 5, 6, 10, 11].indexOf(index) > -1) {
           pin.supportedModes.indexOf(0x03).should.not.equal(-1);
+          assert.equal(pin.pwmResolution, 8);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x03), -1);
         }
         if (index >= 2) {
           pin.supportedModes.indexOf(0x04).should.not.equal(-1);
+          assert.equal(pin.servoResolution, 14);
         }
       });
       done();
@@ -2566,22 +2568,15 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    // SERIAL_PIN_TYPES is currently unused.
-    // it("has a SERIAL_PIN_TYPES property", function(done) {
+    it("has a PIN_LABELS property", function(done) {
 
-    //   assert.deepEqual(board.SERIAL_PORT_IDs, {
-    //     RES_RX0: 0x00,
-    //     RES_TX0: 0x01,
-    //     RES_RX1: 0x02,
-    //     RES_TX1: 0x03,
-    //     RES_RX2: 0x04,
-    //     RES_TX2: 0x05,
-    //     RES_RX3: 0x06,
-    //     RES_TX3: 0x07,
-    //   });
+      assert.deepEqual(board.PIN_LABELS, {
+        serial: ["RX0", "TX0", "RX1", "TX1", "RX2", "TX2", "RX3", "TX3"]
+      });
 
-    //   done();
-    // });
+      done();
+    });
+    
 
     it("can configure a software serial port", function(done) {
       board.serialConfig({

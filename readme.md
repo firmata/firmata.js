@@ -91,8 +91,14 @@ If you run *firmata* from the command line it will prompt you for the serial por
                    // value between 0 and 1023.
     supportedModes: [ ...Number ], // Array of modes from board.MODES that are supported on this pin.
     analogChannel: Number, // Will be 127 for digital pins and the pin number for analog pins.
-    state: Number  // For output pins this is the value of the pin on the board, for digital input
+    state: Number,  // For output pins this is the value of the pin on the board, for digital input
                    // it's the status of the pullup resistor (1 = pullup enabled, 0 = pullup disabled)
+    *Resolution: Number, // Each supported mode may have a property for its resolution corresponding
+                         // to the mode's name. For example, a pin with PWM support may have a property
+                         // of pwmResolution = 8
+    *Label: String // Each supported mode may have a property for its label corresponding
+                   // to the mode's name. For example, a pin with SERIAL support may have a property
+                   // of serialLabel = 'TX0'
   }
   ```
 
