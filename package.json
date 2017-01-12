@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "browserify": "^13.0.0",
+    "coveralls": "^2.11.15",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-jshint": "^1.0.0",
@@ -22,6 +23,7 @@
     "grunt-jscs": "^3.0.1",
     "grunt-mocha-test": "~0.12.7",
     "mocha": "^2.3.x",
+    "nyc": "^10.0.0",
     "should": "^7.1.x",
     "sinon": "~1.17.1",
     "webpack": "^1.12.14"
@@ -33,6 +35,8 @@
   },
   "scripts": {
     "test": "grunt",
-    "attempt-timeout": "node examples/test-i2c-read.js && node examples/test-i2c-read.js && node examples/test-analog-read.js && node examples/test-analog-read.js && node examples/test-serial-read.js && node examples/test-serial-read.js"
+    "attempt-timeout": "node examples/test-i2c-read.js && node examples/test-i2c-read.js && node examples/test-analog-read.js && node examples/test-analog-read.js && node examples/test-serial-read.js && node examples/test-serial-read.js",
+    "test-cover": "nyc grunt test",
+    "coveralls": "nyc --reporter=lcov grunt test && cat ./coverage/lcov.info | coveralls"
   }
 }

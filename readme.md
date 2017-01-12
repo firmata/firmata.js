@@ -1,9 +1,10 @@
+# Firmata.js
+
+
 [![Travis Build Status](https://travis-ci.org/firmata/firmata.js.svg?branch=master)](https://travis-ci.org/firmata/firmata.js)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/w026oorwsq44223j?svg=true)](https://ci.appveyor.com/project/rwaldron/firmata)
+[![Coverage Status](https://coveralls.io/repos/github/firmata/firmata.js/badge.svg?branch=master)](https://coveralls.io/github/firmata/firmata.js?branch=master)
 
-
-
-# Firmata.js
 
 [Firmata protocol](https://github.com/firmata/protocol) implementation for programmatic interaction with Arduino and Arduino compatible development boards.
 
