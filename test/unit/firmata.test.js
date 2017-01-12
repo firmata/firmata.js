@@ -1026,6 +1026,12 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
+  it("board.RESOLUTION.* properties have values via CAPABILITY_RESPONSE", function(done) {
+    assert.equal(board.RESOLUTION.ADC, 1023);
+    assert.equal(board.RESOLUTION.PWM, 255);
+    done();
+  });
+
 
   it("querys analog mappings after capabilities", function(done) {
     //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
