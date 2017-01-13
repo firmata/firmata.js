@@ -578,29 +578,8 @@ describe("Board: data handling", () => {
 });
 
 describe("Board: initialization", () => {
-  it("Always returns a Board instance", done => {
-    const boards = [
-      new Board("/path/to/fake1"),
-      Board("/path/to/fake2"),
-    ];
-
-    boards.forEach(board => {
-      assert.equal(board instanceof Board, true);
-    });
-
-    done();
-  });
-
   it("Is a subclass of EventEmitter", done => {
-
-    const boards = [
-      new Board("/path/to/fake1"),
-      Board("/path/to/fake2"),
-    ];
-
-    boards.forEach(board => {
-      assert.equal(board instanceof Emitter, true);
-    });
+    assert.equal(new Board("/path/to/fake1") instanceof Emitter, true);
     done();
   });
 });
