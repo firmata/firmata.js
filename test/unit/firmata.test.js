@@ -601,6 +601,17 @@ describe("Board: initialization", function() {
     });
     done();
   });
+
+  it("Default RESOLUTION.* values are null", function(done) {
+    var board = new Board("/path/to/fake1");
+
+    assert.equal(typeof board.RESOLUTION, "object");
+    assert.notEqual(board.RESOLUTION, null);
+    assert.equal(board.RESOLUTION.ADC, null);
+    assert.equal(board.RESOLUTION.PWM, null);
+    assert.equal(board.RESOLUTION.DAC, null);
+    done();
+  });
 });
 
 describe("Board: lifecycle", function() {
@@ -1026,9 +1037,9 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("board.RESOLUTION.* properties have values via CAPABILITY_RESPONSE", function(done) {
-    assert.equal(board.RESOLUTION.ADC, 1023);
-    assert.equal(board.RESOLUTION.PWM, 255);
+  it("board.RESOLUTION.* properties recieve values via CAPABILITY_RESPONSE", function(done) {
+    assert.equal(board.RESOLUTION.ADC, 0x3FF);
+    assert.equal(board.RESOLUTION.PWM, 0x0FF);
     done();
   });
 
@@ -1484,11 +1495,16 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to write a value to a analog output", function(done) {
-    board.analogWrite(board.analogPins[1], 1023);
+  it("analogWrite is an alias of pwmWrite (for backward compatibility)", function(done) {
+    assert.ok(board.pwmWrite === board.analogWrite);
+    done();
+  });
+
+  it("must be able to write a PWM value to a capable output", function(done) {
+    board.pwmWrite(board.analogPins[1], 1023);
     assert.deepEqual(transport.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 127, 7]);
 
-    board.analogWrite(board.analogPins[1], 0);
+    board.pwmWrite(board.analogPins[1], 0);
     assert.deepEqual(transport.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 0, 0]);
     done();
   });
@@ -1504,10 +1520,10 @@ describe("Board: lifecycle", function() {
       analogChannel: 127
     };
 
-    board.analogWrite(46, 180);
+    board.pwmWrite(46, 180);
     assert.deepEqual(transport.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 52, 1, END_SYSEX]);
 
-    board.analogWrite(46, 0);
+    board.pwmWrite(46, 0);
     assert.deepEqual(transport.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 0, 0, END_SYSEX]);
 
     // Restore to original length
