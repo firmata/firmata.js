@@ -1,10 +1,11 @@
 appveyor.yml
-coverage
 todo
 gruntfile.js
 .travis.yml
 changelog
 readme.md
+coverage/
+.nyc_output/
 results/
 test/
 
