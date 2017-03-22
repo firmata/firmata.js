@@ -724,6 +724,34 @@ describe("Board: lifecycle", function() {
     sandbox.restore();
   });
 
+  describe("Writing To Transport", function() {
+
+    beforeEach(function() {
+      board.pending = 0;
+    });
+
+    afterEach(function() {
+      board.pending = 0;
+    });
+
+    it("increments pending on writeToTransport", function(done) {
+      sandbox.spy(board.transport, "write");
+
+      assert.equal(board.pending, 0);
+      Board.test.writeToTransport(board, [1, 2, 3, 4]);
+      assert.equal(board.pending, 1);
+
+      var args = board.transport.write.lastCall.args;
+
+      assert.ok(args[0].equals(Buffer([1, 2, 3, 4])));
+
+      args[1]();
+      assert.equal(board.pending, 0);
+
+      done();
+    });
+  });
+
   it("uses serialport defaults", function(done) {
     var a = new Board("/path/to/fake/usb1", initNoop);
     var b = new Board("/path/to/fake/usb2", initNoop);
@@ -1178,17 +1206,17 @@ describe("Board: lifecycle", function() {
 
     // Valid sampling interval
     board.setSamplingInterval(20);
-    assert.ok(Buffer([0xf0, 0x7a, 0x14, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(new Buffer([0xf0, 0x7a, 0x14, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
 
     // Invalid sampling interval is constrained to a valid interval
     // > 65535 => 65535
     board.setSamplingInterval(65540);
-    assert.ok(Buffer([0xf0, 0x7a, 0x7f, 0x7f, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(new Buffer([0xf0, 0x7a, 0x7f, 0x7f, 0xf7]).equals(spy.lastCall.args[0]));
 
     // Invalid sampling interval is constrained to a valid interval
     // < 10 => 10
     board.setSamplingInterval(0);
-    assert.ok(Buffer([0xf0, 0x7a, 0x0a, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(new Buffer([0xf0, 0x7a, 0x0a, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
 
     spy.restore();
     done();
