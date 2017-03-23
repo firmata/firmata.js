@@ -167,6 +167,13 @@ describe("Board: data handling", function() {
   });
 
   describe("MIDI_RESPONSE", function() {
+
+    it("must discard a bad response that meets 3 byte MIDI_RESPONSE criteria", function(done) {
+      transport.emit("data", [NaN, NaN, NaN]);
+      assert.equal(board.currentBuffer.length, 0);
+      done();
+    });
+
     describe("REPORT_VERSION", function() {
 
       it("must ignore unexpected adc data until REPORT_VERSION", function(done) {
@@ -466,6 +473,29 @@ describe("Board: data handling", function() {
       done();
     });
 
+    it("ONEWIRE_DATA", function(done) {
+      board.versionReceived = true;
+      var handler = sandbox.spy(Board.SYSEX_RESPONSE, ONEWIRE_SEARCH_REPLY);
+      var emit = sandbox.spy();
+      var bogusSubCommand = 0xE7;
+
+      // No such sub command exists. This will hit the early return condition
+      Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
+        currentBuffer: [0, 0, bogusSubCommand],
+        emit: emit,
+      });
+
+      Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
+        currentBuffer: [0, 0, ONEWIRE_SEARCH_REPLY],
+        emit: emit,
+      });
+
+      assert.equal(handler.callCount, 1);
+      assert.equal(emit.callCount, 1);
+
+      done();
+    });
+
     it("PIN_STATE_RESPONSE", function(done) {
       var cr = sandbox.spy(Board.SYSEX_RESPONSE, PIN_STATE_RESPONSE);
 
@@ -516,7 +546,61 @@ describe("Board: data handling", function() {
         END_SYSEX
       ]);
 
-      assert.equal(cr.callCount, 4);
+      // minimum state response to set pin 0
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        // pin, mode, state
+        0, 1, 1,
+        END_SYSEX
+      ]);
+
+      assert.equal(board.pins[0].mode, 1);
+      assert.equal(board.pins[0].state, 1);
+
+      // minimum state response to change pin 0
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        // pin, mode, state
+        0, 2, 2,
+        END_SYSEX
+      ]);
+
+      assert.equal(board.pins[0].mode, 2);
+      assert.equal(board.pins[0].state, 2);
+
+      // > 6 bytes of data:
+      //
+      // the 5 byte will be shifted 7 bits to the right
+      // and or'ed with state.
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        // pin, mode, state, state 2
+        0, 2, 2, 1,
+        END_SYSEX
+      ]);
+
+      assert.equal(board.pins[0].mode, 2);
+      assert.equal(board.pins[0].state, 130); // 2 | (1 << 7)
+
+      // > 7 bytes of data:
+      //
+      // the 6 byte will be shifted 14 bits to the right
+      // and or'ed with state.
+      transport.emit("data", [
+        START_SYSEX,
+        PIN_STATE_RESPONSE,
+        // pin, mode, state, state 2
+        0, 2, 2, 1, 1,
+        END_SYSEX
+      ]);
+
+      assert.equal(board.pins[0].mode, 2);
+      assert.equal(board.pins[0].state, 16514); // 130 | (1 << 14)
+
+      assert.equal(cr.callCount, 8);
 
       done();
     });
@@ -936,6 +1020,13 @@ describe("Board: lifecycle", function() {
     ]);
   });
 
+  it("Returns the present samplingInterval", function(done) {
+    board.settings.samplingInterval = Infinity;
+
+    assert.equal(board.getSamplingInterval(), Infinity);
+    done();
+  });
+
   it("gets the capabilities after the firmware", function(done) {
     //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
     assert.deepEqual(transport.lastWrite, [START_SYSEX, CAPABILITY_QUERY, END_SYSEX]);
@@ -1100,6 +1191,12 @@ describe("Board: lifecycle", function() {
     assert.ok(Buffer([0xf0, 0x7a, 0x0a, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
 
     spy.restore();
+    done();
+  });
+
+  it("must be able to reset (SYSTEM_RESET)", function(done) {
+    board.reset();
+    assert.equal(transport.lastWrite[0], SYSTEM_RESET);
     done();
   });
 
@@ -1521,10 +1618,44 @@ describe("Board: lifecycle", function() {
     };
 
     board.pwmWrite(46, 180);
-    assert.deepEqual(transport.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 52, 1, END_SYSEX]);
+    assert.deepEqual(transport.lastWrite, [
+      START_SYSEX,
+      EXTENDED_ANALOG,
+      46, 52, 1,
+      END_SYSEX,
+    ]);
 
     board.pwmWrite(46, 0);
-    assert.deepEqual(transport.lastWrite, [START_SYSEX, EXTENDED_ANALOG, 46, 0, 0, END_SYSEX]);
+    assert.deepEqual(transport.lastWrite, [
+      START_SYSEX,
+      EXTENDED_ANALOG,
+      46, 0, 0,
+      END_SYSEX,
+    ]);
+
+    board.pwmWrite(46, 0x00004001);
+    assert.deepEqual(transport.lastWrite, [
+      START_SYSEX,
+      EXTENDED_ANALOG,
+      46, 1, 0, 1,
+      END_SYSEX,
+    ]);
+
+    board.pwmWrite(46, 0x00200001);
+    assert.deepEqual(transport.lastWrite, [
+      START_SYSEX,
+      EXTENDED_ANALOG,
+      46, 1, 0, 0, 1,
+      END_SYSEX,
+    ]);
+
+    board.pwmWrite(46, 0x10000001);
+    assert.deepEqual(transport.lastWrite, [
+      START_SYSEX,
+      EXTENDED_ANALOG,
+      46, 1, 0, 0, 0, 1,
+      END_SYSEX,
+    ]);
 
     // Restore to original length
     board.pins.length = length;
@@ -1850,6 +1981,15 @@ describe("Board: lifecycle", function() {
 
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_ALARMS_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
+  it("must be able to send a 1-wire write read", function(done) {
+    var _sendOneWireRequest = sandbox.spy(board, "_sendOneWireRequest");
+    var handler = sandbox.spy();
+    board.sendOneWireRead(1, 1, 1, handler);
+
+    _sendOneWireRequest.lastCall.args[8]();
+
+    done();
+  });
   it("must be able to send a 1-wire reset request", function(done) {
     board.sendOneWireReset(1);
 
@@ -1877,6 +2017,7 @@ describe("Board: lifecycle", function() {
 
     done();
   });
+
   it("must be able to send a 1-wire write request", function(done) {
     var device = [40, 219, 239, 33, 5, 0, 0, 93];
     var data = 0x33;
@@ -1906,13 +2047,44 @@ describe("Board: lifecycle", function() {
 
     done();
   });
+
+  it("must be able to send a 1-wire write request (Array)", function(done) {
+    var device = [40, 219, 239, 33, 5, 0, 0, 93];
+    var data = 0x33;
+
+    board.sendOneWireWrite(1, device, [data]);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], PULSE_OUT);
+    assert.equal(transport.lastWrite[2], ONEWIRE_WITHDATA_REQUEST_BITS);
+    assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
+
+    // decode delay from request
+    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+
+    // should select the passed device
+    assert.equal(request[0], device[0]);
+    assert.equal(request[1], device[1]);
+    assert.equal(request[2], device[2]);
+    assert.equal(request[3], device[3]);
+    assert.equal(request[4], device[4]);
+    assert.equal(request[5], device[5]);
+    assert.equal(request[6], device[6]);
+    assert.equal(request[7], device[7]);
+
+    // and send the passed data
+    assert.equal(request[16], data);
+
+    done();
+  });
   it("must be able to send a 1-wire write and read request and recieve a reply", function(done) {
     var device = [40, 219, 239, 33, 5, 0, 0, 93];
     var data = 0x33;
     var output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
 
-    board.sendOneWireWriteAndRead(1, device, data, 2, function(error, receieved) {
-      receieved.should.eql(output);
+    board.sendOneWireWriteAndRead(1, device, data, 2, function(error, received) {
+
+      assert.deepEqual(received, output);
 
       done();
     });
@@ -1951,7 +2123,52 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
   });
 
-  describe("servo", function() {
+  it("must be able to send a 1-wire write and read request and recieve a reply (array)", function(done) {
+    var device = [40, 219, 239, 33, 5, 0, 0, 93];
+    var data = 0x33;
+    var output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
+
+    board.sendOneWireWriteAndRead(1, device, [data], 2, function(error, received) {
+      assert.deepEqual(received, output);
+
+      done();
+    });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], PULSE_OUT);
+    assert.equal(transport.lastWrite[2], ONEWIRE_WITHDATA_REQUEST_BITS);
+    assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
+
+    // decode delay from request
+    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+
+    // should select the passed device
+    assert.equal(request[0], device[0]);
+    assert.equal(request[1], device[1]);
+    assert.equal(request[2], device[2]);
+    assert.equal(request[3], device[3]);
+    assert.equal(request[4], device[4]);
+    assert.equal(request[5], device[5]);
+    assert.equal(request[6], device[6]);
+    assert.equal(request[7], device[7]);
+
+    // and send the passed data
+    assert.equal(request[16], data);
+
+    var dataSentFromBoard = [];
+
+    // respond with the same correlation id
+    dataSentFromBoard[0] = request[10];
+    dataSentFromBoard[1] = request[11];
+
+    // data "read" from the 1-wire device
+    dataSentFromBoard[2] = output[0];
+    dataSentFromBoard[3] = output[1];
+
+    transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
+  });
+
+  describe("Servo", function() {
     it("can configure a servo pwm range", function(done) {
       board.servoConfig(3, 1000, 2000);
       assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2023,6 +2240,19 @@ describe("Board: lifecycle", function() {
 
       done();
     });
+
+    it("calls analogWrite with arguments", function(done) {
+      var aw = sandbox.stub(board, "analogWrite");
+
+      board.servoWrite(9, 180);
+      assert.deepEqual(aw.lastCall.args, [9, 180]);
+
+      board.servoWrite(9, 600);
+      assert.deepEqual(aw.lastCall.args, [9, 600]);
+
+      done();
+    });
+
   });
 
   describe("I2C", function() {
@@ -2048,6 +2278,15 @@ describe("Board: lifecycle", function() {
     it("must be able to send an i2c config (empty)", function(done) {
       board.i2cConfig();
       assert.deepEqual(transport.lastWrite, [START_SYSEX, I2C_CONFIG, 0, 0, END_SYSEX]);
+      done();
+    });
+
+    it("calls i2cConfig (sendI2CConfig)", function(done) {
+
+      var ic = sandbox.stub(board, "i2cConfig");
+
+      board.sendI2CConfig();
+      assert.equal(ic.callCount, 1);
       done();
     });
 
@@ -2107,10 +2346,11 @@ describe("Board: lifecycle", function() {
 
       done();
     });
+
     it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", function(done) {
       board.i2cConfig();
 
-      assert.deepEqual(Board.test.i2cActive.get(board), { delay: 0 });
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), { delay: 0 });
 
       done();
     });
@@ -2120,7 +2360,7 @@ describe("Board: lifecycle", function() {
         address: 0x00
       });
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2139,7 +2379,7 @@ describe("Board: lifecycle", function() {
       board.i2cWrite(0x00, [0x01, 0x02]);
       board.i2cWrite(0x05, [0x06, 0x07]);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2161,7 +2401,7 @@ describe("Board: lifecycle", function() {
       board.i2cWriteReg(0x00, 0x01, 0x02);
       board.i2cWriteReg(0x05, 0x06, 0x07);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2183,7 +2423,7 @@ describe("Board: lifecycle", function() {
       board.i2cRead(0x00, 0x01, 1, initNoop);
       board.i2cRead(0x05, 0x06, 1, initNoop);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2205,7 +2445,7 @@ describe("Board: lifecycle", function() {
       board.i2cRead(0x00, 1, initNoop);
       board.i2cRead(0x05, 1, initNoop);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2215,6 +2455,17 @@ describe("Board: lifecycle", function() {
         delay: 0,
       });
 
+      done();
+    });
+
+    it("does nothing when i2cStop()", function(done) {
+      board.i2cConfig();
+
+      assert.equal(transportWrite.callCount, 0);
+
+      board.i2cRead(0x00, 1, initNoop);
+      board.i2cStop();
+      assert.equal(transportWrite.callCount, 0);
       done();
     });
 
@@ -2269,7 +2520,7 @@ describe("Board: lifecycle", function() {
       board.i2cReadOnce(0x00, 0x01, 1, initNoop);
       board.i2cReadOnce(0x05, 0x06, 1, initNoop);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2291,7 +2542,7 @@ describe("Board: lifecycle", function() {
       board.i2cReadOnce(0x00, 1, initNoop);
       board.i2cReadOnce(0x05, 1, initNoop);
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: true,
         },
@@ -2312,7 +2563,7 @@ describe("Board: lifecycle", function() {
         }
       });
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         delay: 0,
         0: {
           stopTX: true,
@@ -2331,7 +2582,7 @@ describe("Board: lifecycle", function() {
         }
       });
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: false,
         },
@@ -2345,7 +2596,7 @@ describe("Board: lifecycle", function() {
         }
       });
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         delay: 0,
         0: {
           stopTX: true,
@@ -2377,7 +2628,7 @@ describe("Board: lifecycle", function() {
         }
       });
 
-      assert.deepEqual(Board.test.i2cActive.get(board), {
+      assert.deepEqual(Board.test.i2cPeripheralSettings(board), {
         0: {
           stopTX: false,
         },
@@ -2559,7 +2810,7 @@ describe("Board: lifecycle", function() {
     });
   });
 
-  describe("serial", function() {
+  describe("Serial", function() {
 
     it("has a SERIAL_MODES property", function(done) {
 
@@ -2838,6 +3089,25 @@ describe("Board: lifecycle", function() {
       });
 
       transport.emit("data", incoming);
+    });
+
+    it("fail when overwriting SYSEX_RESPONSE command byte", function(done) {
+      Board.SYSEX_RESPONSE[0xFF] = function() {};
+
+      assert.throws(function() {
+        board.sysexResponse(0xFF);
+      });
+      done();
+    });
+
+    it("fail when calling sysexCommand with empty array", function(done) {
+      assert.throws(function() {
+        board.sysexCommand();
+      });
+      assert.throws(function() {
+        board.sysexCommand([]);
+      });
+      done();
     });
 
     it("must allow sending arbitrary sysex commands", function(done) {
