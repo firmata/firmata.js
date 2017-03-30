@@ -23,34 +23,124 @@ For global cli use:
 npm install -g firmata
 ```
 
-# Usage
-
-```js
-var Board = require("firmata");
-var board = new Board("path to serialport", function() {
-  // Arduino is ready to communicate
-});
-```
-
-Or
-
-```js
-var Board = require("firmata");
-var board = new Board("path to serialport");
-
-board.on("ready", function() {
-  // Arduino is ready to communicate
-});
-```
 
 # REPL
 
 If you run *firmata* from the command line it will prompt you for the serial port. Then it will present you with a REPL with a board variable available.
 
-# Board
-  The Board object is where all the functionality is for the library.
+# Basic Usage
 
-## Board Instance API
+### Using the `"ready"` event...
+
+#### With a path string: 
+
+```js
+var Board = require("firmata");
+var board = new Board("system path or name");
+
+board.on("ready", () => {
+  // Arduino is ready to communicate
+});
+```
+
+#### With a Serialport object:
+
+```js
+var Serialport = require("serialport");
+var Board = require("firmata");
+var board = new Board(new Serialport(...));
+
+board.on("ready", () => {
+  // Arduino is ready to communicate
+});
+```
+
+#### With an Etherport object:
+
+```js
+var Etherport = require("etherport");
+var Board = require("firmata");
+var board = new Board(new Etherport(...));
+
+board.on("ready", () => {
+  // Arduino is ready to communicate
+});
+```
+
+### Using the `readyCallback`:
+
+```js
+var Board = require("firmata");
+var board = new Board("system path or name", () => {
+  // Arduino is ready to communicate
+});
+```
+
+#### With a Serialport object:
+
+```js
+var Serialport = require("serialport");
+var Board = require("firmata");
+var board = new Board(new Serialport(...), () => {
+  // Arduino is ready to communicate
+});
+```
+
+#### With an Etherport object:
+
+```js
+var Etherport = require("etherport");
+var Board = require("firmata");
+var board = new Board(new Etherport(...), () => {
+  // Arduino is ready to communicate
+});
+```
+
+
+**Any object can be a `Transport` object, as long as it emits an "open" event and a "data" event, which match the semantics of a `Serialport` object.**
+
+
+# `Board`
+
+The `Board` constructor creates an instance that represents a physical board. 
+
+- `new Board(path[, options][, readyCallback])` 
+- `new Board(port[, options][, readyCallback])` 
+
+  | Parameter | Type   | Description | Default  | Required |
+  |-----------|------- |------------ |--------- |----------|
+  | path      | String | A system path or port name. | none | Yes\* | 
+  | port      | Transport | A Transport object. | none | Yes\* | 
+  | [options] | object | Optional settings to used when constructing. | [See Below](#board-options) | No | 
+  | [readyCallback] | function | Optional "ready" callback to call when connection to board is complete. | none | No | 
+
+  \* _**Either**_ a **path** or a **port** are required.
+
+  - Notes: 
+    - `new Board(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
+      + `new Board("/dev/usb.whatever")`
+      + `new Board("/dev/ttyACM0")`
+      + `new Board("COM1")`
+    - `new Board(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
+      + `new Board(new Serialport(...))` 
+      + `new Board(new Etherport(...))`
+
+- Options<a name="board-options"></a>
+
+  | Property | Type   | Description | Default  | Required |
+  |-----------|------- |------------ |--------- |----------|
+  | skipCapabilities | Boolean | Set to `true` to skip the `CAPABILITY_QUERY` | `true` | No | 
+  | reportVersionTimeout | Number | Time in milliseconds to wait before timing out the initial request for the firmware version. | 5000 | No | 
+  | samplingInterval | Number | Time in milliseconds of the sampling interval on the actual board. | 19 | No | 
+  | serialport | Object | See: [Serialport:openOptions](https://github.com/EmergingTechnologyAdvisors/node-serialport#module_serialport--SerialPort..openOptions). These will be ignored if the first argument is a Transport object. | \* | No | 
+
+  \* Defaults are defined in `Serialport`.
+  
+
+
+
+
+  ## Board Instance
 
 - `board.MODES`
   This is an enumeration of the different modes available. These are used in calls to the *pinMode* function.
