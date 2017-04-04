@@ -57,6 +57,9 @@ board.on("ready", () => {
 
 #### With an Etherport object:
 
+[Etherport](https://github.com/rwaldron/etherport) is a TCP server that can be used with [StandardFirmataEthernet](https://github.com/firmata/arduino/tree/master/examples/StandardFirmataEthernet) or [StandardFirmataWiFi](https://github.com/firmata/arduino/tree/master/examples/StandardFirmataWiFi) when configured as a TCP client (StandardFirmataEthernet can currently only be configured as a TCP client). There is also [etherport-client](https://github.com/mwittig/etherport-client) which is a TCP client that can be used with StandardFirmataWiFi when configured as a TCP server.
+
+
 ```js
 var Etherport = require("etherport");
 var Board = require("firmata");
