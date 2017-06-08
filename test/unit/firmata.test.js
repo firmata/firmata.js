@@ -2,7 +2,7 @@ require("../common/bootstrap");
 
 // Test specific internals
 //
-var Board = firmata.Board;
+var Board = firmata;
 
 var ANALOG_MAPPING_QUERY = 0x69;
 var ANALOG_MAPPING_RESPONSE = 0x6A;
