@@ -1,4 +1,4 @@
-var Board = require("../lib/firmata").Board;
+var Board = require("../lib/firmata");
 var board = new Board("/dev/tty.usbmodem1421");
 
 board.on("ready", function() {
