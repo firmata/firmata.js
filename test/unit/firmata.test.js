@@ -3119,6 +3119,18 @@ describe("Board: lifecycle", function() {
       transport.emit("data", incoming);
     });
 
+    it("SYSEX_RESPONSE handler context is board", function(done) {
+
+      var incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
+
+      board.sysexResponse(NON_STANDARD_REPLY, function(data) {
+        assert.equal(this, board);
+        done();
+      });
+
+      transport.emit("data", incoming);
+    });
+
     it("fail when overwriting SYSEX_RESPONSE command byte", function(done) {
       Board.SYSEX_RESPONSE[0xFF] = function() {};
 
