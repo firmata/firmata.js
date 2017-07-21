@@ -43,12 +43,12 @@ board.on("ready", () => {
 });
 ```
 
-#### With a Serialport object:
+#### With a SerialPort object:
 
 ```js
-var Serialport = require("serialport");
+var SerialPort = require("serialport");
 var Board = require("firmata");
-var board = new Board(new Serialport(...));
+var board = new Board(new SerialPort(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -100,7 +100,7 @@ var board = new Board(new Etherport(...), () => {
 ```
 
 
-**Any object can be a `Transport` object, as long as it emits an "open" event and a "data" event, which match the semantics of a `Serialport` object.**
+**Any object can be a `Transport` object, as long as it emits an "open" event and a "data" event, which match the semantics of a `SerialPort` object.**
 
 
 # `Board`

@@ -1,26 +1,17 @@
 // This test file is primarily for rounding out test coverage
-// and gaurding against changes to the "com" stubs.
+// and gaurding against changes to the "serialport" stubs.
 require("../common/bootstrap");
 
 var sandbox = sinon.sandbox.create();
 
-describe("com.*", function() {
-
-  var response = {
-    error: null,
-    port: {
-      comName: null
-    },
-  };
-
-  it("com.SerialPort", function(done) {
-    assert.equal(typeof com.SerialPort, "function");
+describe("SerialPort", function() {
+  it("SerialPort is a function", function(done) {
+    assert.equal(typeof SerialPort, "function");
     done();
   });
 
-  it("com.list", function(done) {
-    assert.equal(typeof com.list, "function");
-    assert.equal(com.list(), undefined);
+  it("SerialPort.list is a function", function(done) {
+    assert.equal(typeof SerialPort.list, "function");
     done();
   });
 });
