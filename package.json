@@ -32,7 +32,7 @@
   "dependencies": {
     "browser-serialport": "latest",
     "es6-shim": "latest",
-    "serialport": "^4.0.0"
+    "serialport": "^5.0.0-beta8"
   },
   "scripts": {
     "test": "grunt",
