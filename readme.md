@@ -438,6 +438,135 @@ The `Board` constructor creates an instance that represents a physical board.
   **For SoftwareSerial only**. Only a single SoftwareSerial instance can read data at a time. Call this method to set this port to be the reading port in the case there are multiple SoftwareSerial instances.
 
 
+### AccelStepperFirmata
+
+AccelStepperFirmata in configurableFirmata wraps [Mike McCauley's AccelStepper library](http://www.airspayce.com/mikem/arduino/AccelStepper/). Accelstepper gives basic acceleration for individual steppers and support for multiSteppers. multiSteppers  allow you to coordinate the movements of a group of steppers so that they arrive at their desired positions simultaneously.
+
+Requests for stepper movements are made asyncrhonously and movements can be interrupted with a call to stop or by setting a new target position with accelStepperTo or accelStepperMove.
+
+accelStepper support 2, 3, and 4 wire configurations as well as step + direction controllers like the easyDriver.
+
+- `board.STEPPER.TYPE`
+
+  Available Stepper or controller types.
+
+  ```js
+  {
+    DRIVER: 1,
+    TWO_WIRE: 2,
+    THREE_WIRE: 3,
+    FOUR_WIRE: 4,
+  }
+  ```
+
+- `board.STEPPER.STEPTYPE` 
+
+  Available step sizes.
+  
+  ```js
+  {
+    WHOLE: 0,
+    HALF: 1
+  }
+  ```
+
+- `board.STEPPER.DIRECTION` 
+
+  Stepper directions.
+  
+  ```js
+  {
+    CCW: 0,
+    CW: 1
+  }
+  ```
+  
+  - `board.accelStepperConfig(opts)`
+
+  Configure a stepper motor
+
+    ```
+    opts = {
+      deviceNum: 0, // <number> Device number for the stepper (range 0-9)
+      type: board.STEPPER.TYPE.DRIVER, // <number> (optional) Type of stepper or controller; default is FOUR_WIRE
+      stepType: board.STEPPER.STEPTYPE.HALF, // <number> (optional) Size of step; default is WHOLE
+      stepPin: 2, // <number> (required if type === DRIVER) The step pin for a step+direction stepper driver
+      directionPin: 3, // <number> (required if type === DRIVER) The direction pin for a step+direction stepper driver
+      motorPin1: 2, // <number> (required if type !== DRIVER) Motor control pin 1
+      motorPin2: 3, // <number> (required if type !== DRIVER) Motor control pin 2
+      motorPin3: 4, // <number> (required if type === THREE_WIRE or FOUR_WIRE) Motor control pin 3
+      motorPin4: 5, // <number> (required if type === FOUR_WIRE) Motor control pin 4
+      enablePin: 6, // <number> (optional) Enable pin for motor controller pin
+      invertPins: 0 // <number> (optional) Controls which pins to invert (see table below); default is 0
+    }
+    ```
+    
+    **invertPins**
+
+    The invertPins value is a 5 bit number
+    
+    bit 5           |bit 4           |bit 3           |bit 2           |bit 1
+    ----------------|----------------|----------------|----------------|----------------
+    invert motorPin1|invert motorPin2|invert motorPin3|invert motorPin4|invert enablePin
+
+    Examples:
+
+    1. Invert motor pins 1, 2, 3 & 4 = 0b11110 = 30
+
+    1. Invert motor pins 1, 2 & enablePin = 0b11001 = 25
+
+
+- `board.prototype.accelStepperZero(deviceNum)`
+
+  Set the current stepper position to zero
+
+- `Board.prototype.accelStepperStep(deviceNum, steps, callback)`
+
+  Move the stepper motor by a number of steps. Optional callback will be called when motor has finished moving or stop is called
+
+- `Board.prototype.accelStepperTo(deviceNum, position, callback)`
+
+  Move the stepper motor to a specified position. Optional callback will be called when motor has finished moving or stop is called
+
+- `Board.prototype.accelStepperEnable(deviceNum, enabled)`
+
+  If enabled param is set to false, stepper will be disabled, otherwise stepper will be enabled
+
+- `Board.prototype.accelStepperStop(deviceNum)`
+
+  Stop the stepper motor. Triggers a stepper-done event
+
+- `Board.prototype.accelStepperReportPosition(deviceNum)`
+
+  Request the current position of the stepper. Triggers a stepper-position event
+
+- `Board.prototype.accelStepperSpeed(deviceNum, speed)`
+
+  Set teh speed of the stepper in steps per second
+
+- `Board.prototype.accelStepperAcceleration(deviceNum, acceleration)`
+
+  Set the acceleration and deceleration for the stepper in steps / sec^2
+
+- `Board.prototype.multiStepperConfig(opts)`
+  
+  Configure a multStepper group. multiStepper groups allow you to pass an array of targeted positions and have all the steppers move to their targets and arrive at the same time. Note that acceleration cannot be used when moving a multiStepper group.
+
+  ```
+  opts = {
+    groupNum: 0, // <number> Group number for the stepper group (range 0-4)
+    devices: board.STEPPER.TYPE.DRIVER // [<number>] Array of deviceNum's used in group
+  }
+  ```
+
+- `Board.prototype.multiStepperTo(groupNum, positions, callback)`
+
+  Move a goup of steppers to and array of desired positions. Optional callback will be called when group has finished moving or multiStepperStop is called
+
+- `Board.prototype.multiStepperStop(groupNum)`
+
+  Stop a group of stepper motors. Triggers a multi-stepper-done event
+
 ### Sysex
 
 - `board.sysexResponse(commandByte, handler)`
