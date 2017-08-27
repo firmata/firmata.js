@@ -51,6 +51,7 @@ var SERIAL_FLUSH = 0x60;
 var SERIAL_LISTEN = 0x70;
 var START_SYSEX = 0xF0;
 var STEPPER = 0x72;
+var ACCELSTEPPER = 0x62;
 var STRING_DATA = 0x71;
 var SYSTEM_RESET = 0xFF;
 
@@ -1961,6 +1962,427 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [3]);
     transport.emit("data", [END_SYSEX]);
   });
+
+  it("can send a accelStepper config for a driver configuration with enable and invert", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.DRIVER, stepPin: 5, directionPin: 6, enablePin: 2, invertPins: [2] });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x11);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 2);
+    assert.equal(transport.lastWrite[8], 16);
+    assert.equal(transport.lastWrite[9], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper config for a two wire configuration", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.TWO_WIRE, motorPin1: 5, motorPin2: 6, invertPins: [5, 6] });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x20);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 3);
+    assert.equal(transport.lastWrite[8], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper config for a four wire configuration", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x40);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 3);
+    assert.equal(transport.lastWrite[8], 4);
+    assert.equal(transport.lastWrite[9], 0);
+    assert.equal(transport.lastWrite[10], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper config for a four wire, half step configuration", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, stepType: board.STEPPER.STEPTYPE.HALF, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x42);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 3);
+    assert.equal(transport.lastWrite[8], 4);
+    assert.equal(transport.lastWrite[9], 0);
+    assert.equal(transport.lastWrite[10], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper config with four wire and whole step as defaults", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x40);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 3);
+    assert.equal(transport.lastWrite[8], 4);
+    assert.equal(transport.lastWrite[9], 0);
+    assert.equal(transport.lastWrite[10], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper config for a default four wire configuration with inverted motor and enable pins", function(done) {
+    board.accelStepperConfig({ deviceNum: 0, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4, enablePin: 2, invertPins: [2, 3, 4, 5, 6] });
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0x41);
+    assert.equal(transport.lastWrite[5], 5);
+    assert.equal(transport.lastWrite[6], 6);
+    assert.equal(transport.lastWrite[7], 3);
+    assert.equal(transport.lastWrite[8], 4);
+    assert.equal(transport.lastWrite[9], 2);
+    assert.equal(transport.lastWrite[10], 31);
+    assert.equal(transport.lastWrite[11], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper step", function(done) {
+    board.accelStepperStep(0, 12345, function(value) {
+      assert.equal(value, 12345);
+      done();
+    });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 2);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 57);
+    assert.equal(transport.lastWrite[5], 96);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], END_SYSEX);
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x0A]);
+    transport.emit("data", [0]);
+    transport.emit("data", [57]);
+    transport.emit("data", [96]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+  });
+
+  it("can send a accelStepper step w/o a callback", function(done) {
+    board.accelStepperStep(0, 12345);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 2);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 57);
+    assert.equal(transport.lastWrite[5], 96);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], END_SYSEX);
+
+    done();
+  });
+
+  it("can send a accelStepper zero", function(done) {
+    board.accelStepperZero(0);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 1);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper enable", function(done) {
+    board.accelStepperEnable(0, true);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 4);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 1);
+    assert.equal(transport.lastWrite[5], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper enable using default value", function(done) {
+    board.accelStepperEnable(0);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 4);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 1);
+    assert.equal(transport.lastWrite[5], END_SYSEX);
+    done();
+  });
+
+  it("can can send a accelStepper disable", function(done) {
+    board.accelStepperEnable(0, false);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 4);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0);
+    assert.equal(transport.lastWrite[5], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper move to as specified position", function(done) {
+    board.accelStepperTo(0, 2000, function(value) {
+      assert.equal(value, 2000);
+      done();
+    });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 3);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 80);
+    assert.equal(transport.lastWrite[5], 15);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], END_SYSEX);
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x0A]);
+    transport.emit("data", [0]);
+    transport.emit("data", [80]);
+    transport.emit("data", [15]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+  });
+
+  it("can send a accelStepper move to as specified position w/o a callback", function(done) {
+    board.accelStepperTo(0, 2000);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 3);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 80);
+    assert.equal(transport.lastWrite[5], 15);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], END_SYSEX);
+
+    done();
+  });
+
+  it("can send an accelStepper stop", function(done) {
+    
+    board.accelStepperStop(0);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 5);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], END_SYSEX);
+
+    done();
+
+  });
+
+  it("can send a accelStepper reportPosition", function(done) {
+    board.accelStepperReportPosition(0, function() {
+      done();
+    });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 6);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], END_SYSEX);
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x06]);
+    transport.emit("data", [0]);
+    transport.emit("data", [80]);
+    transport.emit("data", [15]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+
+  });
+
+  it("can send a accelStepper set speed", function(done) {
+    board.accelStepperSpeed(0, 123.4);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 9);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 82);
+    assert.equal(transport.lastWrite[5], 9);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 40);
+    assert.equal(transport.lastWrite[8], END_SYSEX);
+    done();
+  });
+
+  it("can send a accelStepper set acceleration", function(done) {
+    board.accelStepperAcceleration(0, 199.9);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 8);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 24);
+    assert.equal(transport.lastWrite[5], 1);
+    assert.equal(transport.lastWrite[6], 122);
+    assert.equal(transport.lastWrite[7], 28);
+    assert.equal(transport.lastWrite[8], END_SYSEX);
+    done();
+  });
+
+  it("can configure a multiStepper", function(done) {
+    board.multiStepperConfig({ groupNum: 0, devices: [0, 1, 2] });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0x20);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 0);
+    assert.equal(transport.lastWrite[5], 1);
+    assert.equal(transport.lastWrite[6], 2);
+    assert.equal(transport.lastWrite[7], END_SYSEX);
+    done();
+  });
+
+  it("can send a multiStepper stop", function(done) {
+    board.multiStepperStop(0);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0x23);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], END_SYSEX);
+    done();
+  });
+
+  it("can send a multiStepper to", function(done) {
+    board.multiStepperTo(0, [200, 400, 600], function() {
+      done();
+    });
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0x21);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 72);
+    assert.equal(transport.lastWrite[5], 1);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], 16);
+    assert.equal(transport.lastWrite[10], 3);
+    assert.equal(transport.lastWrite[11], 0);
+    assert.equal(transport.lastWrite[12], 0);
+    assert.equal(transport.lastWrite[13], 0);
+    assert.equal(transport.lastWrite[14], 88);
+    assert.equal(transport.lastWrite[15], 4);
+    assert.equal(transport.lastWrite[16], 0);
+    assert.equal(transport.lastWrite[17], 0);
+    assert.equal(transport.lastWrite[18], 0);
+    assert.equal(transport.lastWrite[19], END_SYSEX);
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x24]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+    
+  });
+
+  it("can send a multiStepper to w/o a callback", function(done) {
+    board.multiStepperTo(0, [200, 400, 600]);
+
+    assert.equal(transport.lastWrite[0], START_SYSEX);
+    assert.equal(transport.lastWrite[1], ACCELSTEPPER);
+    assert.equal(transport.lastWrite[2], 0x21);
+    assert.equal(transport.lastWrite[3], 0);
+    assert.equal(transport.lastWrite[4], 72);
+    assert.equal(transport.lastWrite[5], 1);
+    assert.equal(transport.lastWrite[6], 0);
+    assert.equal(transport.lastWrite[7], 0);
+    assert.equal(transport.lastWrite[8], 0);
+    assert.equal(transport.lastWrite[9], 16);
+    assert.equal(transport.lastWrite[10], 3);
+    assert.equal(transport.lastWrite[11], 0);
+    assert.equal(transport.lastWrite[12], 0);
+    assert.equal(transport.lastWrite[13], 0);
+    assert.equal(transport.lastWrite[14], 88);
+    assert.equal(transport.lastWrite[15], 4);
+    assert.equal(transport.lastWrite[16], 0);
+    assert.equal(transport.lastWrite[17], 0);
+    assert.equal(transport.lastWrite[18], 0);
+    assert.equal(transport.lastWrite[19], END_SYSEX);
+
+    done();
+    
+  });
+
+  it("can receive a stepper position", function(done) {
+    board.once("stepper-position-0", function(value) {
+      assert.equal(value, 1234);
+      done();
+    });
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x06]);
+    transport.emit("data", [0]);
+    transport.emit("data", [82]);
+    transport.emit("data", [9]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+
+  });
+
+  it("can receive a multStepper done", function(done) {
+    board.once("multi-stepper-done-0", function() {
+      done();
+    });
+
+    transport.emit("data", [START_SYSEX]);
+    transport.emit("data", [ACCELSTEPPER]);
+    transport.emit("data", [0x24]);
+    transport.emit("data", [0]);
+    transport.emit("data", [END_SYSEX]);
+
+  });
+
   it("must be able to send a 1-wire config with parasitic power enabled", function(done) {
     board.sendOneWireConfig(1, true);
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -3297,6 +3719,70 @@ describe("Board: lifecycle", function() {
     });
 
   });
+});
+
+describe("Board number format helpers", function() {
+  
+  it("must encode 32 bit signed integers", function(done) {
+    var value = Board.encode32BitSignedInteger(5786);
+    assert.deepEqual(value, [ 26, 45, 0, 0, 0 ]);
+    done();
+  });
+
+  it("must encode 32 bit signed integers when they are negative", function(done) {
+    var value = Board.encode32BitSignedInteger(-5786);
+    assert.deepEqual(value, [ 26, 45, 0, 0, 8 ]);
+    done();
+  });
+
+  it("must decode 32 bit signed integers", function(done) {
+    var value = Board.decode32BitSignedInteger([ 26, 45, 0, 0, 0 ]);
+    assert.equal(value, 5786);
+    done();
+  });
+
+  it("must decode 32 bit signed integers when they are negative", function(done) {
+    var value = Board.decode32BitSignedInteger([ 26, 45, 0, 0, 8 ]);
+    assert.equal(value, -5786);
+    done();
+  });
+
+  it("must encode custom floats", function(done) {
+    var value = Board.encodeCustomFloat(123.456);
+    assert.deepEqual(value, [ 0, 45, 75, 28 ]);
+    done();
+  });
+  
+  it("must encode custom floats (even when they are integers)", function(done) {
+    var value = Board.encodeCustomFloat(100);
+    assert.deepEqual(value, [ 1, 0, 0, 52 ]);
+    done();
+  });
+
+  it("must encode custom floats when they are negative", function(done) {
+    var value = Board.encodeCustomFloat(-7321.783);
+    assert.deepEqual(value, [ 54, 113, 62, 99 ]);
+    done();
+  });
+
+  it("must encode custom floats when they are less than 1", function(done) {
+    var value = Board.encodeCustomFloat(0.000325);
+    assert.deepEqual(value, [ 79, 46, 70, 5 ]);
+    done();
+  });
+
+  it("must decode custom floats", function(done) {
+    var value = Board.decodeCustomFloat([ 110, 92, 44, 32 ]);
+    assert.equal(value, 732.782);
+    done();
+  });
+
+  it("must decode custom floats when they are negative", function(done) {
+    var value = Board.decodeCustomFloat([ 110, 92, 44, 96 ]);
+    assert.equal(value, -732.782);
+    done();
+  });
+
 });
 
 describe("Board.encode/Board.decode", function() {
