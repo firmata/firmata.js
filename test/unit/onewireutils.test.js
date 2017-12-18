@@ -54,8 +54,8 @@ describe("OneWire.crc8/OneWire.readDevices", function () {
 
     it("detects and logs invalid ROM", function (done) {
 
-      sandbox.stub(console, "error", () => {});
-      sandbox.stub(OneWire, "crc8", () => null);
+      sandbox.stub(console, "error").callsFake(() => {});
+      sandbox.stub(OneWire, "crc8").callsFake(() => null);
 
       var input = Encoder7Bit.to7BitArray([0x28, 0xDB, 0xEF, 0x21, 0x05, 0x00, 0x00, 0x5D, 0x28, 0xDB, 0xEF, 0x21, 0x05, 0x00, 0x00, 0x5D, 0x00, 0x01, 0x02]);
       var devices = OneWire.readDevices(input);

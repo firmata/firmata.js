@@ -20,7 +20,6 @@ describe("com.*", function() {
 
   it("com.list", function(done) {
     assert.equal(typeof com.list, "function");
-    assert.equal(com.list(), undefined);
     done();
   });
 });

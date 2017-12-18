@@ -69,8 +69,8 @@ describe("Board.requestPort", function() {
   };
 
   beforeEach(function() {
-    sandbox.stub(com, "list", function(callback) {
-      process.nextTick(function() {
+    sandbox.stub(com, "list").callsFake(callback => {
+      process.nextTick(() => {
         callback(response.error, [response.port]);
       });
     });
@@ -702,7 +702,7 @@ describe("Board: lifecycle", function() {
 
   var SerialPort = sandbox.spy(com, "SerialPort");
   var transportWrite = sandbox.spy(SerialPort.prototype, "write");
-  var initCallback = sandbox.spy(function(error) {
+  var initCallback = sandbox.spy(error => {
     assert.equal(typeof error, "undefined");
   });
   var initNoop = sandbox.spy();
@@ -757,10 +757,10 @@ describe("Board: lifecycle", function() {
     var b = new Board("/path/to/fake/usb2", initNoop);
 
     assert.equal(transport.spy.getCall(0).args[0], "/path/to/fake/usb1");
-    assert.deepEqual(transport.spy.getCall(0).args[1], { baudRate: 57600, bufferSize: 256 });
+    assert.deepEqual(transport.spy.getCall(0).args[1], { baudRate: 57600, highWaterMark: 256 });
 
     assert.equal(transport.spy.getCall(1).args[0], "/path/to/fake/usb2");
-    assert.deepEqual(transport.spy.getCall(1).args[1], { baudRate: 57600, bufferSize: 256 });
+    assert.deepEqual(transport.spy.getCall(1).args[1], { baudRate: 57600, highWaterMark: 256 });
 
     done();
   });
@@ -770,7 +770,7 @@ describe("Board: lifecycle", function() {
     var board = new Board(port, function(err) {});
 
     assert.deepEqual(
-      transport.spy.args, [ [ "fake port", { baudRate: 57600, bufferSize: 256 } ] ]
+      transport.spy.args, [ [ "fake port", { baudRate: 57600, highWaterMark: 256 } ] ]
     );
 
     done();
@@ -782,13 +782,13 @@ describe("Board: lifecycle", function() {
       reportVersionTimeout: 1,
       serialport: {
         baudRate: 5,
-        bufferSize: 10
+        highWaterMark: 10
       }
     };
     var board = new Board(port, opt, function(err) {});
 
     assert.deepEqual(
-      transport.spy.args, [ [ "fake port", { baudRate: 5, bufferSize: 10 } ] ]
+      transport.spy.args, [ [ "fake port", { baudRate: 5, highWaterMark: 10 } ] ]
     );
 
     done();
@@ -904,7 +904,11 @@ describe("Board: lifecycle", function() {
 
     board.on("disconnect", done);
 
-    transport.emit("disconnect");
+    // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#opening-and-closing
+    transport.emit("close", {
+      disconnect: true,
+      disconnected: true,
+    });
   });
 
   it("forwards 'error' event from transport", function(done) {
@@ -997,19 +1001,20 @@ describe("Board: lifecycle", function() {
   });
 
   it("Optionally call setSamplingInterval after queryfirmware", function(done) {
-    var spy = sandbox.spy(Board.prototype, "setSamplingInterval");
+    sandbox.spy(Board.prototype, "setSamplingInterval");
+    sandbox.spy(SerialPort.prototype, "write");
+
     var transport = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
       samplingInterval: 100
     };
-
-    var board = new Board(transport, options, function(err) {
-      assert.deepEqual(transport.lastWrite, [ 240, 122, 100, 0, 247 ]);
-      assert.equal(spy.callCount, 1);
-      assert.ok(spy.calledWith(100));
-
-      spy.restore();
+    var board = new Board(transport, options, error => {
+      assert.deepEqual(Array.from(transport.write.lastCall.args[0]), [
+        0xf0, 0x7a, 0x64, 0x00, 0xf7
+      ]);
+      assert.equal(board.setSamplingInterval.callCount, 1);
+      assert.ok(board.setSamplingInterval.calledWith(100));
       done();
     });
 
@@ -1025,15 +1030,17 @@ describe("Board: lifecycle", function() {
   });
 
   it("Does not call setSamplingInterval after queryfirmware by default", function(done) {
-    var spy = sandbox.spy(Board.prototype, "setSamplingInterval");
+    sandbox.spy(Board.prototype, "setSamplingInterval");
+    sandbox.spy(SerialPort.prototype, "write");
+
     var transport = new SerialPort("/path/to/fake/usb");
     var options = {
       skipCapabilities: true,
     };
 
-    var board = new Board(transport, options, function() {
-      assert.equal(spy.callCount, 0);
-      spy.restore();
+    var board = new Board(transport, options, () => {
+      assert.equal(board.setSamplingInterval.callCount, 0);
+      assert.equal(transport.write.callCount, 0);
       done();
     });
 
@@ -1099,23 +1106,23 @@ describe("Board: lifecycle", function() {
       board.pins.forEach(function(pin, index) {
         if (index >= 2 && index <= 19) {
 
-          pin.supportedModes.indexOf(0).should.not.equal(-1);
-          pin.supportedModes.indexOf(1).should.not.equal(-1);
+          assert.notEqual(pin.supportedModes.indexOf(0), -1);
+          assert.notEqual(pin.supportedModes.indexOf(1), -1);
         } else {
           assert.equal(pin.supportedModes.length, 0);
         }
         if (index >= 14 && index <= 19) {
-          pin.supportedModes.indexOf(0x02).should.not.equal(-1);
+          assert.notEqual(pin.supportedModes.indexOf(0x02), -1);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x02), -1);
         }
         if ([3, 5, 6, 10, 11].indexOf(index) > -1) {
-          pin.supportedModes.indexOf(0x03).should.not.equal(-1);
+          assert.notEqual(pin.supportedModes.indexOf(0x03), -1);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x03), -1);
         }
         if (index >= 2) {
-          pin.supportedModes.indexOf(0x04).should.not.equal(-1);
+          assert.notEqual(pin.supportedModes.indexOf(0x04), -1);
         }
       });
       done();
