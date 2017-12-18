@@ -1,3 +1,5 @@
+"use strict";
+
 require("../common/bootstrap");
 
 // Test specific internals
