@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "browser-serialport": "latest",
-    "es6-shim": "latest",
     "serialport": "~6.0.4"
   },
   "scripts": {
