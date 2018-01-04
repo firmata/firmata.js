@@ -2018,7 +2018,7 @@ describe("Board: lifecycle", function() {
   });
 
   it("can send a accelStepper config for a four wire, half step configuration", function(done) {
-    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, stepType: board.STEPPER.STEPTYPE.HALF, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
+    board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, stepSize: board.STEPPER.STEP_SIZE.HALF, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
     assert.equal(transport.lastWrite[2], 0);
@@ -2206,7 +2206,7 @@ describe("Board: lifecycle", function() {
   });
 
   it("can send an accelStepper stop", function(done) {
-    
+
     board.accelStepperStop(0);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2329,7 +2329,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [0x24]);
     transport.emit("data", [0]);
     transport.emit("data", [END_SYSEX]);
-    
+
   });
 
   it("can send a multiStepper to w/o a callback", function(done) {
@@ -2357,7 +2357,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[19], END_SYSEX);
 
     done();
-    
+
   });
 
   it("can receive a stepper position", function(done) {
@@ -3731,63 +3731,64 @@ describe("Board: lifecycle", function() {
 });
 
 describe("Board number format helpers", function() {
-  
+
   it("must encode 32 bit signed integers", function(done) {
-    var value = Board.encode32BitSignedInteger(5786);
+    var value = Board.test.encode32BitSignedInteger(5786);
+
     assert.deepEqual(value, [ 26, 45, 0, 0, 0 ]);
     done();
   });
 
   it("must encode 32 bit signed integers when they are negative", function(done) {
-    var value = Board.encode32BitSignedInteger(-5786);
+    var value = Board.test.encode32BitSignedInteger(-5786);
     assert.deepEqual(value, [ 26, 45, 0, 0, 8 ]);
     done();
   });
 
   it("must decode 32 bit signed integers", function(done) {
-    var value = Board.decode32BitSignedInteger([ 26, 45, 0, 0, 0 ]);
+    var value = Board.test.decode32BitSignedInteger([ 26, 45, 0, 0, 0 ]);
     assert.equal(value, 5786);
     done();
   });
 
   it("must decode 32 bit signed integers when they are negative", function(done) {
-    var value = Board.decode32BitSignedInteger([ 26, 45, 0, 0, 8 ]);
+    var value = Board.test.decode32BitSignedInteger([ 26, 45, 0, 0, 8 ]);
     assert.equal(value, -5786);
     done();
   });
 
   it("must encode custom floats", function(done) {
-    var value = Board.encodeCustomFloat(123.456);
+    var value = Board.test.encodeCustomFloat(123.456);
     assert.deepEqual(value, [ 0, 45, 75, 28 ]);
     done();
   });
-  
+
   it("must encode custom floats (even when they are integers)", function(done) {
-    var value = Board.encodeCustomFloat(100);
+    var value = Board.test.encodeCustomFloat(100);
     assert.deepEqual(value, [ 1, 0, 0, 52 ]);
     done();
   });
 
   it("must encode custom floats when they are negative", function(done) {
-    var value = Board.encodeCustomFloat(-7321.783);
+    var value = Board.test.encodeCustomFloat(-7321.783);
     assert.deepEqual(value, [ 54, 113, 62, 99 ]);
     done();
   });
 
   it("must encode custom floats when they are less than 1", function(done) {
-    var value = Board.encodeCustomFloat(0.000325);
+    var value = Board.test.encodeCustomFloat(0.000325);
     assert.deepEqual(value, [ 79, 46, 70, 5 ]);
     done();
   });
 
   it("must decode custom floats", function(done) {
-    var value = Board.decodeCustomFloat([ 110, 92, 44, 32 ]);
+    var value = Board.test.decodeCustomFloat([ 110, 92, 44, 32 ]);
     assert.equal(value, 732.782);
     done();
   });
 
   it("must decode custom floats when they are negative", function(done) {
-    var value = Board.decodeCustomFloat([ 110, 92, 44, 96 ]);
+    var value = Board.test.decodeCustomFloat([ 110, 92, 44, 96 ]);
     assert.equal(value, -732.782);
     done();
   });
