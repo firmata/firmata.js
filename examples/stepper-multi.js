@@ -17,7 +17,7 @@ Board.requestPort(function(error, port) {
       motorPin2: 6,
       motorPin3: 7,
       motorPin4: 8,
-      stepType: board.STEPPER.STEPTYPE.WHOLE
+      stepSize: board.STEPPER.STEP_SIZE.WHOLE
     });
 
     board.accelStepperConfig({
@@ -27,27 +27,27 @@ Board.requestPort(function(error, port) {
       motorPin2: 10,
       motorPin3: 11,
       motorPin4: 12,
-      stepType: board.STEPPER.STEPTYPE.HALF
+      stepSize: board.STEPPER.STEP_SIZE.HALF
     });
 
     board.accelStepperSpeed(0, 400);
     board.accelStepperSpeed(1, 400);
-    
+
     board.multiStepperConfig({
       groupNum: 0,
       devices: [0, 1]
     });
 
     board.multiStepperTo(0, [2000, 3000], function() {
-      
+
       board.accelStepperReportPosition(0, function(value) {
         console.log("Stepper 0 position: " + value);
       });
-      
+
       board.accelStepperReportPosition(1, function(value) {
         console.log("Stepper 1 position: " + value);
       });
-    
+
     });
 
   });

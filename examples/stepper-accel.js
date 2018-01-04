@@ -17,7 +17,7 @@ Board.requestPort(function(error, port) {
       motorPin2: 5,
       motorPin3: 6,
       motorPin4: 7,
-      stepType: board.STEPPER.STEPTYPE.WHOLE
+      stepSize: board.STEPPER.STEP_SIZE.WHOLE
     });
 
     board.accelStepperSpeed(0, 300);

@@ -437,7 +437,7 @@ The `Board` constructor creates an instance that represents a physical board.
 
   **For SoftwareSerial only**. Only a single SoftwareSerial instance can read data at a time. Call this method to set this port to be the reading port in the case there are multiple SoftwareSerial instances.
 
-  ### AccelStepperFirmata
+### AccelStepperFirmata
 
 AccelStepperFirmata in configurableFirmata wraps [Mike McCauley&rsquo;s AccelStepper library](http://www.airspayce.com/mikem/arduino/AccelStepper/). Accelstepper gives basic acceleration for individual steppers and support for multiSteppers. multiSteppers  allow you to coordinate the movements of a group of steppers so that they arrive at their desired positions simultaneously.
 
@@ -458,7 +458,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
 
-- `board.STEPPER.STEPTYPE` 
+- `board.STEPPER.STEP_SIZE` 
 
   Available step sizes.
   
@@ -488,7 +488,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
     opts = {
       deviceNum: 0, // <number> Device number for the stepper (range 0-9)
       type: board.STEPPER.TYPE.DRIVER, // <number> (optional) Type of stepper or controller; default is FOUR_WIRE
-      stepType: board.STEPPER.STEPTYPE.HALF, // <number> (optional) Size of step; default is WHOLE
+      stepSize: board.STEPPER.STEP_SIZE.HALF, // <number> (optional) Size of step; default is WHOLE
       stepPin: 2, // <number> (required if type === DRIVER) The step pin for a step+direction stepper driver
       directionPin: 3, // <number> (required if type === DRIVER) The direction pin for a step+direction stepper driver
       motorPin1: 2, // <number> (required if type !== DRIVER) Motor control pin 1
@@ -502,7 +502,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
     
     **invertPins**
 
-    The invertPins value is a 5 bit number
+    The invertPins value is a 5-bit number
     
     bit 5           |bit 4           |bit 3           |bit 2           |bit 1
     ----------------|----------------|----------------|----------------|----------------
@@ -537,11 +537,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
 - `Board.prototype.accelStepperReportPosition(deviceNum)`
 
-  Request the current position of the stepper. Triggers a stepper-position event
+  Request the current position of the stepper. Triggers a `"stepper-position"` event.
 
 - `Board.prototype.accelStepperSpeed(deviceNum, speed)`
 
-  Set teh speed of the stepper in steps per second
+  Set the speed of the stepper in steps per second
 
 - `Board.prototype.accelStepperAcceleration(deviceNum, acceleration)`
 
@@ -576,20 +576,20 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
 - `board.sysexCommand(message)`
 
-  Allow user code to send arbitrary sysex messages. The `message` array is expected to be all necessary bytes between START_SYSEX and END_SYSEX (non-inclusive). It will be assumed that the data in the message array is already encoded as 2 7-bit bytes LSB first.
+  Allow user code to send arbitrary sysex messages. The `message` array is expected to be all necessary bytes between `START_SYSEX` and `END_SYSEX` (non-inclusive). It will be assumed that the data in the message array is already encoded as 2 7-bit bytes LSB first.
 
-  - Use `Board.encode(data)` to encode data values into an array of 7 bit byte pairs.
+  - Use `Board.encode(data)` to encode data values into an array of 7-bit byte pairs.
 
 
 ### Encode/Decode
 
 - `Board.encode(data)`
 
-  Encode an array of 8 bit data values as two 7 bit byte pairs (each). (LSB first)
+  Encode an array of 8-bit data values as an array of two 7-bit byte pairs (each). (LSB first).
 
 - `Board.decode(data)`
 
-  Decode an array of 7 bit byte pairs into a an array of 8 bit data values. (LSB first)
+  Decode an array of 7-bit byte pairs into a an array of 8-bit data values. (LSB first)
 
 
 ## License
