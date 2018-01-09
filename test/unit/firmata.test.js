@@ -3730,7 +3730,7 @@ describe("Board: lifecycle", function() {
   });
 });
 
-describe("Board number format helpers", function() {
+describe("Numeric encoding/decoding and formatting", function() {
 
   it("must encode 32 bit signed integers", function(done) {
     var value = Board.test.encode32BitSignedInteger(5786);
