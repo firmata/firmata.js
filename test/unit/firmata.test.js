@@ -1274,6 +1274,21 @@ describe("Board: lifecycle", function() {
     done();
   });
 
+  it("must remove read handlers when reporting set to 0 for digital pin (INPUT)", function(done) {
+    board.on("removeListener", function(eventName) {
+      if (eventName === "digital-read-2") {
+        done();
+      }
+    });
+
+    board.digitalRead(2, function(value) {
+      assert.fail();
+      done();
+    });
+
+    board.reportDigitalPin(2, 0);
+  });
+
   it("must be able to set pin mode on digital pin (INPUT)", function(done) {
     board.pinMode(2, board.MODES.INPUT);
     assert.equal(transport.lastWrite[0], PIN_MODE);
@@ -1371,6 +1386,21 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[1], board.analogPins[0]);
     assert.equal(transport.lastWrite[2], board.MODES.INPUT);
     done();
+  });
+
+  it("must remove read handlers when reporting set to 0 for analog pin", function(done) {
+    board.on("removeListener", function(eventName) {
+      if (eventName === "analog-read-2") {
+        done();
+      }
+    });
+
+    board.analogRead(2, function(value) {
+      assert.fail();
+      done();
+    });
+
+    board.reportAnalogPin(2, 0);
   });
 
   it("must be able to read value of analog pin", function(done) {
