@@ -768,6 +768,19 @@ describe("Board: lifecycle", function() {
     done();
   });
 
+  it("aliases serialport defaults for backward compatibility", function(done) {
+    var a = new Board("/path/to/fake/usb1", {
+      serialport: {
+        highWaterMark: 1028,
+        bufferSize: 1
+      }
+    }, initNoop);
+
+    assert.deepEqual(transport.spy.getCall(0).args[1].highWaterMark, 1);
+
+    done();
+  });
+
   it("uses default baud rate and buffer size", function(done) {
     var port = "fake port";
     var board = new Board(port, function(err) {});
@@ -922,6 +935,29 @@ describe("Board: lifecycle", function() {
 
     board.isReady = true;
     transport.emit("error");
+  });
+
+  it("When reportVersion and queryFirmware timeout, call noop", function(done) {
+    this.timeout(50);
+    sandbox.stub(Board.prototype, "reportVersion");
+    sandbox.stub(Board.prototype, "queryFirmware");
+    var clock = sandbox.useFakeTimers();
+    var transport = new SerialPort("/path/to/fake/usb");
+    var opt = {
+      reportVersionTimeout: 1
+    };
+    var board = new Board(transport, opt, initNoop);
+    board.versionReceived = false;
+
+    clock.tick(2);
+
+    assert.equal(board.reportVersion.callCount, 1);
+    assert.equal(board.queryFirmware.callCount, 1);
+
+    assert.equal(board.reportVersion.getCall(0).args[0](), undefined);
+    assert.equal(board.queryFirmware.getCall(0).args[0](), undefined);
+
+    done();
   });
 
   it("sends 'REPORT_VERSION' and 'QUERY_FIRMWARE' if it hasnt received the version within the timeout", function(done) {
