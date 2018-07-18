@@ -3638,6 +3638,17 @@ describe("Board: lifecycle", function() {
       done();
     });
 
+	it("allows clearing handler for SYSEX_RESPONSE command byte", function(done) {
+      Board.SYSEX_RESPONSE[0xFF] = function() {};
+
+      board.clearSysexResponse(0xFF);
+
+      assert.ok(function() {
+        board.sysexResponse(0xFF, function() {});
+      });
+      done();
+    });
+
   });
 
   describe("parser", function() {

@@ -580,6 +580,10 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
   - Use `Board.encode(data)` to encode data values into an array of 7-bit byte pairs.
 
+- `board.clearSysexResponse(commandByte)`
+
+  Allow user to remove sysex response handler such as one previously set through board.sysexResponse(commandByte, handler).
+
 
 ### Encode/Decode
 
