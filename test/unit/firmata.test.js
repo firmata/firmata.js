@@ -1490,6 +1490,47 @@ describe("Board: lifecycle", function() {
     done();
   });
 
+  it("must be able to enqueue a series of digital writes and then update the ports on demand", function(done) {
+
+    var write = sandbox.stub(SerialPort.prototype, "write");
+    var expect = [
+      [ 144, 20, 0 ],
+      [ 145, 5, 0 ]
+    ];
+
+    board.digitalWrite(2, board.HIGH, true);
+    board.digitalWrite(3, board.LOW, true);
+    board.digitalWrite(4, board.HIGH, true);
+    board.digitalWrite(5, board.LOW, true);
+
+    // Should not call write yet
+    assert.equal(write.callCount, 0);
+
+    board.digitalWrite(8, board.HIGH, true);
+    board.digitalWrite(9, board.LOW, true);
+    board.digitalWrite(10, board.HIGH, true);
+    board.digitalWrite(11, board.LOW, true);
+
+    // Should not call write yet
+    assert.equal(write.callCount, 0);
+
+    // Write the ports
+    board.flushDigitalPorts();
+
+    // We are updating both ports 0 and 1
+    assert.equal(write.callCount, 2);
+
+    assert.deepEqual(Array.from(write.getCall(0).args[0]), expect[0]);
+    assert.deepEqual(Array.from(write.getCall(1).args[0]), expect[1]);
+
+    // Reset pins to low
+    [2, 4, 8, 10].forEach(pin => { 
+      board.digitalWrite(pin, board.LOW);
+    });
+
+    done();
+  });
+
   it("must be able to track digital writes via ports property", function(done) {
     for (var i = 0; i < board.pins.length; i++) {
       board.pins[i].mode = board.MODES.UNKNOWN;

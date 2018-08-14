@@ -207,9 +207,13 @@ The `Board` constructor creates an instance that represents a physical board.
 
   Set a mode for a pin. pin is the number of the pin and the mode is on of the Board.MODES values. All digital pins are set to board.MODES.OUTPUT by default (because this is what the Firmata firmware running on the board defaults to) and all analog pins are set to board.MODES.ANALOG (analog input) by default.
 
-- `digitalWrite(pin,value)`
+- `digitalWrite(pin,value,enqueue)`
 
-  Write an output to a digital pin. pin is the number of the pin and the value is either board.HIGH or board.LOW.
+  Write an output to a digital pin. pin is the number of the pin and the value is either board.HIGH or board.LOW. enqueue is optional and when true will update the local pin value but will not write the data until `writeQueuedDigitalPorts()` is called.
+
+- `writeQueuedDigitalPorts()`
+
+  Directs firmata to update all ports whose values have been changed via digitalWrite with the `enqueue` parameter set to true.
 
 - `digitalRead(pin,callback)`
 
