@@ -2,7 +2,7 @@ process.env.IS_TEST_MODE = true;
 
 // Built-in Dependencies
 global.cp = require("child_process");
-global.Emitter = require("events").EventEmitter;
+global.Emitter = require("events");
 global.fs = require("fs");
 global.path = require("path");
 

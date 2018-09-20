@@ -173,7 +173,7 @@ describe("Board: data handling", function() {
 
     it("must discard a bad response that meets 3 byte MIDI_RESPONSE criteria", function(done) {
       transport.emit("data", [NaN, NaN, NaN]);
-      assert.equal(board.currentBuffer.length, 0);
+      assert.equal(board.buffer.length, 0);
       done();
     });
 
@@ -192,7 +192,7 @@ describe("Board: data handling", function() {
 
         assert.equal(am.callCount, 0);
         assert.equal(rv.callCount, 0);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         for (var i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
@@ -244,13 +244,13 @@ describe("Board: data handling", function() {
         // No more REPORT_VERSION calls arrived
         assert.equal(rv.callCount, 1);
         // The buffer is empty
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         // Another complete I2C_REPLY arrives...
         transport.emit("data", [0xe0, 0x7f, 0x03]);
 
         assert.equal(am.callCount, 2);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         done();
       });
@@ -268,7 +268,7 @@ describe("Board: data handling", function() {
 
         assert.equal(ir.callCount, 0);
         assert.equal(rv.callCount, 0);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         for (var i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
@@ -320,13 +320,13 @@ describe("Board: data handling", function() {
         // No more REPORT_VERSION calls arrived
         assert.equal(rv.callCount, 1);
         // The buffer is empty
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         // Another complete I2C_REPLY arrives...
         transport.emit("data", [0xf0, 0x77, 0x0a, 0x00, 0x00, 0x00, 0x06, 0x00, 0x5e, 0x00, 0x05, 0x00, 0x48, 0x01, 0x05, 0x00, 0x1b, 0x01, 0x05, 0x00, 0x3f, 0x01, 0x04, 0x00, 0x16, 0x00, 0x05, 0x00, 0x42, 0x01, 0xf7]);
 
         assert.equal(ir.callCount, 2);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         done();
       });
@@ -344,7 +344,7 @@ describe("Board: data handling", function() {
 
         assert.equal(sr.callCount, 0);
         assert.equal(rv.callCount, 0);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         for (var i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
@@ -396,13 +396,13 @@ describe("Board: data handling", function() {
         // No more REPORT_VERSION calls arrived
         assert.equal(rv.callCount, 1);
         // The buffer is empty
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         // Another complete SERIAL_MESSAGE arrives...
         transport.emit("data", [0xf0, 0x60, 0x48, 0x19, 0x01, 0xf7]);
 
         assert.equal(sr.callCount, 2);
-        assert.equal(board.currentBuffer.length, 0);
+        assert.equal(board.buffer.length, 0);
 
         done();
       });
@@ -484,12 +484,12 @@ describe("Board: data handling", function() {
 
       // No such sub command exists. This will hit the early return condition
       Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
-        currentBuffer: [0, 0, bogusSubCommand],
+        buffer: [0, 0, bogusSubCommand],
         emit: emit,
       });
 
       Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
-        currentBuffer: [0, 0, ONEWIRE_SEARCH_REPLY],
+        buffer: [0, 0, ONEWIRE_SEARCH_REPLY],
         emit: emit,
       });
 
@@ -1524,7 +1524,7 @@ describe("Board: lifecycle", function() {
     assert.deepEqual(Array.from(write.getCall(1).args[0]), expect[1]);
 
     // Reset pins to low
-    [2, 4, 8, 10].forEach(pin => { 
+    [2, 4, 8, 10].forEach(pin => {
       board.digitalWrite(pin, board.LOW);
     });
 
@@ -2375,6 +2375,20 @@ describe("Board: lifecycle", function() {
     done();
   });
 
+  it("multiStepperStop(-1)", function(done) {
+    assert.throws(() => {
+      board.multiStepperStop(-1);
+    });
+    done();
+  });
+
+  it("multiStepperStop(6)", function(done) {
+    assert.throws(() => {
+      board.multiStepperStop(6);
+    });
+    done();
+  });
+
   it("can send a multiStepper to", function(done) {
     board.multiStepperTo(0, [200, 400, 600], function() {
       done();
@@ -2435,6 +2449,20 @@ describe("Board: lifecycle", function() {
 
     done();
 
+  });
+
+  it("multiStepperTo(-1)", function(done) {
+    assert.throws(() => {
+      board.multiStepperTo(-1);
+    });
+    done();
+  });
+
+  it("multiStepperTo(6)", function(done) {
+    assert.throws(() => {
+      board.multiStepperStop(6);
+    });
+    done();
   });
 
   it("can receive a stepper position", function(done) {
@@ -3586,10 +3614,10 @@ describe("Board: lifecycle", function() {
 
       Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = function(board) {
         var payload = [];
-        var sub = board.currentBuffer[2];
+        var sub = board.buffer[2];
 
-        for (var i = 3, length = board.currentBuffer.length - 1; i < length; i += 2) {
-          payload.push(board.currentBuffer[i] | (board.currentBuffer[i + 1] << 7));
+        for (var i = 3, length = board.buffer.length - 1; i < length; i += 2) {
+          payload.push(board.buffer[i] | (board.buffer[i + 1] << 7));
         }
 
         board.emit("non-standard-reply-" + sub, payload);
@@ -3694,7 +3722,7 @@ describe("Board: lifecycle", function() {
   describe("parser", function() {
 
     beforeEach(function() {
-      board.currentBuffer = [];
+      board.buffer = [];
     });
 
     it("must parse a command from the beginning of a data packet", function(done) {

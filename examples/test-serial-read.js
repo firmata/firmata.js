@@ -40,7 +40,7 @@ Board.requestPort(function(error, port) {
       txPin: 3
     });
 
-    this.serialRead(SW_SERIAL0, function(data) {
+    this.serialRead(SW_SERIAL0, function() {
       console.log("  ✔ received data (exiting)");
       console.log("------------------------------");
       process.exit();

@@ -1,12 +1,10 @@
 require("../common/bootstrap");
 
-var entry = path.join(__dirname, "/fixtures/entry.js");
-var output = path.join(__dirname, "/fixtures/output.js");
-var source = fs.readFileSync(path.join(__dirname, "/../../lib/firmata.js"), "utf8");
-var lines = source.split("\n").map(function(line) {
-  return line.trim();
-});
-var startAt = lines.indexOf("* constants");
+const entry = path.join(__dirname, "/fixtures/entry.js");
+const output = path.join(__dirname, "/fixtures/output.js");
+const source = fs.readFileSync(path.join(__dirname, "/../../lib/firmata.js"), "utf8");
+const lines = source.split("\n").map(line => line.trim());
+const startAt = lines.indexOf("* constants");
 
 describe("Bundling", function() {
 
@@ -20,10 +18,10 @@ describe("Bundling", function() {
 
   it("must browserify", function(done) {
     this.timeout(1e5);
-    var b = browserify(entry);
+    const b = browserify(entry);
 
     b.bundle(function(error, buffer) {
-      var bundle = buffer.toString();
+      const bundle = buffer.toString();
       assert.equal(error, null);
       lines.slice(startAt).forEach(function(line) {
         assert.equal(bundle.includes(line), true);
@@ -34,8 +32,8 @@ describe("Bundling", function() {
 
   it("must webpack", function(done) {
     this.timeout(1e5);
-    var w = webpack({
-      entry: entry,
+    const w = webpack({
+      entry,
       output: {
         filename: output
       }
@@ -44,8 +42,7 @@ describe("Bundling", function() {
     w.run(function(error, stats) {
       assert.equal(error, null);
 
-      var bundle = fs.readFileSync(output, "utf8");
-
+      const bundle = fs.readFileSync(output, "utf8");
       lines.slice(startAt).forEach(function(line) {
         assert.equal(bundle.includes(line), true);
       });

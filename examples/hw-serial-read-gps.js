@@ -12,15 +12,12 @@ Board.requestPort(function(error, port) {
     console.log("READY");
 
     var HW_SERIAL1 = board.SERIAL_PORT_IDs.HW_SERIAL1;
-    var maxBytesToRead = 4;
 
     board.serialConfig({
       portId: HW_SERIAL1,
       baud: 9600
     });
 
-    // leave 2nd parameter (maxBytesToRead) to read all available bytes in buffer
-    // board.serialRead(HW_SERIAL1, maxBytesToRead, function(data) {
     board.serialRead(HW_SERIAL1, function(data) {
       console.log(new Buffer(data).toString("ascii"));
     });
