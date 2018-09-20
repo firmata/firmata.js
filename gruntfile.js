@@ -1,5 +1,5 @@
-var cp = require("child_process");
-var tags = require("common-tags");
+const cp = require("child_process");
+const tags = require("common-tags");
 
 module.exports = function (grunt) {
   grunt.initConfig({
@@ -9,29 +9,10 @@ module.exports = function (grunt) {
         "test/unit/*.js"
       ],
     },
-    jshint: {
-      all: [ "gruntfile.js", "lib/*.js", "test/*.js", "examples/*.js"],
+    eslint: {
+      target: ["gruntfile.js", "lib/*.js", "test/*.js", "examples/*.js"],
       options: {
-        globals: {
-          it: true,
-          describe: true,
-          beforeEach: true,
-          afterEach: true,
-          before: true
-        },
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: false,
-        nonew: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        boss: true,
-        eqnull: true,
-        node: true,
-        strict: false,
-        esnext: true,
+        configFile: ".eslint.json"
       }
     },
     jscs: {
@@ -93,8 +74,8 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask("test", ["mochaTest"]);
-  grunt.registerTask("default", ["jshint:all", "jscs", "mochaTest"]);
-  grunt.loadNpmTasks("grunt-contrib-jshint");
+  grunt.registerTask("default", ["eslint", "jscs", "mochaTest"]);
+  grunt.loadNpmTasks("grunt-eslint");
   grunt.loadNpmTasks("grunt-mocha-test");
   grunt.loadNpmTasks("grunt-jsbeautifier");
   grunt.loadNpmTasks("grunt-jscs");
@@ -112,11 +93,11 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask("changelog", "'changelog', 'changelog:v0.0.0..v0.0.2' or 'changelog:v0.0.0'", (arg) => {
-    var done = grunt.task.current.async();
-    var tags = cp.execSync("git tag --sort version:refname").toString().split("\n");
-    var tagIndex = -1;
-    var range;
-    var revisionRange;
+    const done = grunt.task.current.async();
+    const tags = cp.execSync("git tag --sort version:refname").toString().split("\n");
+    let tagIndex = -1;
+    let range;
+    let revisionRange;
 
     if (!arg) {
       // grunt changelog
@@ -155,7 +136,7 @@ module.exports = function (grunt) {
         return;
       }
 
-      var rows = result.split("\n").filter(commit => {
+      const rows = result.split("\n").filter(commit => {
         return !commit.includes("|Merge ") && !commit.includes(range[0]);
       });
 
