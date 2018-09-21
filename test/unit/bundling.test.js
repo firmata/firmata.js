@@ -7,23 +7,24 @@ const lines = source.split("\n").map(line => line.trim());
 const startAt = lines.indexOf("* constants");
 
 describe("Bundling", function() {
+  const context = this;
 
-  beforeEach(function() {
+  beforeEach(() => {
     fs.writeFileSync(output, "");
   });
 
-  afterEach(function() {
+  afterEach(() => {
     fs.unlinkSync(output);
   });
 
   it("must browserify", function(done) {
-    this.timeout(1e5);
+    context.timeout(1e5);
     const b = browserify(entry);
 
-    b.bundle(function(error, buffer) {
+    b.bundle((error, buffer) => {
       const bundle = buffer.toString();
       assert.equal(error, null);
-      lines.slice(startAt).forEach(function(line) {
+      lines.slice(startAt).forEach(line => {
         assert.equal(bundle.includes(line), true);
       });
       done();
@@ -31,7 +32,7 @@ describe("Bundling", function() {
   });
 
   it("must webpack", function(done) {
-    this.timeout(1e5);
+    context.timeout(1e5);
     const w = webpack({
       entry,
       output: {
@@ -39,11 +40,11 @@ describe("Bundling", function() {
       }
     });
 
-    w.run(function(error, stats) {
+    w.run((error, stats) => {
       assert.equal(error, null);
 
       const bundle = fs.readFileSync(output, "utf8");
-      lines.slice(startAt).forEach(function(line) {
+      lines.slice(startAt).forEach(line => {
         assert.equal(bundle.includes(line), true);
       });
       done();

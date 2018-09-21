@@ -4,74 +4,74 @@ require("../common/bootstrap");
 
 // Test specific internals
 //
-var Board = firmata.Board;
+const Board = firmata.Board;
 
-var ANALOG_MAPPING_QUERY = 0x69;
-var ANALOG_MAPPING_RESPONSE = 0x6A;
-var ANALOG_MESSAGE = 0xE0;
-var CAPABILITY_QUERY = 0x6B;
-var CAPABILITY_RESPONSE = 0x6C;
-var DIGITAL_MESSAGE = 0x90;
-var END_SYSEX = 0xF7;
-var EXTENDED_ANALOG = 0x6F;
-var I2C_CONFIG = 0x78;
-var I2C_REPLY = 0x77;
-var I2C_REQUEST = 0x76;
-var I2C_READ_MASK = 0x18;   // 0b00011000
-var I2C_END_TX_MASK = 0x40; // 0b01000000
-var ONEWIRE_CONFIG_REQUEST = 0x41;
-var ONEWIRE_DATA = 0x73;
-var ONEWIRE_DELAY_REQUEST_BIT = 0x10;
-var ONEWIRE_READ_REPLY = 0x43;
-var ONEWIRE_READ_REQUEST_BIT = 0x08;
-var ONEWIRE_RESET_REQUEST_BIT = 0x01;
-var ONEWIRE_SEARCH_ALARMS_REPLY = 0x45;
-var ONEWIRE_SEARCH_ALARMS_REQUEST = 0x44;
-var ONEWIRE_SEARCH_REPLY = 0x42;
-var ONEWIRE_SEARCH_REQUEST = 0x40;
-var ONEWIRE_WITHDATA_REQUEST_BITS = 0x3C;
-var ONEWIRE_WRITE_REQUEST_BIT = 0x20;
-var PIN_MODE = 0xF4;
-var PIN_STATE_QUERY = 0x6D;
-var PIN_STATE_RESPONSE = 0x6E;
-var PING_READ = 0x75;
-var PULSE_IN = 0x74;
-var PULSE_OUT = 0x73;
-var QUERY_FIRMWARE = 0x79;
-var REPORT_ANALOG = 0xC0;
-var REPORT_DIGITAL = 0xD0;
-var REPORT_VERSION = 0xF9;
-var SAMPLING_INTERVAL = 0x7A;
-var SERVO_CONFIG = 0x70;
-var SERIAL_MESSAGE = 0x60;
-var SERIAL_CONFIG = 0x10;
-var SERIAL_WRITE = 0x20;
-var SERIAL_READ = 0x30;
-var SERIAL_REPLY = 0x40;
-var SERIAL_CLOSE = 0x50;
-var SERIAL_FLUSH = 0x60;
-var SERIAL_LISTEN = 0x70;
-var START_SYSEX = 0xF0;
-var STEPPER = 0x72;
-var ACCELSTEPPER = 0x62;
-var STRING_DATA = 0x71;
-var SYSTEM_RESET = 0xFF;
+const ANALOG_MAPPING_QUERY = 0x69;
+const ANALOG_MAPPING_RESPONSE = 0x6A;
+const ANALOG_MESSAGE = 0xE0;
+const CAPABILITY_QUERY = 0x6B;
+const CAPABILITY_RESPONSE = 0x6C;
+const DIGITAL_MESSAGE = 0x90;
+const END_SYSEX = 0xF7;
+const EXTENDED_ANALOG = 0x6F;
+const I2C_CONFIG = 0x78;
+const I2C_REPLY = 0x77;
+const I2C_REQUEST = 0x76;
+const I2C_READ_MASK = 0x18;   // 0b00011000
+const I2C_END_TX_MASK = 0x40; // 0b01000000
+const ONEWIRE_CONFIG_REQUEST = 0x41;
+const ONEWIRE_DATA = 0x73;
+const ONEWIRE_DELAY_REQUEST_BIT = 0x10;
+const ONEWIRE_READ_REPLY = 0x43;
+const ONEWIRE_READ_REQUEST_BIT = 0x08;
+const ONEWIRE_RESET_REQUEST_BIT = 0x01;
+const ONEWIRE_SEARCH_ALARMS_REPLY = 0x45;
+const ONEWIRE_SEARCH_ALARMS_REQUEST = 0x44;
+const ONEWIRE_SEARCH_REPLY = 0x42;
+const ONEWIRE_SEARCH_REQUEST = 0x40;
+const ONEWIRE_WITHDATA_REQUEST_BITS = 0x3C;
+const ONEWIRE_WRITE_REQUEST_BIT = 0x20;
+const PIN_MODE = 0xF4;
+const PIN_STATE_QUERY = 0x6D;
+const PIN_STATE_RESPONSE = 0x6E;
+const PING_READ = 0x75;
+const PULSE_IN = 0x74;
+const PULSE_OUT = 0x73;
+const QUERY_FIRMWARE = 0x79;
+const REPORT_ANALOG = 0xC0;
+const REPORT_DIGITAL = 0xD0;
+const REPORT_VERSION = 0xF9;
+const SAMPLING_INTERVAL = 0x7A;
+const SERVO_CONFIG = 0x70;
+const SERIAL_MESSAGE = 0x60;
+const SERIAL_CONFIG = 0x10;
+const SERIAL_WRITE = 0x20;
+const SERIAL_READ = 0x30;
+const SERIAL_REPLY = 0x40;
+const SERIAL_CLOSE = 0x50;
+const SERIAL_FLUSH = 0x60;
+const SERIAL_LISTEN = 0x70;
+const START_SYSEX = 0xF0;
+const STEPPER = 0x72;
+const ACCELSTEPPER = 0x62;
+const STRING_DATA = 0x71;
+const SYSTEM_RESET = 0xFF;
 
 // Used by custom sysex tests
-var NON_STANDARD_REPLY = 0x11;
+const NON_STANDARD_REPLY = 0x11;
 
-var sandbox = sinon.sandbox.create();
+const sandbox = sinon.sandbox.create();
 
-describe("Board.requestPort", function() {
+describe("Board.requestPort", () => {
 
-  var response = {
+  const response = {
     error: null,
     port: {
       comName: null
     },
   };
 
-  beforeEach(function() {
+  beforeEach(() => {
     sandbox.stub(com, "list").callsFake(callback => {
       process.nextTick(() => {
         callback(response.error, [response.port]);
@@ -79,13 +79,13 @@ describe("Board.requestPort", function() {
     });
   });
 
-  afterEach(function() {
+  afterEach(() => {
     sandbox.restore();
     response.error = null;
     response.port.comName = null;
   });
 
-  it("can identify an acceptable port", function(done) {
+  it("can identify an acceptable port", done => {
     response.port.comName = "/dev/usb.whatever";
     assert.equal(Board.isAcceptablePort(response.port), true);
 
@@ -98,7 +98,7 @@ describe("Board.requestPort", function() {
     done();
   });
 
-  it("can identify an unacceptable port", function(done) {
+  it("can identify an unacceptable port", done => {
     response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
     assert.equal(Board.isAcceptablePort(response.port), false);
 
@@ -108,37 +108,37 @@ describe("Board.requestPort", function() {
     done();
   });
 
-  it("invokes callback with an acceptable port: usb", function(done) {
+  it("invokes callback with an acceptable port: usb", done => {
     response.port.comName = "/dev/usb.whatever";
 
-    Board.requestPort(function(error, port) {
+    Board.requestPort((error, port) => {
       assert.equal(port, response.port);
       done();
     });
   });
 
-  it("invokes callback with an acceptable port: acm", function(done) {
+  it("invokes callback with an acceptable port: acm", done => {
     response.port.comName = "/dev/ttyACM0";
 
-    Board.requestPort(function(error, port) {
+    Board.requestPort((error, port) => {
       assert.equal(port, response.port);
       done();
     });
   });
 
-  it("invokes callback with an acceptable port: com", function(done) {
+  it("invokes callback with an acceptable port: com", done => {
     response.port.comName = "COM0";
 
-    Board.requestPort(function(error, port) {
+    Board.requestPort((error, port) => {
       assert.equal(port, response.port);
       done();
     });
   });
 
-  it("doesn't call callback with an unacceptable port: Bluetooth-Incoming-Port", function(done) {
+  it("doesn't call callback with an unacceptable port: Bluetooth-Incoming-Port", done => {
     response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
 
-    Board.requestPort(function(error, port) {
+    Board.requestPort((error, port) => {
       assert.equal(port, null);
       assert.equal(error.message, "No Acceptable Port Found");
       done();
@@ -148,15 +148,15 @@ describe("Board.requestPort", function() {
 });
 
 
-describe("Board: data handling", function() {
+describe("Board: data handling", () => {
 
-  var SerialPort;
-  var transportWrite;
-  var transport;
-  var initCallback;
-  var board;
+  let SerialPort;
+  let transportWrite;
+  let transport;
+  let initCallback;
+  let board;
 
-  beforeEach(function() {
+  beforeEach(() => {
     initCallback = sandbox.spy();
     SerialPort = sandbox.spy(com, "SerialPort");
     transportWrite = sandbox.spy(SerialPort.prototype, "write");
@@ -164,37 +164,37 @@ describe("Board: data handling", function() {
     board = new Board(transport, initCallback);
   });
 
-  afterEach(function() {
+  afterEach(() => {
     Board.test.i2cActive.clear();
     sandbox.restore();
   });
 
-  describe("MIDI_RESPONSE", function() {
+  describe("MIDI_RESPONSE", () => {
 
-    it("must discard a bad response that meets 3 byte MIDI_RESPONSE criteria", function(done) {
+    it("must discard a bad response that meets 3 byte MIDI_RESPONSE criteria", done => {
       transport.emit("data", [NaN, NaN, NaN]);
       assert.equal(board.buffer.length, 0);
       done();
     });
 
-    describe("REPORT_VERSION", function() {
+    describe("REPORT_VERSION", () => {
 
-      it("must ignore unexpected adc data until REPORT_VERSION", function(done) {
+      it("must ignore unexpected adc data until REPORT_VERSION", done => {
 
-        var parts = [
+        const parts = [
           fixtures.unexpected.adc.slice(0, 200),
           fixtures.unexpected.adc.slice(200, 400),
           fixtures.unexpected.adc.slice(400, 513),
         ];
 
-        var am = sandbox.spy(Board.MIDI_RESPONSE, ANALOG_MESSAGE);
-        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+        const am = sandbox.spy(Board.MIDI_RESPONSE, ANALOG_MESSAGE);
+        const rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
 
         assert.equal(am.callCount, 0);
         assert.equal(rv.callCount, 0);
         assert.equal(board.buffer.length, 0);
 
-        for (var i = 0; i < parts[0].length; i++) {
+        for (let i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
         }
 
@@ -205,14 +205,14 @@ describe("Board: data handling", function() {
 
 
         // The REPORT_VERSION byte is at index 38
-        var reportVersionAtByteIndex = 38;
+        const reportVersionAtByteIndex = 38;
         // We won't know it's been seen until all three
         // bytes have been read and processed.
-        var reportVersionCalledAtIndex = -1;
-        var isVersioned = false;
+        let reportVersionCalledAtIndex = -1;
+        let isVersioned = false;
         // This contains a valid REPORT_VERSION message
         //
-        for (var j = 0; j < parts[1].length; j++) {
+        for (let j = 0; j < parts[1].length; j++) {
           transport.emit("data", [parts[1][j]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -230,7 +230,7 @@ describe("Board: data handling", function() {
         assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
 
 
-        for (var k = 0; k < parts[2].length; k++) {
+        for (let k = 0; k < parts[2].length; k++) {
           transport.emit("data", [parts[2][k]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -255,22 +255,22 @@ describe("Board: data handling", function() {
         done();
       });
 
-      it("must ignore unexpected i2c data until REPORT_VERSION", function(done) {
+      it("must ignore unexpected i2c data until REPORT_VERSION", done => {
 
-        var parts = [
+        const parts = [
           fixtures.unexpected.i2c.slice(0, 200),
           fixtures.unexpected.i2c.slice(200, 400),
           fixtures.unexpected.i2c.slice(400, 697),
         ];
 
-        var ir = sandbox.spy(Board.SYSEX_RESPONSE, I2C_REPLY);
-        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+        const ir = sandbox.spy(Board.SYSEX_RESPONSE, I2C_REPLY);
+        const rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
 
         assert.equal(ir.callCount, 0);
         assert.equal(rv.callCount, 0);
         assert.equal(board.buffer.length, 0);
 
-        for (var i = 0; i < parts[0].length; i++) {
+        for (let i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
         }
 
@@ -281,14 +281,14 @@ describe("Board: data handling", function() {
 
 
         // The REPORT_VERSION byte is at index 194
-        var reportVersionAtByteIndex = 194;
+        const reportVersionAtByteIndex = 194;
         // We won't know it's been seen until all three
         // bytes have been read and processed.
-        var reportVersionCalledAtIndex = -1;
-        var isVersioned = false;
+        let reportVersionCalledAtIndex = -1;
+        let isVersioned = false;
         // This contains a valid REPORT_VERSION message
         //
-        for (var j = 0; j < parts[1].length; j++) {
+        for (let j = 0; j < parts[1].length; j++) {
           transport.emit("data", [parts[1][j]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -306,7 +306,7 @@ describe("Board: data handling", function() {
         assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
 
 
-        for (var k = 0; k < parts[2].length; k++) {
+        for (let k = 0; k < parts[2].length; k++) {
           transport.emit("data", [parts[2][k]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -331,22 +331,22 @@ describe("Board: data handling", function() {
         done();
       });
 
-      it("must ignore unexpected serial data until REPORT_VERSION", function(done) {
+      it("must ignore unexpected serial data until REPORT_VERSION", done => {
 
-        var parts = [
+        const parts = [
           fixtures.unexpected.serial.slice(0, 200),
           fixtures.unexpected.serial.slice(200, 400),
           fixtures.unexpected.serial.slice(400, 697),
         ];
 
-        var sr = sandbox.spy(Board.SYSEX_RESPONSE, SERIAL_MESSAGE);
-        var rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
+        const sr = sandbox.spy(Board.SYSEX_RESPONSE, SERIAL_MESSAGE);
+        const rv = sandbox.spy(Board.MIDI_RESPONSE, REPORT_VERSION);
 
         assert.equal(sr.callCount, 0);
         assert.equal(rv.callCount, 0);
         assert.equal(board.buffer.length, 0);
 
-        for (var i = 0; i < parts[0].length; i++) {
+        for (let i = 0; i < parts[0].length; i++) {
           transport.emit("data", [parts[0][i]]);
         }
 
@@ -357,14 +357,14 @@ describe("Board: data handling", function() {
 
 
         // The REPORT_VERSION byte is at index 86
-        var reportVersionAtByteIndex = 86;
+        const reportVersionAtByteIndex = 86;
         // We won't know it's been seen until all three
         // bytes have been read and processed.
-        var reportVersionCalledAtIndex = -1;
-        var isVersioned = false;
+        let reportVersionCalledAtIndex = -1;
+        let isVersioned = false;
         // This contains a valid REPORT_VERSION message
         //
-        for (var j = 0; j < parts[1].length; j++) {
+        for (let j = 0; j < parts[1].length; j++) {
           transport.emit("data", [parts[1][j]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -382,7 +382,7 @@ describe("Board: data handling", function() {
         assert.equal(reportVersionCalledAtIndex - 2, reportVersionAtByteIndex);
 
 
-        for (var k = 0; k < parts[2].length; k++) {
+        for (let k = 0; k < parts[2].length; k++) {
           transport.emit("data", [parts[2][k]]);
 
           if (rv.callCount === 1 && !isVersioned) {
@@ -409,9 +409,9 @@ describe("Board: data handling", function() {
     });
   });
 
-  describe("SYSEX_RESPONSE", function() {
-    it("QUERY_FIRMWARE", function(done) {
-      var qf = sandbox.spy(Board.SYSEX_RESPONSE, QUERY_FIRMWARE);
+  describe("SYSEX_RESPONSE", () => {
+    it("QUERY_FIRMWARE", done => {
+      const qf = sandbox.spy(Board.SYSEX_RESPONSE, QUERY_FIRMWARE);
 
       board.versionReceived = true;
 
@@ -439,7 +439,7 @@ describe("Board: data handling", function() {
         116, 0,
         97, 0,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(qf.callCount, 1);
       assert.deepEqual(board.firmware, {
@@ -449,12 +449,11 @@ describe("Board: data handling", function() {
           minor: 3
         }
       });
-
       done();
     });
 
-    it("CAPABILITY_RESPONSE", function(done) {
-      var cr = sandbox.spy(Board.SYSEX_RESPONSE, CAPABILITY_RESPONSE);
+    it("CAPABILITY_RESPONSE", done => {
+      const cr = sandbox.spy(Board.SYSEX_RESPONSE, CAPABILITY_RESPONSE);
 
       board.versionReceived = true;
 
@@ -464,43 +463,41 @@ describe("Board: data handling", function() {
         CAPABILITY_RESPONSE,
         0, 1, 1, 1, 4, 14, 127,
         0, 1, 1, 1, 3, 8, 4, 14, 127,
-      ]);
+     ]);
       transport.emit("data", [
         0, 1, 1, 1, 3, 8, 4, 14, 127,
         0, 1, 1, 1, 4, 14, 127,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(cr.callCount, 1);
-
       done();
     });
 
-    it("ONEWIRE_DATA", function(done) {
+    it("ONEWIRE_DATA", done => {
       board.versionReceived = true;
-      var handler = sandbox.spy(Board.SYSEX_RESPONSE, ONEWIRE_SEARCH_REPLY);
-      var emit = sandbox.spy();
-      var bogusSubCommand = 0xE7;
+      const handler = sandbox.spy(Board.SYSEX_RESPONSE, ONEWIRE_SEARCH_REPLY);
+      const emit = sandbox.spy();
+      const bogusSubCommand = 0xE7;
 
       // No such sub command exists. This will hit the early return condition
       Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
         buffer: [0, 0, bogusSubCommand],
-        emit: emit,
+        emit,
       });
 
       Board.SYSEX_RESPONSE[ONEWIRE_DATA]({
         buffer: [0, 0, ONEWIRE_SEARCH_REPLY],
-        emit: emit,
+        emit,
       });
 
       assert.equal(handler.callCount, 1);
       assert.equal(emit.callCount, 1);
-
       done();
     });
 
-    it("PIN_STATE_RESPONSE", function(done) {
-      var cr = sandbox.spy(Board.SYSEX_RESPONSE, PIN_STATE_RESPONSE);
+    it("PIN_STATE_RESPONSE", done => {
+      const cr = sandbox.spy(Board.SYSEX_RESPONSE, PIN_STATE_RESPONSE);
 
       board.versionReceived = true;
 
@@ -512,26 +509,26 @@ describe("Board: data handling", function() {
         0, 1, 1, 1, 3, 8, 4, 14, 127,
         0, 1, 1, 1, 4, 14, 127,
         END_SYSEX
-      ]);
+     ]);
 
       transport.emit("data", [
         START_SYSEX,
         PIN_STATE_RESPONSE,
         0, 1,
         END_SYSEX
-      ]);
+     ]);
 
       // Garbage data...
       transport.emit("data", [
         1, 1, 1, 1,
-      ]);
+     ]);
 
       transport.emit("data", [
         START_SYSEX,
         PIN_STATE_RESPONSE,
         1, 1,
         END_SYSEX
-      ]);
+     ]);
 
       // Garbage data followed by valid data
       transport.emit("data", [
@@ -540,14 +537,14 @@ describe("Board: data handling", function() {
         PIN_STATE_RESPONSE,
         2, 1,
         END_SYSEX
-      ]);
+     ]);
 
       transport.emit("data", [
         START_SYSEX,
         PIN_STATE_RESPONSE,
         3, 1,
         END_SYSEX
-      ]);
+     ]);
 
       // minimum state response to set pin 0
       transport.emit("data", [
@@ -556,7 +553,7 @@ describe("Board: data handling", function() {
         // pin, mode, state
         0, 1, 1,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(board.pins[0].mode, 1);
       assert.equal(board.pins[0].state, 1);
@@ -568,7 +565,7 @@ describe("Board: data handling", function() {
         // pin, mode, state
         0, 2, 2,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(board.pins[0].mode, 2);
       assert.equal(board.pins[0].state, 2);
@@ -583,7 +580,7 @@ describe("Board: data handling", function() {
         // pin, mode, state, state 2
         0, 2, 2, 1,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(board.pins[0].mode, 2);
       assert.equal(board.pins[0].state, 130); // 2 | (1 << 7)
@@ -598,18 +595,17 @@ describe("Board: data handling", function() {
         // pin, mode, state, state 2
         0, 2, 2, 1, 1,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(board.pins[0].mode, 2);
       assert.equal(board.pins[0].state, 16514); // 130 | (1 << 14)
 
       assert.equal(cr.callCount, 8);
-
       done();
     });
 
-    it("ANALOG_MAPPING_RESPONSE", function(done) {
-      var amr = sandbox.spy(Board.SYSEX_RESPONSE, ANALOG_MAPPING_RESPONSE);
+    it("ANALOG_MAPPING_RESPONSE", done => {
+      const amr = sandbox.spy(Board.SYSEX_RESPONSE, ANALOG_MAPPING_RESPONSE);
 
       board.versionReceived = true;
 
@@ -621,30 +617,30 @@ describe("Board: data handling", function() {
         0, 1, 1, 1, 3, 8, 4, 14, 127,
         0, 1, 1, 1, 4, 14, 127,
         END_SYSEX
-      ]);
+     ]);
 
       transport.emit("data", [
         START_SYSEX,
         ANALOG_MAPPING_RESPONSE,
         127, 127, 0, 1,
         END_SYSEX
-      ]);
+     ]);
 
       // Garbage data...
       transport.emit("data", [
         1, 1, 1, 1,
-      ]);
+     ]);
 
       transport.emit("data", [
         START_SYSEX,
         ANALOG_MAPPING_RESPONSE,
         0, 1,
-      ]);
+     ]);
 
       transport.emit("data", [
         2, 3,
         END_SYSEX
-      ]);
+     ]);
 
       // Garbage data followed by valid data
       transport.emit("data", [
@@ -653,44 +649,43 @@ describe("Board: data handling", function() {
         ANALOG_MAPPING_RESPONSE,
         2, 1,
         END_SYSEX
-      ]);
+     ]);
 
       assert.equal(amr.callCount, 3);
-
       done();
     });
   });
 });
 
-describe("Board: initialization", function() {
-  it("Always returns a Board instance", function(done) {
-    var boards = [
+describe("Board: initialization", () => {
+  it("Always returns a Board instance", done => {
+    const boards = [
       new Board("/path/to/fake1"),
       Board("/path/to/fake2"),
     ];
 
-    boards.forEach(function(board) {
+    boards.forEach(board => {
       assert.equal(board instanceof Board, true);
     });
 
     done();
   });
 
-  it("Is a subclass of EventEmitter", function(done) {
+  it("Is a subclass of EventEmitter", done => {
 
-    var boards = [
+    const boards = [
       new Board("/path/to/fake1"),
       Board("/path/to/fake2"),
     ];
 
-    boards.forEach(function(board) {
+    boards.forEach(board => {
       assert.equal(board instanceof Emitter, true);
     });
     done();
   });
 
-  it("Default RESOLUTION.* values are null", function(done) {
-    var board = new Board("/path/to/fake1");
+  it("Default RESOLUTION.* values are null", done => {
+    const board = new Board("/path/to/fake1");
 
     assert.equal(typeof board.RESOLUTION, "object");
     assert.notEqual(board.RESOLUTION, null);
@@ -703,18 +698,19 @@ describe("Board: initialization", function() {
 
 describe("Board: lifecycle", function() {
 
-  var SerialPort = sandbox.spy(com, "SerialPort");
-  var transportWrite = sandbox.spy(SerialPort.prototype, "write");
-  var initCallback = sandbox.spy(error => {
+  let SerialPort = sandbox.spy(com, "SerialPort");
+  let transportWrite = sandbox.spy(SerialPort.prototype, "write");
+  let initCallback = sandbox.spy(error => {
     assert.equal(typeof error, "undefined");
   });
-  var initNoop = sandbox.spy();
+  let initNoop = sandbox.spy();
 
-  var transport = new SerialPort("/path/to/fake/usb");
-  var board = new Board(transport, initCallback);
+  let transport = new SerialPort("/path/to/fake/usb");
+  let board = new Board(transport, initCallback);
 
+  const context = this;
 
-  beforeEach(function() {
+  beforeEach(() => {
     Board.test.i2cActive.clear();
 
     transport.spy = sandbox.spy(com, "SerialPort");
@@ -722,42 +718,41 @@ describe("Board: lifecycle", function() {
     board._events.length = 0;
   });
 
-  afterEach(function() {
+  afterEach(() => {
     Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = undefined;
     sandbox.restore();
   });
 
-  describe("Writing To Transport", function() {
+  describe("Writing To Transport", () => {
 
-    beforeEach(function() {
+    beforeEach(() => {
       board.pending = 0;
     });
 
-    afterEach(function() {
+    afterEach(() => {
       board.pending = 0;
     });
 
-    it("increments pending on writeToTransport", function(done) {
+    it("increments pending on writeToTransport", done => {
       sandbox.spy(board.transport, "write");
 
       assert.equal(board.pending, 0);
       Board.test.writeToTransport(board, [1, 2, 3, 4]);
       assert.equal(board.pending, 1);
 
-      var args = board.transport.write.lastCall.args;
+      const args = board.transport.write.lastCall.args;
 
       assert.ok(args[0].equals(Buffer([1, 2, 3, 4])));
 
       args[1]();
       assert.equal(board.pending, 0);
-
       done();
     });
   });
 
-  it("uses serialport defaults", function(done) {
-    var a = new Board("/path/to/fake/usb1", initNoop);
-    var b = new Board("/path/to/fake/usb2", initNoop);
+  it("uses serialport defaults", done => {
+    const a = new Board("/path/to/fake/usb1", initNoop);
+    const b = new Board("/path/to/fake/usb2", initNoop);
 
     assert.equal(transport.spy.getCall(0).args[0], "/path/to/fake/usb1");
     assert.deepEqual(transport.spy.getCall(0).args[1], { baudRate: 57600, highWaterMark: 256 });
@@ -768,8 +763,8 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("aliases serialport defaults for backward compatibility", function(done) {
-    var a = new Board("/path/to/fake/usb1", {
+  it("aliases serialport defaults for backward compatibility", done => {
+    const a = new Board("/path/to/fake/usb1", {
       serialport: {
         highWaterMark: 1028,
         bufferSize: 1
@@ -781,77 +776,73 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("uses default baud rate and buffer size", function(done) {
-    var port = "fake port";
-    var board = new Board(port, function(err) {});
+  it("uses default baud rate and buffer size", done => {
+    const port = "fake port";
+    const board = new Board(port, err => {});
 
     assert.deepEqual(
-      transport.spy.args, [ [ "fake port", { baudRate: 57600, highWaterMark: 256 } ] ]
+      transport.spy.args, [[ "fake port", { baudRate: 57600, highWaterMark: 256 } ] ]
     );
 
     done();
   });
 
-  it("overrides baud rate and buffer size", function(done) {
-    var port = "fake port";
-    var opt = {
+  it("overrides baud rate and buffer size", done => {
+    const port = "fake port";
+    const opt = {
       reportVersionTimeout: 1,
       serialport: {
         baudRate: 5,
         highWaterMark: 10
       }
     };
-    var board = new Board(port, opt, function(err) {});
+    const board = new Board(port, opt, err => {});
 
     assert.deepEqual(
-      transport.spy.args, [ [ "fake port", { baudRate: 5, highWaterMark: 10 } ] ]
+      transport.spy.args, [[ "fake port", { baudRate: 5, highWaterMark: 10 } ] ]
     );
 
     done();
   });
 
-  it("has a name", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("has a name", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
     assert.equal(board.name, "Firmata");
     done();
   });
 
   // Legacy
-  it("emits 'connect' event when transport emits 'open'.", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("emits 'connect' event when transport emits 'open'.", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
-    board.on("connect", function() {
-      done();
-    });
+    board.on("connect", () => done());
 
     transport.emit("open");
   });
 
-  it("forwards 'open' events from transport.", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("forwards 'open' events from transport.", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
-    board.on("open", function() {
-      done();
-    });
+    board.on("open", () => done());
 
     transport.emit("open");
   });
 
-  it("emits 'ready' after handshakes complete (skipCapabilities)", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true}, initNoop);
-    var oc = 0;
+  it("emits 'ready' after handshakes complete (skipCapabilities)", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, {skipCapabilities: true}, initNoop);
+    let oc = 0;
 
-    board.on("open", function() {
+    board.on("open", () => {
       assert.ok(true);
       oc++;
     });
 
-    board.on("connect", function() {
+    board.on("connect", () => {
       assert.ok(true);
       oc++;
     });
@@ -867,17 +858,17 @@ describe("Board: lifecycle", function() {
     board.emit("queryfirmware");
   });
 
-  it("emits 'ready' after handshakes complete", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
-    var oc = 0;
+  it("emits 'ready' after handshakes complete", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
+    let oc = 0;
 
-    board.on("open", function() {
+    board.on("open", () => {
       assert.ok(true);
       oc++;
     });
 
-    board.on("connect", function() {
+    board.on("connect", () => {
       assert.ok(true);
       oc++;
     });
@@ -895,9 +886,9 @@ describe("Board: lifecycle", function() {
     board.emit("analog-mapping-query");
   });
 
-  it("reports errors during connect/ready", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, function(err) {
+  it("reports errors during connect/ready", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, err => {
       assert.equal("test error", err);
       done();
     });
@@ -905,18 +896,18 @@ describe("Board: lifecycle", function() {
     transport.emit("error", "test error");
   });
 
-  it("forwards 'close' events from transport", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("forwards 'close' events from transport", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
     board.on("close", done);
 
     transport.emit("close");
   });
 
-  it("forwards 'disconnect' events from transport", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("forwards 'disconnect' events from transport", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
     board.on("disconnect", done);
 
@@ -927,9 +918,9 @@ describe("Board: lifecycle", function() {
     });
   });
 
-  it("forwards 'error' event from transport", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, initNoop);
+  it("forwards 'error' event from transport", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, initNoop);
 
     board.on("error", done);
 
@@ -937,16 +928,16 @@ describe("Board: lifecycle", function() {
     transport.emit("error");
   });
 
-  it("When reportVersion and queryFirmware timeout, call noop", function(done) {
-    this.timeout(50);
+  it("When reportVersion and queryFirmware timeout, call noop", done => {
+    context.timeout(50);
     sandbox.stub(Board.prototype, "reportVersion");
     sandbox.stub(Board.prototype, "queryFirmware");
-    var clock = sandbox.useFakeTimers();
-    var transport = new SerialPort("/path/to/fake/usb");
-    var opt = {
+    const clock = sandbox.useFakeTimers();
+    const transport = new SerialPort("/path/to/fake/usb");
+    const opt = {
       reportVersionTimeout: 1
     };
-    var board = new Board(transport, opt, initNoop);
+    const board = new Board(transport, opt, initNoop);
     board.versionReceived = false;
 
     clock.tick(2);
@@ -960,32 +951,32 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("sends 'REPORT_VERSION' and 'QUERY_FIRMWARE' if it hasnt received the version within the timeout", function(done) {
-    this.timeout(50000);
-    var transport = new SerialPort("/path/to/fake/usb");
-    var opt = {
+  it("sends 'REPORT_VERSION' and 'QUERY_FIRMWARE' if it hasnt received the version within the timeout", done => {
+    context.timeout(50000);
+    const transport = new SerialPort("/path/to/fake/usb");
+    const opt = {
       reportVersionTimeout: 1
     };
-    var board = new Board(transport, opt, initNoop);
+    const board = new Board(transport, opt, initNoop);
 
     // rcheck for report version
-    transport.once("write", function(data) {
+    transport.once("write", data => {
       assert.deepEqual(data, [REPORT_VERSION]);
       // check for query firmware
-      transport.once("write", function(data) {
+      transport.once("write", data => {
         assert.deepEqual(data, [240, 121, 247]);
         done();
       });
     });
   });
 
-  it("receives the version on startup", function(done) {
+  it("receives the version on startup", done => {
     //"send" report version command back from arduino
     transport.emit("data", [REPORT_VERSION]);
     transport.emit("data", [0x02]);
 
     //subscribe to the "data" event to capture the event
-    transport.once("data", function(buffer) {
+    transport.once("data", buffer => {
       assert.equal(board.version.major, 2);
       assert.equal(board.version.minor, 3);
       done();
@@ -995,8 +986,8 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [0x03]);
   });
 
-  it("receives the firmware after the version", function(done) {
-    board.once("queryfirmware", function() {
+  it("receives the firmware after the version", done => {
+    board.once("queryfirmware", () => {
       assert.equal(board.firmware.version.major, 2);
       assert.equal(board.firmware.version.minor, 3);
       assert.equal(board.firmware.name, "StandardFirmata");
@@ -1039,19 +1030,19 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [247]);
   });
 
-  it("Optionally call setSamplingInterval after queryfirmware", function(done) {
+  it("Optionally call setSamplingInterval after queryfirmware", done => {
     sandbox.spy(Board.prototype, "setSamplingInterval");
     sandbox.spy(SerialPort.prototype, "write");
 
-    var transport = new SerialPort("/path/to/fake/usb");
-    var options = {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const options = {
       skipCapabilities: true,
       samplingInterval: 100
     };
-    var board = new Board(transport, options, error => {
+    const board = new Board(transport, options, error => {
       assert.deepEqual(Array.from(transport.write.lastCall.args[0]), [
         0xf0, 0x7a, 0x64, 0x00, 0xf7
-      ]);
+     ]);
       assert.equal(board.setSamplingInterval.callCount, 1);
       assert.ok(board.setSamplingInterval.calledWith(100));
       done();
@@ -1065,19 +1056,19 @@ describe("Board: lifecycle", function() {
       240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0,
       97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0,
       97, 0, 116, 0, 97, 0, 247
-    ]);
+   ]);
   });
 
-  it("Does not call setSamplingInterval after queryfirmware by default", function(done) {
+  it("Does not call setSamplingInterval after queryfirmware by default", done => {
     sandbox.spy(Board.prototype, "setSamplingInterval");
     sandbox.spy(SerialPort.prototype, "write");
 
-    var transport = new SerialPort("/path/to/fake/usb");
-    var options = {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const options = {
       skipCapabilities: true,
     };
 
-    var board = new Board(transport, options, () => {
+    const board = new Board(transport, options, () => {
       assert.equal(board.setSamplingInterval.callCount, 0);
       assert.equal(transport.write.callCount, 0);
       done();
@@ -1091,17 +1082,17 @@ describe("Board: lifecycle", function() {
       240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0,
       97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0,
       97, 0, 116, 0, 97, 0, 247
-    ]);
+   ]);
   });
 
-  it("Returns the present samplingInterval", function(done) {
+  it("Returns the present samplingInterval", done => {
     board.settings.samplingInterval = Infinity;
 
     assert.equal(board.getSamplingInterval(), Infinity);
     done();
   });
 
-  it("gets the capabilities after the firmware", function(done) {
+  it("gets the capabilities after the firmware", done => {
     //[START_SYSEX, CAPABILITY_QUERY, END_SYSEX]
     assert.deepEqual(transport.lastWrite, [START_SYSEX, CAPABILITY_QUERY, END_SYSEX]);
 
@@ -1110,7 +1101,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [START_SYSEX]);
     transport.emit("data", [CAPABILITY_RESPONSE]);
 
-    for (var i = 0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       // if "pin" is digital it can be input and output
       if (i >= 2 && i <= 19) {
         //input is on
@@ -1126,7 +1117,7 @@ describe("Board: lifecycle", function() {
         transport.emit("data", [10]);
       }
       //if pin is PWM
-      if ([3, 5, 6, 10, 11].indexOf(i) > -1) {
+      if ([3, 5, 6, 10, 11].includes(i)) {
         transport.emit("data", [0x03]);
         transport.emit("data", [8]);
       }
@@ -1140,9 +1131,9 @@ describe("Board: lifecycle", function() {
     }
 
     //capture the event once to make all pin modes are set correctly
-    transport.once("data", function() {
+    transport.once("data", () => {
       assert.equal(board.pins.length, 20);
-      board.pins.forEach(function(pin, index) {
+      board.pins.forEach((pin, index) => {
         if (index >= 2 && index <= 19) {
 
           assert.notEqual(pin.supportedModes.indexOf(0), -1);
@@ -1155,7 +1146,7 @@ describe("Board: lifecycle", function() {
         } else {
           assert.equal(pin.supportedModes.indexOf(0x02), -1);
         }
-        if ([3, 5, 6, 10, 11].indexOf(index) > -1) {
+        if ([3, 5, 6, 10, 11].includes(index)) {
           assert.notEqual(pin.supportedModes.indexOf(0x03), -1);
         } else {
           assert.equal(pin.supportedModes.indexOf(0x03), -1);
@@ -1170,10 +1161,10 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("capabilities response is an idempotent operation", function(done) {
+  it("capabilities response is an idempotent operation", done => {
 
-    var count = 0;
-    var i = 0;
+    let count = 0;
+    let i = 0;
 
     transport.on("data", function data() {
       count++;
@@ -1202,20 +1193,20 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("board.RESOLUTION.* properties recieve values via CAPABILITY_RESPONSE", function(done) {
+  it("board.RESOLUTION.* properties recieve values via CAPABILITY_RESPONSE", done => {
     assert.equal(board.RESOLUTION.ADC, 0x3FF);
     assert.equal(board.RESOLUTION.PWM, 0x0FF);
     done();
   });
 
 
-  it("querys analog mappings after capabilities", function(done) {
+  it("querys analog mappings after capabilities", done => {
     //[START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]
     assert.deepEqual(transport.lastWrite, [START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX]);
 
     transport.emit("data", [START_SYSEX]);
     transport.emit("data", [ANALOG_MAPPING_RESPONSE]);
-    for (var i = 0; i < 20; i++) {
+    for (let i = 0; i < 20; i++) {
       if (i >= 14 && i < 20) {
         transport.emit("data", [i - 14]);
       } else {
@@ -1223,7 +1214,7 @@ describe("Board: lifecycle", function() {
       }
     }
 
-    transport.once("data", function() {
+    transport.once("data", () => {
       assert.equal(board.pins[14].analogChannel, 0);
       assert.equal(board.pins[15].analogChannel, 1);
       assert.equal(board.pins[16].analogChannel, 2);
@@ -1242,13 +1233,14 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("must be ready", function() {
+  it("must be ready", done => {
     assert.equal(board.isReady, true);
     assert.equal(initCallback.callCount, 1);
+    done();
   });
 
-  it("allows setting a valid sampling interval", function(done) {
-    var spy = sandbox.spy(board.transport, "write");
+  it("allows setting a valid sampling interval", done => {
+    const spy = sandbox.spy(board.transport, "write");
 
     // Valid sampling interval
     board.setSamplingInterval(20);
@@ -1268,13 +1260,13 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to reset (SYSTEM_RESET)", function(done) {
+  it("must be able to reset (SYSTEM_RESET)", done => {
     board.reset();
     assert.equal(transport.lastWrite[0], SYSTEM_RESET);
     done();
   });
 
-  it("must be able to set pin mode on digital pin (INPUT)", function(done) {
+  it("must be able to set pin mode on digital pin (INPUT)", done => {
     board.pinMode(2, board.MODES.INPUT);
     assert.equal(transport.lastWrite[0], PIN_MODE);
     assert.equal(transport.lastWrite[1], 2);
@@ -1283,10 +1275,10 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to read value of digital pin (INPUT)", function(done) {
-    var counter = 0;
-    var order = [1, 0, 1, 0];
-    board.digitalRead(2, function(value) {
+  it("must be able to read value of digital pin (INPUT)", done => {
+    let counter = 0;
+    const order = [1, 0, 1, 0];
+    board.digitalRead(2, value => {
       if (value === 1) {
         counter++;
       }
@@ -1303,7 +1295,7 @@ describe("Board: lifecycle", function() {
     });
 
     // Digital reporting turned on...
-    assert.deepEqual(transport.lastWrite, [ 208, 1 ]);
+    assert.deepEqual(transport.lastWrite, [208, 1]);
 
     // Single Byte
     transport.emit("data", [DIGITAL_MESSAGE]);
@@ -1319,7 +1311,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [DIGITAL_MESSAGE, 0x00, 0x00]);
   });
 
-  it("must be able to set pin mode on digital pin (PULLUP)", function(done) {
+  it("must be able to set pin mode on digital pin (PULLUP)", done => {
     board.pinMode(3, board.MODES.PULLUP);
     assert.equal(transport.lastWrite[0], PIN_MODE);
     assert.equal(transport.lastWrite[1], 3);
@@ -1328,11 +1320,11 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to read value of digital pin (PULLUP)", function(done) {
-    var counter = 0;
-    var order = [1, 0, 1, 0];
+  it("must be able to read value of digital pin (PULLUP)", done => {
+    let counter = 0;
+    const order = [1, 0, 1, 0];
     board.pinMode(2, board.MODES.PULLUP);
-    board.digitalRead(2, function(value) {
+    board.digitalRead(2, value => {
       if (value === 1) {
         counter++;
       }
@@ -1349,7 +1341,7 @@ describe("Board: lifecycle", function() {
     });
 
     // Digital reporting turned on...
-    assert.deepEqual(transport.lastWrite, [ 208, 1 ]);
+    assert.deepEqual(transport.lastWrite, [208, 1]);
 
     // Single Byte
     transport.emit("data", [DIGITAL_MESSAGE]);
@@ -1365,7 +1357,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [DIGITAL_MESSAGE, 0x00, 0x00]);
   });
 
-  it("must be able to set mode on analog pins", function(done) {
+  it("must be able to set mode on analog pins", done => {
     board.pinMode(board.analogPins[0], board.MODES.INPUT);
     assert.equal(transport.lastWrite[0], PIN_MODE);
     assert.equal(transport.lastWrite[1], board.analogPins[0]);
@@ -1373,10 +1365,10 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to read value of analog pin", function(done) {
-    var counter = 0;
-    var order = [1023, 0, 1023, 0];
-    board.analogRead(1, function(value) {
+  it("must be able to read value of analog pin", done => {
+    let counter = 0;
+    const order = [1023, 0, 1023, 0];
+    board.analogRead(1, value => {
       if (value === 1023) {
         counter++;
       }
@@ -1393,7 +1385,7 @@ describe("Board: lifecycle", function() {
     });
 
     // Analog reporting turned on...
-    assert.deepEqual(transport.lastWrite, [ 193, 1 ]);
+    assert.deepEqual(transport.lastWrite, [193, 1]);
 
     // Single Byte
     transport.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
@@ -1410,14 +1402,14 @@ describe("Board: lifecycle", function() {
   });
 
 
-  it("must be able to read value of analog pin on a board that skipped capabilities check", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true, analogPins: [14,15,16,17,18,19]}, initNoop);
+  it("must be able to read value of analog pin on a board that skipped capabilities check", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, {skipCapabilities: true, analogPins: [14,15,16,17,18,19]}, initNoop);
 
-    board.on("ready", function() {
-      var counter = 0;
-      var order = [1023, 0, 1023, 0];
-      board.analogRead(1, function(value) {
+    board.on("ready", () => {
+      let counter = 0;
+      let order = [1023, 0, 1023, 0];
+      board.analogRead(1, value => {
         if (value === 1023) {
           counter++;
         }
@@ -1434,7 +1426,7 @@ describe("Board: lifecycle", function() {
       });
 
       // Analog reporting turned on...
-      assert.deepEqual(transport.lastWrite, [ 193, 1 ]);
+      assert.deepEqual(transport.lastWrite, [193, 1]);
 
       // Single Byte
       transport.emit("data", [ANALOG_MESSAGE | (1 & 0xF)]);
@@ -1455,10 +1447,10 @@ describe("Board: lifecycle", function() {
     board.emit("queryfirmware");
   });
 
-  it("must be able to write a value to a digital output", function(done) {
+  it("must be able to write a value to a digital output", done => {
 
-    var write = sandbox.stub(SerialPort.prototype, "write");
-    var expect = [
+    const write = sandbox.stub(SerialPort.prototype, "write");
+    const expect = [
       [ 144, 1, 0 ],
       [ 144, 2, 0 ],
       [ 144, 4, 0 ],
@@ -1481,7 +1473,7 @@ describe("Board: lifecycle", function() {
       [ 146, 8, 0 ],
     ];
 
-    for (var i = 0; i < board.pins.length; i++) {
+    for (let i = 0; i < board.pins.length; i++) {
       board.digitalWrite(i, board.HIGH);
       assert.deepEqual(Array.from(write.lastCall.args[0]), expect[i]);
 
@@ -1490,10 +1482,10 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to enqueue a series of digital writes and then update the ports on demand", function(done) {
+  it("must be able to enqueue a series of digital writes and then update the ports on demand", done => {
 
-    var write = sandbox.stub(SerialPort.prototype, "write");
-    var expect = [
+    const write = sandbox.stub(SerialPort.prototype, "write");
+    const expect = [
       [ 144, 20, 0 ],
       [ 145, 5, 0 ]
     ];
@@ -1531,13 +1523,13 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to track digital writes via ports property", function(done) {
-    for (var i = 0; i < board.pins.length; i++) {
+  it("must be able to track digital writes via ports property", done => {
+    for (let i = 0; i < board.pins.length; i++) {
       board.pins[i].mode = board.MODES.UNKNOWN;
     }
 
-    var write = sandbox.stub(SerialPort.prototype, "write");
-    var expecting = [
+    const write = sandbox.stub(SerialPort.prototype, "write");
+    const expecting = [
       1,
       2,
       4,
@@ -1560,9 +1552,9 @@ describe("Board: lifecycle", function() {
       8,
     ];
 
-    for (var j = 0; j < board.pins.length; j++) {
-      var port = j >> 3;
-      var expect = expecting[j];
+    for (let j = 0; j < board.pins.length; j++) {
+      const port = j >> 3;
+      const expect = expecting[j];
 
       board.digitalWrite(j, board.HIGH);
 
@@ -1573,7 +1565,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to write and read to a digital port without garbling state", function(done) {
+  it("must be able to write and read to a digital port without garbling state", done => {
     /* This test will change the value of port 1 as follows:
 
       0b00000001
@@ -1585,10 +1577,10 @@ describe("Board: lifecycle", function() {
       0b00000001
     */
 
-    var write = sandbox.stub(SerialPort.prototype, "write");
-    var state = 0;
-    var calls = 0;
-    var expecting = [
+    const write = sandbox.stub(SerialPort.prototype, "write");
+    const state = 0;
+    let calls = 0;
+    const expecting = [
       // 10 is high, 9 is low, 8 is high
       "101",
       // 10 is low, 9 is low, 8 is low
@@ -1599,11 +1591,11 @@ describe("Board: lifecycle", function() {
       "1"
     ];
 
-    for (var i = 0; i < board.pins.length; i++) {
+    for (let i = 0; i < board.pins.length; i++) {
       board.pins[i].mode = board.MODES.UNKNOWN;
     }
 
-    for (var j = 0; j < board.ports.length; j++) {
+    for (let j = 0; j < board.ports.length; j++) {
       board.ports[j] = 0;
     }
 
@@ -1613,7 +1605,7 @@ describe("Board: lifecycle", function() {
 
     board.pinMode(8, board.MODES.OUTPUT);
     board.pinMode(10, board.MODES.INPUT);
-    board.digitalRead(10, function(data) {
+    board.digitalRead(10, data => {
       assert.equal(board.ports[1].toString(2), expecting[calls++]);
 
       if (calls === 4) {
@@ -1674,11 +1666,11 @@ describe("Board: lifecycle", function() {
     assert.equal(board.ports[1].toString(2), "1");
   });
 
-  it("must be able to write a value to a digital output to a board that skipped capabilities check", function(done) {
-    var transport = new SerialPort("/path/to/fake/usb");
-    var board = new Board(transport, {skipCapabilities: true}, initNoop);
+  it("must be able to write a value to a digital output to a board that skipped capabilities check", done => {
+    const transport = new SerialPort("/path/to/fake/usb");
+    const board = new Board(transport, {skipCapabilities: true}, initNoop);
 
-    board.on("ready", function() {
+    board.on("ready", () => {
       board.digitalWrite(3, board.HIGH);
       assert.deepEqual(transport.lastWrite, [DIGITAL_MESSAGE, 8, 0]);
 
@@ -1693,7 +1685,7 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("must be able to write a value to an analog pin being used as a digital output", function(done) {
+  it("must be able to write a value to an analog pin being used as a digital output", done => {
     board.ports[2] = 0;
 
     // `DIGITAL_MESSAGE | 2` => Digital Message on Port 2
@@ -1707,12 +1699,12 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("analogWrite is an alias of pwmWrite (for backward compatibility)", function(done) {
+  it("analogWrite is an alias of pwmWrite (for backward compatibility)", done => {
     assert.ok(board.pwmWrite === board.analogWrite);
     done();
   });
 
-  it("must be able to write a PWM value to a capable output", function(done) {
+  it("must be able to write a PWM value to a capable output", done => {
     board.pwmWrite(board.analogPins[1], 1023);
     assert.deepEqual(transport.lastWrite, [ANALOG_MESSAGE | board.analogPins[1], 127, 7]);
 
@@ -1721,8 +1713,8 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to write a value to an extended analog output", function(done) {
-    var length = board.pins.length;
+  it("must be able to write a value to an extended analog output", done => {
+    const length = board.pins.length;
 
     board.pins[46] = {
       supportedModes: [0, 1, 4],
@@ -1738,7 +1730,7 @@ describe("Board: lifecycle", function() {
       EXTENDED_ANALOG,
       46, 52, 1,
       END_SYSEX,
-    ]);
+   ]);
 
     board.pwmWrite(46, 0);
     assert.deepEqual(transport.lastWrite, [
@@ -1746,7 +1738,7 @@ describe("Board: lifecycle", function() {
       EXTENDED_ANALOG,
       46, 0, 0,
       END_SYSEX,
-    ]);
+   ]);
 
     board.pwmWrite(46, 0x00004001);
     assert.deepEqual(transport.lastWrite, [
@@ -1754,7 +1746,7 @@ describe("Board: lifecycle", function() {
       EXTENDED_ANALOG,
       46, 1, 0, 1,
       END_SYSEX,
-    ]);
+   ]);
 
     board.pwmWrite(46, 0x00200001);
     assert.deepEqual(transport.lastWrite, [
@@ -1762,7 +1754,7 @@ describe("Board: lifecycle", function() {
       EXTENDED_ANALOG,
       46, 1, 0, 0, 1,
       END_SYSEX,
-    ]);
+   ]);
 
     board.pwmWrite(46, 0x10000001);
     assert.deepEqual(transport.lastWrite, [
@@ -1770,7 +1762,7 @@ describe("Board: lifecycle", function() {
       EXTENDED_ANALOG,
       46, 1, 0, 0, 0, 1,
       END_SYSEX,
-    ]);
+   ]);
 
     // Restore to original length
     board.pins.length = length;
@@ -1779,13 +1771,13 @@ describe("Board: lifecycle", function() {
   });
 
 
-  it("must be able to send a string", function(done) {
-    var bytes = new Buffer("test string", "utf8");
-    var length = bytes.length;
+  it("must be able to send a string", done => {
+    const bytes = new Buffer("test string", "utf8");
+    const length = bytes.length;
     board.sendString(bytes);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], STRING_DATA);
-    for (var i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
       assert.equal(transport.lastWrite[i * 2 + 2], bytes[i] & 0x7F);
       assert.equal(transport.lastWrite[i * 2 + 3], (bytes[i + 1] >> 7) & 0x7F);
     }
@@ -1794,22 +1786,22 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[length * 2 + 4], END_SYSEX);
     done();
   });
-  it("must emit a string event", function(done) {
-    board.on("string", function(string) {
+  it("must emit a string event", done => {
+    board.on("string", string => {
       assert.equal(string, "test string");
       done();
     });
     transport.emit("data", [START_SYSEX]);
     transport.emit("data", [STRING_DATA]);
-    var bytes = new Buffer("test string", "utf8");
-    Array.prototype.forEach.call(bytes, function(value, index) {
+    const bytes = new Buffer("test string", "utf8");
+    Array.prototype.forEach.call(bytes, (value, index) => {
       transport.emit("data", [value]);
     });
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can query pin state", function(done) {
-    board.queryPinState(2, function() {
+  it("can query pin state", done => {
+    board.queryPinState(2, () => {
       assert.equal(board.pins[2].state, 1024);
       done();
     });
@@ -1823,8 +1815,8 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("must ignore invalid query firmware data", function(done) {
-    board.once("queryfirmware", function() {
+  it("must ignore invalid query firmware data", done => {
+    board.once("queryfirmware", () => {
       assert.equal(board.firmware.version.major, 2);
       assert.equal(board.firmware.version.minor, 5);
       assert.equal(board.firmware.name.substring(0, 3), "Sta");
@@ -1856,8 +1848,8 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("cannot pingRead without PingFirmata", function(done) {
-    assert.throws(function() {
+  it("cannot pingRead without PingFirmata", done => {
+    assert.throws(() => {
       board.pingRead({
         pin: 3
       });
@@ -1866,13 +1858,13 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a pingRead without a timeout and without a pulse out", function(done) {
+  it("can send a pingRead without a timeout and without a pulse out", done => {
     board.pins[3].supportedModes.push(PING_READ);
     board.pingRead({
       pin: 3,
       value: board.HIGH,
       timeout: 1000000
-    }, function(duration) {
+    }, duration => {
       assert.equal(duration, 0);
       done();
     });
@@ -1893,13 +1885,13 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a pingRead with a timeout and a pulse out", function(done) {
+  it("can send a pingRead with a timeout and a pulse out", done => {
     board.pingRead({
       pin: 3,
       value: board.HIGH,
       pulseOut: 5,
       timeout: 1000000
-    }, function(duration) {
+    }, duration => {
       assert.equal(duration, 1000000);
       done();
     });
@@ -1919,12 +1911,12 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [0]);
     transport.emit("data", [END_SYSEX]);
   });
-  it("can send a pingRead with a pulse out and without a timeout ", function(done) {
+  it("can send a pingRead with a pulse out and without a timeout ", done => {
     board.pingRead({
       pin: 3,
       value: board.HIGH,
       pulseOut: 5
-    }, function(duration) {
+    }, duration => {
       assert.equal(duration, 1000000);
       done();
     });
@@ -1964,7 +1956,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a stepper config for a driver configuration", function(done) {
+  it("can send a stepper config for a driver configuration", done => {
     board.stepperConfig(0, board.STEPPER.TYPE.DRIVER, 200, 2, 3);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], STEPPER);
@@ -1979,7 +1971,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a stepper config for a two wire configuration", function(done) {
+  it("can send a stepper config for a two wire configuration", done => {
     board.stepperConfig(0, board.STEPPER.TYPE.TWO_WIRE, 200, 2, 3);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], STEPPER);
@@ -1994,7 +1986,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a stepper config for a four wire configuration", function(done) {
+  it("can send a stepper config for a four wire configuration", done => {
     board.stepperConfig(0, board.STEPPER.TYPE.FOUR_WIRE, 200, 2, 3, 4, 5);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], STEPPER);
@@ -2011,8 +2003,8 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a stepper move without acceleration or deceleration", function(done) {
-    board.stepperStep(2, board.STEPPER.DIRECTION.CCW, 10000, 2000, function(complete) {
+  it("can send a stepper move without acceleration or deceleration", done => {
+    board.stepperStep(2, board.STEPPER.DIRECTION.CCW, 10000, 2000, complete => {
       assert.equal(complete, true);
       done();
     });
@@ -2034,13 +2026,13 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a stepper move with acceleration and deceleration", function(done) {
-    board.stepperStep(3, board.STEPPER.DIRECTION.CCW, 10000, 2000, 3000, 8000, function(complete) {
+  it("can send a stepper move with acceleration and deceleration", done => {
+    board.stepperStep(3, board.STEPPER.DIRECTION.CCW, 10000, 2000, 3000, 8000, complete => {
       assert.equal(complete, true);
       done();
     });
 
-    var message = [START_SYSEX, STEPPER, 1, 3, board.STEPPER.DIRECTION.CCW, 10000 & 0x7F, (10000 >> 7) & 0x7F, (10000 >> 14) & 0x7F, 2000 & 0x7F, (2000 >> 7) & 0x7F, 3000 & 0x7F, (3000 >> 7) & 0x7F, 8000 & 0x7F, (8000 >> 7) & 0x7F, END_SYSEX];
+    const message = [START_SYSEX, STEPPER, 1, 3, board.STEPPER.DIRECTION.CCW, 10000 & 0x7F, (10000 >> 7) & 0x7F, (10000 >> 14) & 0x7F, 2000 & 0x7F, (2000 >> 7) & 0x7F, 3000 & 0x7F, (3000 >> 7) & 0x7F, 8000 & 0x7F, (8000 >> 7) & 0x7F, END_SYSEX];
     assert.deepEqual(transport.lastWrite, message);
 
     transport.emit("data", [START_SYSEX]);
@@ -2049,7 +2041,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a accelStepper config for a driver configuration with enable and invert", function(done) {
+  it("can send a accelStepper config for a driver configuration with enable and invert", done => {
     board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.DRIVER, stepPin: 5, directionPin: 6, enablePin: 2, invertPins: [2] });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2064,7 +2056,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper config for a two wire configuration", function(done) {
+  it("can send a accelStepper config for a two wire configuration", done => {
     board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.TWO_WIRE, motorPin1: 5, motorPin2: 6, invertPins: [5, 6] });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2078,7 +2070,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper config for a four wire configuration", function(done) {
+  it("can send a accelStepper config for a four wire configuration", done => {
     board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2094,7 +2086,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper config for a four wire, half step configuration", function(done) {
+  it("can send a accelStepper config for a four wire, half step configuration", done => {
     board.accelStepperConfig({ deviceNum: 0, type: board.STEPPER.TYPE.FOUR_WIRE, stepSize: board.STEPPER.STEP_SIZE.HALF, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2110,7 +2102,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper config with four wire and whole step as defaults", function(done) {
+  it("can send a accelStepper config with four wire and whole step as defaults", done => {
     board.accelStepperConfig({ deviceNum: 0, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4 });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2126,7 +2118,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper config for a default four wire configuration with inverted motor and enable pins", function(done) {
+  it("can send a accelStepper config for a default four wire configuration with inverted motor and enable pins", done => {
     board.accelStepperConfig({ deviceNum: 0, motorPin1: 5, motorPin2: 6, motorPin3: 3, motorPin4: 4, enablePin: 2, invertPins: [2, 3, 4, 5, 6] });
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2143,8 +2135,8 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper step", function(done) {
-    board.accelStepperStep(0, 12345, function(value) {
+  it("can send a accelStepper step", done => {
+    board.accelStepperStep(0, 12345, value => {
       assert.equal(value, 12345);
       done();
     });
@@ -2172,7 +2164,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a accelStepper step w/o a callback", function(done) {
+  it("can send a accelStepper step w/o a callback", done => {
     board.accelStepperStep(0, 12345);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2189,7 +2181,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper zero", function(done) {
+  it("can send a accelStepper zero", done => {
     board.accelStepperZero(0);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2200,7 +2192,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper enable", function(done) {
+  it("can send a accelStepper enable", done => {
     board.accelStepperEnable(0, true);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2212,7 +2204,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper enable using default value", function(done) {
+  it("can send a accelStepper enable using default value", done => {
     board.accelStepperEnable(0);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2224,7 +2216,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can can send a accelStepper disable", function(done) {
+  it("can can send a accelStepper disable", done => {
     board.accelStepperEnable(0, false);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2236,8 +2228,8 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper move to as specified position", function(done) {
-    board.accelStepperTo(0, 2000, function(value) {
+  it("can send a accelStepper move to as specified position", done => {
+    board.accelStepperTo(0, 2000, value => {
       assert.equal(value, 2000);
       done();
     });
@@ -2265,7 +2257,7 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [END_SYSEX]);
   });
 
-  it("can send a accelStepper move to as specified position w/o a callback", function(done) {
+  it("can send a accelStepper move to as specified position w/o a callback", done => {
     board.accelStepperTo(0, 2000);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2282,7 +2274,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send an accelStepper stop", function(done) {
+  it("can send an accelStepper stop", done => {
 
     board.accelStepperStop(0);
 
@@ -2296,10 +2288,8 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("can send a accelStepper reportPosition", function(done) {
-    board.accelStepperReportPosition(0, function() {
-      done();
-    });
+  it("can send a accelStepper reportPosition", done => {
+    board.accelStepperReportPosition(0, () => done());
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2320,7 +2310,7 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("can send a accelStepper set speed", function(done) {
+  it("can send a accelStepper set speed", done => {
     board.accelStepperSpeed(0, 123.4);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2335,7 +2325,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a accelStepper set acceleration", function(done) {
+  it("can send a accelStepper set acceleration", done => {
     board.accelStepperAcceleration(0, 199.9);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2350,7 +2340,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can configure a multiStepper", function(done) {
+  it("can configure a multiStepper", done => {
     board.multiStepperConfig({ groupNum: 0, devices: [0, 1, 2] });
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2364,7 +2354,7 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("can send a multiStepper stop", function(done) {
+  it("can send a multiStepper stop", done => {
     board.multiStepperStop(0);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2375,24 +2365,22 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("multiStepperStop(-1)", function(done) {
+  it("multiStepperStop(-1)", done => {
     assert.throws(() => {
       board.multiStepperStop(-1);
     });
     done();
   });
 
-  it("multiStepperStop(6)", function(done) {
+  it("multiStepperStop(6)", done => {
     assert.throws(() => {
       board.multiStepperStop(6);
     });
     done();
   });
 
-  it("can send a multiStepper to", function(done) {
-    board.multiStepperTo(0, [200, 400, 600], function() {
-      done();
-    });
+  it("can send a multiStepper to", done => {
+    board.multiStepperTo(0, [200, 400, 600], () => done());
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], ACCELSTEPPER);
@@ -2423,7 +2411,7 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("can send a multiStepper to w/o a callback", function(done) {
+  it("can send a multiStepper to w/o a callback", done => {
     board.multiStepperTo(0, [200, 400, 600]);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2451,22 +2439,22 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("multiStepperTo(-1)", function(done) {
+  it("multiStepperTo(-1)", done => {
     assert.throws(() => {
       board.multiStepperTo(-1);
     });
     done();
   });
 
-  it("multiStepperTo(6)", function(done) {
+  it("multiStepperTo(6)", done => {
     assert.throws(() => {
       board.multiStepperStop(6);
     });
     done();
   });
 
-  it("can receive a stepper position", function(done) {
-    board.once("stepper-position-0", function(value) {
+  it("can receive a stepper position", done => {
+    board.once("stepper-position-0", value => {
       assert.equal(value, 1234);
       done();
     });
@@ -2484,10 +2472,8 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("can receive a multStepper done", function(done) {
-    board.once("multi-stepper-done-0", function() {
-      done();
-    });
+  it("can receive a multStepper done", done => {
+    board.once("multi-stepper-done-0", () => done());
 
     transport.emit("data", [START_SYSEX]);
     transport.emit("data", [ACCELSTEPPER]);
@@ -2497,7 +2483,7 @@ describe("Board: lifecycle", function() {
 
   });
 
-  it("must be able to send a 1-wire config with parasitic power enabled", function(done) {
+  it("must be able to send a 1-wire config with parasitic power enabled", done => {
     board.sendOneWireConfig(1, true);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], PULSE_OUT);
@@ -2507,7 +2493,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[5], END_SYSEX);
     done();
   });
-  it("must be able to send a 1-wire config with parasitic power disabled", function(done) {
+  it("must be able to send a 1-wire config with parasitic power disabled", done => {
     board.sendOneWireConfig(1, false);
     assert.equal(transport.lastWrite[0], START_SYSEX);
     assert.equal(transport.lastWrite[1], PULSE_OUT);
@@ -2517,10 +2503,9 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[5], END_SYSEX);
     done();
   });
-  it("must be able to send a 1-wire search request and recieve a reply", function(done) {
-    board.sendOneWireSearch(1, function(error, devices) {
+  it("must be able to send a 1-wire search request and recieve a reply", done => {
+    board.sendOneWireSearch(1, (error, devices) => {
       assert.equal(devices.length, 1);
-
       done();
     });
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2531,10 +2516,9 @@ describe("Board: lifecycle", function() {
 
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
-  it("must be able to send a 1-wire search alarm request and recieve a reply", function(done) {
-    board.sendOneWireAlarmsSearch(1, function(error, devices) {
+  it("must be able to send a 1-wire search alarm request and recieve a reply", done => {
+    board.sendOneWireAlarmsSearch(1, (error, devices) => {
       assert.equal(devices.length, 1);
-
       done();
     });
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2545,16 +2529,14 @@ describe("Board: lifecycle", function() {
 
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_ALARMS_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
-  it("must be able to send a 1-wire write read", function(done) {
-    var _sendOneWireRequest = sandbox.spy(board, "_sendOneWireRequest");
-    var handler = sandbox.spy();
-    board.sendOneWireRead(1, 1, 1, handler);
+  it("must be able to send a 1-wire write read", done => {
+    sandbox.spy(board, "_sendOneWireRequest");
+    board.sendOneWireRead(1, 1, 1, () => {});
 
-    _sendOneWireRequest.lastCall.args[8]();
-
+    board._sendOneWireRequest.lastCall.args[8]();
     done();
   });
-  it("must be able to send a 1-wire reset request", function(done) {
+  it("must be able to send a 1-wire reset request", done => {
     board.sendOneWireReset(1);
 
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -2564,8 +2546,8 @@ describe("Board: lifecycle", function() {
 
     done();
   });
-  it("must be able to send a 1-wire delay request", function(done) {
-    var delay = 1000;
+  it("must be able to send a 1-wire delay request", done => {
+    const delay = 1000;
 
     board.sendOneWireDelay(1, delay);
 
@@ -2575,16 +2557,16 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
-    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
-    var sentDelay = request[12] | (request[13] << 8) | (request[14] << 12) | request[15] << 24;
+    const request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+    const sentDelay = request[12] | (request[13] << 8) | (request[14] << 12) | request[15] << 24;
     assert.equal(sentDelay, delay);
 
     done();
   });
 
-  it("must be able to send a 1-wire write request", function(done) {
-    var device = [40, 219, 239, 33, 5, 0, 0, 93];
-    var data = 0x33;
+  it("must be able to send a 1-wire write request", done => {
+    const device = [40, 219, 239, 33, 5, 0, 0, 93];
+    const data = 0x33;
 
     board.sendOneWireWrite(1, device, data);
 
@@ -2594,7 +2576,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
-    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+    const request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
 
     // should select the passed device
     assert.equal(request[0], device[0]);
@@ -2612,9 +2594,9 @@ describe("Board: lifecycle", function() {
     done();
   });
 
-  it("must be able to send a 1-wire write request (Array)", function(done) {
-    var device = [40, 219, 239, 33, 5, 0, 0, 93];
-    var data = 0x33;
+  it("must be able to send a 1-wire write request (Array)", done => {
+    const device = [40, 219, 239, 33, 5, 0, 0, 93];
+    const data = 0x33;
 
     board.sendOneWireWrite(1, device, [data]);
 
@@ -2624,7 +2606,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
-    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+    const request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
 
     // should select the passed device
     assert.equal(request[0], device[0]);
@@ -2641,15 +2623,14 @@ describe("Board: lifecycle", function() {
 
     done();
   });
-  it("must be able to send a 1-wire write and read request and recieve a reply", function(done) {
-    var device = [40, 219, 239, 33, 5, 0, 0, 93];
-    var data = 0x33;
-    var output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
+  it("must be able to send a 1-wire write and read request and recieve a reply", done => {
+    const device = [40, 219, 239, 33, 5, 0, 0, 93];
+    const data = 0x33;
+    const output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
 
-    board.sendOneWireWriteAndRead(1, device, data, 2, function(error, received) {
+    board.sendOneWireWriteAndRead(1, device, data, 2, (error, received) => {
 
       assert.deepEqual(received, output);
-
       done();
     });
 
@@ -2659,7 +2640,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
-    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+    const request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
 
     // should select the passed device
     assert.equal(request[0], device[0]);
@@ -2674,7 +2655,7 @@ describe("Board: lifecycle", function() {
     // and send the passed data
     assert.equal(request[16], data);
 
-    var dataSentFromBoard = [];
+    const dataSentFromBoard = [];
 
     // respond with the same correlation id
     dataSentFromBoard[0] = request[10];
@@ -2687,14 +2668,13 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
   });
 
-  it("must be able to send a 1-wire write and read request and recieve a reply (array)", function(done) {
-    var device = [40, 219, 239, 33, 5, 0, 0, 93];
-    var data = 0x33;
-    var output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
+  it("must be able to send a 1-wire write and read request and recieve a reply (array)", done => {
+    const device = [40, 219, 239, 33, 5, 0, 0, 93];
+    const data = 0x33;
+    const output = [ONEWIRE_RESET_REQUEST_BIT, 0x02];
 
-    board.sendOneWireWriteAndRead(1, device, [data], 2, function(error, received) {
+    board.sendOneWireWriteAndRead(1, device, [data], 2, (error, received) => {
       assert.deepEqual(received, output);
-
       done();
     });
 
@@ -2704,7 +2684,7 @@ describe("Board: lifecycle", function() {
     assert.equal(transport.lastWrite[3], ONEWIRE_RESET_REQUEST_BIT);
 
     // decode delay from request
-    var request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
+    const request = Encoder7Bit.from7BitArray(transport.lastWrite.slice(4, transport.lastWrite.length - 1));
 
     // should select the passed device
     assert.equal(request[0], device[0]);
@@ -2719,7 +2699,7 @@ describe("Board: lifecycle", function() {
     // and send the passed data
     assert.equal(request[16], data);
 
-    var dataSentFromBoard = [];
+    const dataSentFromBoard = [];
 
     // respond with the same correlation id
     dataSentFromBoard[0] = request[10];
@@ -2732,8 +2712,8 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_READ_REPLY, ONEWIRE_RESET_REQUEST_BIT].concat(Encoder7Bit.to7BitArray(dataSentFromBoard)).concat([END_SYSEX]));
   });
 
-  describe("Servo", function() {
-    it("can configure a servo pwm range", function(done) {
+  describe("Servo", () => {
+    it("can configure a servo pwm range", done => {
       board.servoConfig(3, 1000, 2000);
       assert.equal(transport.lastWrite[0], START_SYSEX);
       assert.equal(transport.lastWrite[1], SERVO_CONFIG);
@@ -2744,11 +2724,10 @@ describe("Board: lifecycle", function() {
 
       assert.equal(transport.lastWrite[5], 2000 & 0x7F);
       assert.equal(transport.lastWrite[6], (2000 >> 7) & 0x7F);
-
       done();
     });
 
-    it("can configure a servo pwm range, with object", function(done) {
+    it("can configure a servo pwm range, with object", done => {
       board.servoConfig({
         pin: 3,
         min: 1000,
@@ -2763,119 +2742,115 @@ describe("Board: lifecycle", function() {
 
       assert.equal(transport.lastWrite[5], 2000 & 0x7F);
       assert.equal(transport.lastWrite[6], (2000 >> 7) & 0x7F);
-
       done();
     });
 
-    it("will throw if servoConfig is missing any parameters", function(done) {
+    it("will throw if servoConfig is missing any parameters", done => {
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig();
       });
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig(3, 1000);
       });
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig({
           min: 1000,
           max: 2000,
         });
       });
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig({
           pin: 3,
           max: 2000,
         });
       });
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig({
           pin: 3,
           min: 1000,
         });
       });
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.servoConfig({});
       });
-
       done();
     });
 
-    it("calls analogWrite with arguments", function(done) {
-      var aw = sandbox.stub(board, "analogWrite");
+    it("calls analogWrite with arguments", done => {
+      const aw = sandbox.stub(board, "analogWrite");
 
       board.servoWrite(9, 180);
       assert.deepEqual(aw.lastCall.args, [9, 180]);
 
       board.servoWrite(9, 600);
       assert.deepEqual(aw.lastCall.args, [9, 600]);
-
       done();
     });
 
   });
 
-  describe("I2C", function() {
+  describe("I2C", () => {
 
-    it("throws if i2c not enabled", function(done) {
+    it("throws if i2c not enabled", done => {
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.i2cRead(1, 1, initNoop);
       });
-      assert.throws(function() {
+      assert.throws(() => {
         board.i2cReadOnce(1, 1, initNoop);
       });
-      assert.throws(function() {
+      assert.throws(() => {
         board.i2cWrite(1, [1, 2, 3]);
       });
-      assert.throws(function() {
+      assert.throws(() => {
         board.i2cWriteReg(1, 1, 1);
       });
-
       done();
     });
 
-    it("must be able to send an i2c config (empty)", function(done) {
+    it("must be able to send an i2c config (empty)", done => {
       board.i2cConfig();
       assert.deepEqual(transport.lastWrite, [START_SYSEX, I2C_CONFIG, 0, 0, END_SYSEX]);
       done();
     });
 
-    it("calls i2cConfig (sendI2CConfig)", function(done) {
+    it("calls i2cConfig (sendI2CConfig)", done => {
 
-      var ic = sandbox.stub(board, "i2cConfig");
+      const ic = sandbox.stub(board, "i2cConfig");
 
       board.sendI2CConfig();
       assert.equal(ic.callCount, 1);
       done();
     });
 
-    it("must be able to send an i2c config (number)", function(done) {
+    it("must be able to send an i2c config (number)", done => {
       board.i2cConfig(1);
       assert.deepEqual(transport.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
       done();
     });
 
-    it("must be able to send an i2c config (object with delay property)", function(done) {
+    it("must be able to send an i2c config (object with delay property)", done => {
       board.i2cConfig({ delay: 1 });
       assert.deepEqual(transport.lastWrite, [START_SYSEX, I2C_CONFIG, 1 & 0xFF, (1 >> 8) & 0xFF, END_SYSEX]);
       done();
     });
 
-    it("must be able to send an i2c request", function(done) {
+    it("must be able to send an i2c request", done => {
       board.i2cConfig(1);
       board.sendI2CWriteRequest(0x68, [1, 2, 3]);
-      var request = [START_SYSEX, I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, END_SYSEX];
+      const request = [START_SYSEX, I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F, 2 & 0x7F, (2 >> 7) & 0x7F, 3 & 0x7F, (3 >> 7) & 0x7F, END_SYSEX];
       assert.deepEqual(transport.lastWrite, request);
       done();
     });
 
-    it("must be able to receive an i2c reply", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("must be able to receive an i2c reply", done => {
+      const handler = sandbox.spy(() => {});
       board.i2cConfig(1);
       board.sendI2CReadRequest(0x68, 4, handler);
       assert.deepEqual(transport.lastWrite, [START_SYSEX, I2C_REQUEST, 0x68, 1 << 3, 4 & 0x7F, (4 >> 7) & 0x7F, END_SYSEX]);
@@ -2907,19 +2882,17 @@ describe("Board: lifecycle", function() {
 
       assert.equal(handler.callCount, 1);
       assert.deepEqual(handler.getCall(0).args[0], [1, 2, 3, 4]);
-
       done();
     });
 
-    it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", function(done) {
+    it("does not create default settings for an i2c peripheral, when call to i2cConfig does not include address", done => {
       board.i2cConfig();
 
       assert.deepEqual(Board.test.i2cPeripheralSettings(board), { delay: 0 });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, with call to i2cConfig that includes address", function(done) {
+    it("creates default settings for an i2c peripheral, with call to i2cConfig that includes address", done => {
       board.i2cConfig({
         address: 0x00
       });
@@ -2930,11 +2903,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWrite)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWrite)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -2952,11 +2924,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWriteReg)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cWriteReg)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -2974,11 +2945,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/ Register)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/ Register)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -2996,11 +2966,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/o Register)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cRead w/o Register)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -3018,11 +2987,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("does nothing when i2cStop()", function(done) {
+    it("does nothing when i2cStop()", done => {
       board.i2cConfig();
 
       assert.equal(transportWrite.callCount, 0);
@@ -3033,15 +3001,15 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("can stop a continuous read with i2cStop(address)", function(done) {
+    it("can stop a continuous read with i2cStop(address)", done => {
       board.i2cConfig();
 
-      Object.keys(board._events).forEach(function(event) {
+      Object.keys(board._events).forEach(event => {
         if (event.startsWith("I2C-reply-")) {
           board.removeAllListeners(event);
         }
       });
-      var removeAllListeners = sandbox.spy(board, "removeAllListeners");
+      const removeAllListeners = sandbox.spy(board, "removeAllListeners");
 
 
       board.i2cRead(0x00, 1, initNoop);
@@ -3054,15 +3022,15 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("can stop a continuous read with i2cStop({address})", function(done) {
+    it("can stop a continuous read with i2cStop({address})", done => {
       board.i2cConfig();
 
-      Object.keys(board._events).forEach(function(event) {
+      Object.keys(board._events).forEach(event => {
         if (event.startsWith("I2C-reply-")) {
           board.removeAllListeners(event);
         }
       });
-      var removeAllListeners = sandbox.spy(board, "removeAllListeners");
+      const removeAllListeners = sandbox.spy(board, "removeAllListeners");
 
       board.i2cRead(0x00, 1, initNoop);
       board.i2cStop({ address: 0x00 });
@@ -3075,7 +3043,7 @@ describe("Board: lifecycle", function() {
     });
 
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/ Register)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -3093,11 +3061,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/o Register)", function(done) {
+    it("creates default settings for an i2c peripheral, without call to i2cConfig for that peripheral (i2cReadOnce w/o Register)", done => {
       // This has to be called no matter what,
       // but it might be the case that it's called once in a program,
       // where there are several different i2c peripherals.
@@ -3115,11 +3082,10 @@ describe("Board: lifecycle", function() {
         },
         delay: 0,
       });
-
       done();
     });
 
-    it("can store arbitrary settings for an i2c peripheral via i2cConfig", function(done) {
+    it("can store arbitrary settings for an i2c peripheral via i2cConfig", done => {
       board.i2cConfig({
         address: 0x00,
         settings: {
@@ -3134,11 +3100,10 @@ describe("Board: lifecycle", function() {
           whatever: true,
         }
       });
-
       done();
     });
 
-    it("allows stored i2c peripheral settings to be reconfigured via i2cConfig", function(done) {
+    it("allows stored i2c peripheral settings to be reconfigured via i2cConfig", done => {
       board.i2cConfig({
         address: 0x00,
         settings: {
@@ -3166,13 +3131,12 @@ describe("Board: lifecycle", function() {
           stopTX: true,
         }
       });
-
       done();
     });
 
-    it("allows an i2c peripheral's stopTX to be overridden", function(done) {
+    it("allows an i2c peripheral's stopTX to be overridden", done => {
       // var spy = sandbox.spy(board.transport, "write");
-      var mask = 0x48; // 01001000
+      const mask = 0x48; // 01001000
 
       board.i2cConfig({
         address: 0x00,
@@ -3183,7 +3147,7 @@ describe("Board: lifecycle", function() {
 
       board.i2cReadOnce(0x00, 0x01, 1, initNoop);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 0, 8, 1, 0, 1, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 0, 8, 1, 0, 1, 0, 247]);
 
       board.i2cConfig({
         address: 0x00,
@@ -3201,85 +3165,84 @@ describe("Board: lifecycle", function() {
 
       board.i2cReadOnce(0x00, 0x01, 1, initNoop);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 0, 72, 1, 0, 1, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 0, 72, 1, 0, 1, 0, 247]);
 
       board.i2cRead(0x00, 0x01, 1, initNoop);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 0, 80, 1, 0, 1, 0, 247 ]);
-
+      assert.deepEqual(transport.lastWrite, [240, 118, 0, 80, 1, 0, 1, 0, 247]);
       done();
     });
 
-    it("has an i2cWrite method, that writes a data array", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has an i2cWrite method, that writes a data array", done => {
+      const spy = sandbox.spy(transport, "write");
 
       board.i2cConfig(0);
       board.i2cWrite(0x53, [1, 2]);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 83, 0, 1, 0, 2, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 83, 0, 1, 0, 2, 0, 247]);
       assert.equal(spy.callCount, 2);
       spy.restore();
       done();
     });
 
-    it("has an i2cWrite method, that writes a byte", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has an i2cWrite method, that writes a byte", done => {
+      const spy = sandbox.spy(transport, "write");
 
       board.i2cConfig(0);
       board.i2cWrite(0x53, 1);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 83, 0, 1, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 83, 0, 1, 0, 247]);
       assert.equal(spy.callCount, 2);
       spy.restore();
       done();
     });
 
-    it("has an i2cWrite method, that writes a data array to a register", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has an i2cWrite method, that writes a data array to a register", done => {
+      const spy = sandbox.spy(transport, "write");
 
       board.i2cConfig(0);
       board.i2cWrite(0x53, 0xB2, [1, 2]);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 83, 0, 50, 1, 1, 0, 2, 0, 247]);
       assert.equal(spy.callCount, 2);
       spy.restore();
       done();
     });
 
-    it("has an i2cWrite method, that writes a data byte to a register", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has an i2cWrite method, that writes a data byte to a register", done => {
+      const spy = sandbox.spy(transport, "write");
 
       board.i2cConfig(0);
       board.i2cWrite(0x53, 0xB2, 1);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 83, 0, 50, 1, 1, 0, 247]);
       assert.equal(spy.callCount, 2);
       spy.restore();
       done();
     });
 
-    it("has an i2cWriteReg method, that writes a data byte to a register", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has an i2cWriteReg method, that writes a data byte to a register", done => {
+      const spy = sandbox.spy(transport, "write");
 
       board.i2cConfig(0);
       board.i2cWrite(0x53, 0xB2, 1);
 
-      assert.deepEqual(transport.lastWrite, [ 240, 118, 83, 0, 50, 1, 1, 0, 247 ]);
+      assert.deepEqual(transport.lastWrite, [240, 118, 83, 0, 50, 1, 1, 0, 247]);
       assert.equal(spy.callCount, 2);
       spy.restore();
       done();
     });
 
-    it("has an i2cRead method that reads continuously", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has an i2cRead method that reads continuously", done => {
+      const handler = sandbox.spy(() => {});
 
       board.i2cConfig(0);
       board.i2cRead(0x53, 0x04, handler);
 
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 5);
@@ -3288,20 +3251,19 @@ describe("Board: lifecycle", function() {
       assert.equal(handler.getCall(2).args[0].length, 4);
       assert.equal(handler.getCall(3).args[0].length, 4);
       assert.equal(handler.getCall(4).args[0].length, 4);
-
       done();
     });
 
-    it("has an i2cRead method that reads a register continuously", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has an i2cRead method that reads a register continuously", done => {
+      const handler = sandbox.spy(() => {});
 
       board.i2cConfig(0);
       board.i2cRead(0x53, 0xB2, 0x04, handler);
 
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 5);
@@ -3310,21 +3272,20 @@ describe("Board: lifecycle", function() {
       assert.equal(handler.getCall(2).args[0].length, 4);
       assert.equal(handler.getCall(3).args[0].length, 4);
       assert.equal(handler.getCall(4).args[0].length, 4);
-
       done();
     });
 
 
-    it("has an i2cRead method that reads continuously", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has an i2cRead method that reads continuously", done => {
+      const handler = sandbox.spy(() => {});
 
       board.i2cConfig(0);
       board.i2cRead(0x53, 0x04, handler);
 
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX, I2C_REPLY, 83, 0, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 5);
@@ -3333,21 +3294,20 @@ describe("Board: lifecycle", function() {
       assert.equal(handler.getCall(2).args[0].length, 4);
       assert.equal(handler.getCall(3).args[0].length, 4);
       assert.equal(handler.getCall(4).args[0].length, 4);
-
       done();
     });
 
-    it("has an i2cReadOnce method that reads a register once", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has an i2cReadOnce method that reads a register once", done => {
+      const handler = sandbox.spy(() => {});
 
       board.i2cConfig(0);
       board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
 
       // Emit data enough times to potentially break it.
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 1);
@@ -3355,17 +3315,17 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("has an i2cReadOnce method that reads a register once", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has an i2cReadOnce method that reads a register once", done => {
+      const handler = sandbox.spy(() => {});
 
       board.i2cConfig(0);
       board.i2cReadOnce(0x53, 0xB2, 0x04, handler);
 
       // Emit data enough times to potentially break it.
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX, I2C_REPLY, 83, 0, 50, 1, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 1);
@@ -3374,19 +3334,18 @@ describe("Board: lifecycle", function() {
     });
   });
 
-  describe("Serial", function() {
+  describe("Serial", () => {
 
-    it("has a SERIAL_MODES property", function(done) {
+    it("has a SERIAL_MODES property", done => {
 
       assert.deepEqual(board.SERIAL_MODES, {
         CONTINUOUS_READ: 0x00,
         STOP_READING: 0x01,
       });
-
       done();
     });
 
-    it("has a SERIAL_PORT_IDs property", function(done) {
+    it("has a SERIAL_PORT_IDs property", done => {
 
       assert.deepEqual(board.SERIAL_PORT_IDs, {
         HW_SERIAL0: 0x00,
@@ -3399,12 +3358,11 @@ describe("Board: lifecycle", function() {
         SW_SERIAL3: 0x11,
         DEFAULT: 0x08,
       });
-
       done();
     });
 
     // SERIAL_PIN_TYPES is currently unused.
-    // it("has a SERIAL_PIN_TYPES property", function(done) {
+    // it("has a SERIAL_PIN_TYPES property", done => {
 
     //   assert.deepEqual(board.SERIAL_PORT_IDs, {
     //     RES_RX0: 0x00,
@@ -3420,7 +3378,7 @@ describe("Board: lifecycle", function() {
     //   done();
     // });
 
-    it("can configure a software serial port", function(done) {
+    it("can configure a software serial port", done => {
       board.serialConfig({
         portId: 0x08,
         baud: 9600,
@@ -3441,7 +3399,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("can configure a hardware serial port", function(done) {
+    it("can configure a hardware serial port", done => {
       board.serialConfig({
         portId: 0x01,
         buad: 57600
@@ -3456,8 +3414,8 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("throws an error if no serial port id is passed", function(done) {
-      assert.throws(function() {
+    it("throws an error if no serial port id is passed", done => {
+      assert.throws(() => {
         board.serialConfig({
           buad: 57600
         });
@@ -3465,9 +3423,9 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("throws an error if both RX and TX pins are not defined when using Software Serial", function(done) {
+    it("throws an error if both RX and TX pins are not defined when using Software Serial", done => {
       // throw error if both pins are not specified
-      assert.throws(function() {
+      assert.throws(() => {
         board.serialConfig({
           portId: 8,
           buad: 57600
@@ -3475,7 +3433,7 @@ describe("Board: lifecycle", function() {
       });
 
       // throw error if only one serial pin is specified
-      assert.throws(function() {
+      assert.throws(() => {
         board.serialConfig({
           portId: 8,
           buad: 57600,
@@ -3485,7 +3443,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("can write a single byte to a serial port", function(done) {
+    it("can write a single byte to a serial port", done => {
       board.serialWrite(0x08, [1]);
       assert.equal(transport.lastWrite[2], SERIAL_WRITE | 0x08);
       assert.equal(transport.lastWrite[3], 1 & 0x7F);
@@ -3494,7 +3452,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("can write a byte array to a serial port", function(done) {
+    it("can write a byte array to a serial port", done => {
       board.serialWrite(0x08, [252, 253, 254]);
       assert.equal(transport.lastWrite[2], SERIAL_WRITE | 0x08);
       assert.equal(transport.lastWrite[3], 252 & 0x7F);
@@ -3505,19 +3463,18 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("has a serialRead method that sets READ_CONTINUOUS mode", function(done) {
-      var handler = sandbox.spy(function() {});
+    it("has a serialRead method that sets READ_CONTINUOUS mode", done => {
+      const handler = sandbox.spy(() => {});
       board.serialRead(0x08, handler);
 
       assert.equal(transport.lastWrite[2], SERIAL_READ | 0x08);
       assert.equal(transport.lastWrite[3], 0);
       assert.equal(transport.lastWrite[4], END_SYSEX);
-
       done();
     });
 
-    it("has a serialRead method that reads continuously", function(done) {
-      var inBytes = [
+    it("has a serialRead method that reads continuously", done => {
+      const inBytes = [
         242 & 0x7F,
         (242 >> 7) & 0x7F,
         243 & 0x7F,
@@ -3526,10 +3483,10 @@ describe("Board: lifecycle", function() {
         (244 >> 7) & 0x7F,
       ];
 
-      var handler = sandbox.spy(function() {});
+      const handler = sandbox.spy(() => {});
       board.serialRead(0x08, handler);
 
-      for (var i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {
         transport.emit("data", [
           START_SYSEX,
           SERIAL_MESSAGE,
@@ -3541,7 +3498,7 @@ describe("Board: lifecycle", function() {
           inBytes[4],
           inBytes[5],
           END_SYSEX
-        ]);
+       ]);
       }
 
       assert.equal(handler.callCount, 5);
@@ -3555,9 +3512,9 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("serialRead accepts an optional maxBytesToRead parameter", function(done) {
-      var maxBytesToRead = 4;
-      var handler = sandbox.spy(function() {});
+    it("serialRead accepts an optional maxBytesToRead parameter", done => {
+      const maxBytesToRead = 4;
+      const handler = sandbox.spy(() => {});
       board.serialRead(0x08, maxBytesToRead, handler);
 
       assert.equal(transport.lastWrite[4], 4);
@@ -3566,7 +3523,7 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("has a serialStop method that sets STOP_READING mode", function(done) {
+    it("has a serialStop method that sets STOP_READING mode", done => {
       board.serialStop(0x08);
       assert.equal(transport.lastWrite[2], SERIAL_READ | 0x08);
       assert.equal(transport.lastWrite[3], 1);
@@ -3574,20 +3531,20 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("has a serialClose method", function(done) {
+    it("has a serialClose method", done => {
       board.serialClose(0x09);
       assert.equal(transport.lastWrite[2], SERIAL_CLOSE | 0x09);
       done();
     });
 
-    it("has a serialFlush method", function(done) {
+    it("has a serialFlush method", done => {
       board.serialFlush(0x02);
       assert.equal(transport.lastWrite[2], SERIAL_FLUSH | 0x02);
       done();
     });
 
-    it("has a serialListen method that switches software serial port", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("has a serialListen method that switches software serial port", done => {
+      const spy = sandbox.spy(transport, "write");
       board.serialListen(0x08);
       assert.equal(transport.lastWrite[2], SERIAL_LISTEN | 0x08);
       assert.equal(transport.lastWrite[3], END_SYSEX);
@@ -3596,8 +3553,8 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must not send a SERIAL_LISTEN message for a hardware serial port", function(done) {
-      var spy = sandbox.spy(transport, "write");
+    it("must not send a SERIAL_LISTEN message for a hardware serial port", done => {
+      const spy = sandbox.spy(transport, "write");
       board.serialListen(0x01);
       assert.equal(spy.callCount, 0);
       spy.restore();
@@ -3606,25 +3563,25 @@ describe("Board: lifecycle", function() {
 
   });
 
-  describe("sysex: custom messages and response handlers", function() {
+  describe("sysex: custom messages and response handlers", () => {
 
-    it("must allow custom SYSEX_RESPONSE handlers", function(done) {
+    it("must allow custom SYSEX_RESPONSE handlers", done => {
 
       assert.equal(Board.SYSEX_RESPONSE[NON_STANDARD_REPLY], undefined);
 
-      Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = function(board) {
-        var payload = [];
-        var sub = board.buffer[2];
+      Board.SYSEX_RESPONSE[NON_STANDARD_REPLY] = board => {
+        const payload = [];
+        const sub = board.buffer[2];
 
-        for (var i = 3, length = board.buffer.length - 1; i < length; i += 2) {
+        for (let i = 3, length = board.buffer.length - 1; i < length; i += 2) {
           payload.push(board.buffer[i] | (board.buffer[i + 1] << 7));
         }
 
-        board.emit("non-standard-reply-" + sub, payload);
+        board.emit(`non-standard-reply-${sub}`, payload);
       };
 
       // User code may add this emitter
-      board.on("non-standard-reply-4", function(payload) {
+      board.on("non-standard-reply-4", payload => {
         assert.deepEqual(payload, [0, 1, 2, 3, 4]);
         done();
       });
@@ -3633,14 +3590,14 @@ describe("Board: lifecycle", function() {
       transport.emit("data", [
         //                               SUB   Data...
         START_SYSEX, NON_STANDARD_REPLY, 0x04, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX
-      ]);
+     ]);
     });
 
-    it("must provide a SAFE API to define custom SYSEX_RESPONSE handlers", function(done) {
+    it("must provide a SAFE API to define custom SYSEX_RESPONSE handlers", done => {
 
-      var incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
+      const incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
 
-      board.sysexResponse(NON_STANDARD_REPLY, function(data) {
+      board.sysexResponse(NON_STANDARD_REPLY, data => {
         // Data does NOT include:
         // [0] START_SYSEX
         // [1] NON_STANDARD_REPLY
@@ -3655,9 +3612,9 @@ describe("Board: lifecycle", function() {
       transport.emit("data", incoming);
     });
 
-    it("SYSEX_RESPONSE handler context is board", function(done) {
+    it("SYSEX_RESPONSE handler context is board", done => {
 
-      var incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
+      const incoming = [START_SYSEX, NON_STANDARD_REPLY, 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, END_SYSEX];
 
       board.sysexResponse(NON_STANDARD_REPLY, function(data) {
         assert.equal(this, board);
@@ -3667,34 +3624,34 @@ describe("Board: lifecycle", function() {
       transport.emit("data", incoming);
     });
 
-    it("fail when overwriting SYSEX_RESPONSE command byte", function(done) {
-      Board.SYSEX_RESPONSE[0xFF] = function() {};
+    it("fail when overwriting SYSEX_RESPONSE command byte", done => {
+      Board.SYSEX_RESPONSE[0xFF] = () => {};
 
-      assert.throws(function() {
+      assert.throws(() => {
         board.sysexResponse(0xFF);
       });
       done();
     });
 
-    it("fail when calling sysexCommand with empty array", function(done) {
-      assert.throws(function() {
+    it("fail when calling sysexCommand with empty array", done => {
+      assert.throws(() => {
         board.sysexCommand();
       });
-      assert.throws(function() {
+      assert.throws(() => {
         board.sysexCommand([]);
       });
       done();
     });
 
-    it("must allow sending arbitrary sysex commands", function(done) {
+    it("must allow sending arbitrary sysex commands", done => {
 
-      var write = sandbox.stub(transport, "write");
+      const write = sandbox.stub(transport, "write");
 
       board.sysexCommand([
         I2C_REQUEST, 0x68, 0 << 3, 1 & 0x7F, (1 >> 7) & 0x7F,
-      ]);
+     ]);
 
-      var sent = write.lastCall.args[0];
+      const sent = write.lastCall.args[0];
 
       assert.equal(sent[0], START_SYSEX);
       assert.equal(sent[1], I2C_REQUEST);
@@ -3703,31 +3660,30 @@ describe("Board: lifecycle", function() {
       assert.equal(sent[4], 1 & 0x7F);
       assert.equal(sent[5], (1 >> 7) & 0x7F);
       assert.equal(sent[6], END_SYSEX);
-
       done();
     });
 
-    it("allows clearing handler for SYSEX_RESPONSE command byte", function(done) {
-      Board.SYSEX_RESPONSE[0xFF] = function() {};
+    it("allows clearing handler for SYSEX_RESPONSE command byte", done => {
+      Board.SYSEX_RESPONSE[0xFF] = () => {};
 
       board.clearSysexResponse(0xFF);
 
-      assert.doesNotThrow(function() {
+      assert.doesNotThrow(() => {
         board.sysexResponse(0xFF);
       });
       done();
     });
   });
 
-  describe("parser", function() {
+  describe("parser", () => {
 
-    beforeEach(function() {
+    beforeEach(() => {
       board.buffer = [];
     });
 
-    it("must parse a command from the beginning of a data packet", function(done) {
-      var spy = sandbox.spy();
-      var incoming = [REPORT_VERSION, 0x02, 0x03];
+    it("must parse a command from the beginning of a data packet", done => {
+      const spy = sandbox.spy();
+      const incoming = [REPORT_VERSION, 0x02, 0x03];
       board.versionReceived = false;
       board.on("reportversion", spy);
       transport.emit("data", incoming);
@@ -3735,10 +3691,10 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command from the middle of a data packet", function(done) {
-      var spy = sandbox.spy();
+    it("must parse a command from the middle of a data packet", done => {
+      const spy = sandbox.spy();
       // includes: analog input, report version, query firmware (incomplete)
-      var incoming = [
+      const incoming = [
         0xe0, 0x07, 0x07, 0xf9, 0x02, 0x05, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61,
         0x00, 0x6e, 0x00, 0x64, 0x00
       ];
@@ -3749,12 +3705,12 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must not emit command events until REPORT_VERSION is received", function(done) {
-      var spyAnalog = sandbox.spy();
-      var spyVersion = sandbox.spy();
+    it("must not emit command events until REPORT_VERSION is received", done => {
+      const spyAnalog = sandbox.spy();
+      const spyVersion = sandbox.spy();
       // includes: analog input, report version, query firmware (incomplete) and junk
       // between analog input and report version
-      var incoming = [
+      const incoming = [
         0xe0, 0x00, 0x71, 0xf9, 0x02, 0x05, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74,
         0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00
       ];
@@ -3767,12 +3723,12 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse multiple commands from a single packet", function(done) {
-      var spyAnalog = sandbox.spy();
-      var spyVersion = sandbox.spy();
+    it("must parse multiple commands from a single packet", done => {
+      const spyAnalog = sandbox.spy();
+      const spyVersion = sandbox.spy();
       // includes: report version, analog input, query firmware (incomplete) and junk
       // between analog input and report version
-      var incoming = [
+      const incoming = [
         0xf9, 0x02, 0x05, 0xe0, 0x00, 0x71, 0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74,
         0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00
       ];
@@ -3785,10 +3741,10 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a complete sysex command after an incomplete sysex command", function(done) {
-      var spy = sandbox.spy();
+    it("must parse a complete sysex command after an incomplete sysex command", done => {
+      const spy = sandbox.spy();
       // includes: query firmware (incomplete sysex), pin state response (pin 2)
-      var incoming = [
+      const incoming = [
         0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00,
         0xf0, 0x6e, 0x02, 0x01, 0x01, 0xf7
       ];
@@ -3799,10 +3755,10 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a non-sysex command after an incomplete sysex command", function(done) {
-      var spy = sandbox.spy();
+    it("must parse a non-sysex command after an incomplete sysex command", done => {
+      const spy = sandbox.spy();
       // includes: query firmware (incomplete sysex), analog input
-      var incoming = [
+      const incoming = [
         0xf0, 0x79, 0x02, 0x05, 0x53, 0x00, 0x74, 0x00, 0x61, 0x00, 0x6e, 0x00, 0x64, 0x00,
         0xe0, 0x00, 0x71
       ];
@@ -3813,12 +3769,12 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command spread across multiple data packets", function(done) {
-      var spy = sandbox.spy();
+    it("must parse a command spread across multiple data packets", done => {
+      const spy = sandbox.spy();
       // query firmware split across 3 packets with first packet preceeded by junk
-      var incoming1 = [0x07, 0x04, 240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0];
-      var incoming2 = [97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0];
-      var incoming3 = [97, 0, 116, 0, 97, 0, 247];
+      const incoming1 = [0x07, 0x04, 240, 121, 2, 3, 83, 0, 116, 0, 97, 0, 110, 0, 100, 0];
+      const incoming2 = [97, 0, 114, 0, 100, 0, 70, 0, 105, 0, 114, 0, 109, 0];
+      const incoming3 = [97, 0, 116, 0, 97, 0, 247];
 
       board.versionReceived = true;
       board.on("queryfirmware", spy);
@@ -3829,115 +3785,103 @@ describe("Board: lifecycle", function() {
       done();
     });
 
-    it("must parse a command spread across multiple single byte transfers", function(done) {
-      var spy = sandbox.spy();
-      var incoming = [REPORT_VERSION, 0x02, 0x03];
+    it("must parse a command spread across multiple single byte transfers", done => {
+      const spy = sandbox.spy();
+      const incoming = [REPORT_VERSION, 0x02, 0x03];
 
       board.versionReceived = true;
       board.on("reportversion", spy);
-      for (var i = 0; i < incoming.length; i++) {
+      for (let i = 0; i < incoming.length; i++) {
         transport.emit("data", [incoming[i]]);
       }
       assert.equal(spy.callCount, 1);
       done();
     });
-
   });
 });
 
-describe("Numeric encoding/decoding and formatting", function() {
+describe("Numeric encoding/decoding and formatting", () => {
 
-  it("must encode 32 bit signed integers", function(done) {
-    var value = Board.test.encode32BitSignedInteger(5786);
-
-    assert.deepEqual(value, [ 26, 45, 0, 0, 0 ]);
+  it("must encode 32 bit signed integers", done => {
+    assert.deepEqual(Board.test.encode32BitSignedInteger(5786), [26, 45, 0, 0, 0]);
     done();
   });
 
-  it("must encode 32 bit signed integers when they are negative", function(done) {
-    var value = Board.test.encode32BitSignedInteger(-5786);
-    assert.deepEqual(value, [ 26, 45, 0, 0, 8 ]);
+  it("must encode 32 bit signed integers when they are negative", done => {
+    assert.deepEqual(Board.test.encode32BitSignedInteger(-5786), [26, 45, 0, 0, 8]);
     done();
   });
 
-  it("must decode 32 bit signed integers", function(done) {
-    var value = Board.test.decode32BitSignedInteger([ 26, 45, 0, 0, 0 ]);
-    assert.equal(value, 5786);
+  it("must decode 32 bit signed integers", done => {
+    assert.equal(Board.test.decode32BitSignedInteger([26, 45, 0, 0, 0]), 5786);
     done();
   });
 
-  it("must decode 32 bit signed integers when they are negative", function(done) {
-    var value = Board.test.decode32BitSignedInteger([ 26, 45, 0, 0, 8 ]);
-    assert.equal(value, -5786);
+  it("must decode 32 bit signed integers when they are negative", done => {
+    assert.equal(Board.test.decode32BitSignedInteger([26, 45, 0, 0, 8]), -5786);
     done();
   });
 
-  it("must encode custom floats", function(done) {
-    var value = Board.test.encodeCustomFloat(123.456);
-    assert.deepEqual(value, [ 0, 45, 75, 28 ]);
+  it("must encode custom floats", done => {
+    assert.deepEqual(Board.test.encodeCustomFloat(123.456), [0, 45, 75, 28]);
     done();
   });
 
-  it("must encode custom floats (even when they are integers)", function(done) {
-    var value = Board.test.encodeCustomFloat(100);
-    assert.deepEqual(value, [ 1, 0, 0, 52 ]);
+  it("must encode custom floats (even when they are integers)", done => {
+    assert.deepEqual(Board.test.encodeCustomFloat(100), [1, 0, 0, 52]);
     done();
   });
 
-  it("must encode custom floats when they are negative", function(done) {
-    var value = Board.test.encodeCustomFloat(-7321.783);
-    assert.deepEqual(value, [ 54, 113, 62, 99 ]);
+  it("must encode custom floats when they are negative", done => {
+    assert.deepEqual(Board.test.encodeCustomFloat(-7321.783), [54, 113, 62, 99]);
     done();
   });
 
-  it("must encode custom floats when they are less than 1", function(done) {
-    var value = Board.test.encodeCustomFloat(0.000325);
-    assert.deepEqual(value, [ 79, 46, 70, 5 ]);
+  it("must encode custom floats when they are less than 1", done => {
+    assert.deepEqual(Board.test.encodeCustomFloat(0.000325), [79, 46, 70, 5]);
     done();
   });
 
-  it("must decode custom floats", function(done) {
-    var value = Board.test.decodeCustomFloat([ 110, 92, 44, 32 ]);
-    assert.equal(value, 732.782);
+  it("must decode custom floats", done => {
+    assert.equal(Board.test.decodeCustomFloat([110, 92, 44, 32]), 732.782);
     done();
   });
 
-  it("must decode custom floats when they are negative", function(done) {
-    var value = Board.test.decodeCustomFloat([ 110, 92, 44, 96 ]);
-    assert.equal(value, -732.782);
+  it("must decode custom floats when they are negative", done => {
+    assert.equal(Board.test.decodeCustomFloat([110, 92, 44, 96]), -732.782);
     done();
   });
-
 });
 
-describe("Board.encode/Board.decode", function() {
+describe("Board.encode/Board.decode", () => {
 
-  describe("Board.encode", function() {
-    it("must encode arbitrary data", function(done) {
+  describe("Board.encode", () => {
+    it("must encode arbitrary data", done => {
       assert.deepEqual(Board.encode([0, 1, 2, 3, 4]), [0, 0, 1, 0, 2, 0, 3, 0, 4, 0]);
       done();
     });
-    it("returns a fresh array", function(done) {
-      var data = [];
+    it("returns a fresh array", done => {
+      const data = [];
       assert.notEqual(Board.encode(data), data);
       done();
     });
   });
-  describe("Board.decode", function() {
-    it("must decode arbitrary data", function(done) {
+
+  describe("Board.decode", () => {
+    it("must decode arbitrary data", done => {
       assert.deepEqual(Board.decode([0, 0, 1, 0, 2, 0, 3, 0, 4, 0]), [0, 1, 2, 3, 4]);
       done();
     });
 
-    it("must fail to decode uneven data", function(done) {
-      assert.throws(function() {
+    it("must fail to decode uneven data", done => {
+      assert.throws(() => {
         Board.decode([0, 0, 1, 0, 2, 0, 3, 0, 4]);
       });
       done();
     });
 
-    it("returns a fresh array", function(done) {
-      var data = [];
+    it("returns a fresh array", done => {
+      const data = [];
       assert.notEqual(Board.decode(data), data);
       done();
     });
