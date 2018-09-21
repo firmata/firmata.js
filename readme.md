@@ -35,8 +35,8 @@ If you run *firmata* from the command line it will prompt you for the serial por
 #### With a path string: 
 
 ```js
-var Board = require("firmata");
-var board = new Board("system path or name");
+const Board = require("firmata");
+const board = new Board("system path or name");
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -46,9 +46,9 @@ board.on("ready", () => {
 #### With a Serialport object:
 
 ```js
-var Serialport = require("serialport");
-var Board = require("firmata");
-var board = new Board(new Serialport(...));
+const Serialport = require("serialport");
+const Board = require("firmata");
+const board = new Board(new Serialport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -61,9 +61,9 @@ board.on("ready", () => {
 
 
 ```js
-var Etherport = require("etherport");
-var Board = require("firmata");
-var board = new Board(new Etherport(...));
+const Etherport = require("etherport");
+const Board = require("firmata");
+const board = new Board(new Etherport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -73,8 +73,8 @@ board.on("ready", () => {
 ### Using the `readyCallback`:
 
 ```js
-var Board = require("firmata");
-var board = new Board("system path or name", () => {
+const Board = require("firmata");
+const board = new Board("system path or name", () => {
   // Arduino is ready to communicate
 });
 ```
@@ -82,9 +82,9 @@ var board = new Board("system path or name", () => {
 #### With a Serialport object:
 
 ```js
-var Serialport = require("serialport");
-var Board = require("firmata");
-var board = new Board(new Serialport(...), () => {
+const Serialport = require("serialport");
+const Board = require("firmata");
+const board = new Board(new Serialport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -92,9 +92,9 @@ var board = new Board(new Serialport(...), () => {
 #### With an Etherport object:
 
 ```js
-var Etherport = require("etherport");
-var Board = require("firmata");
-var board = new Board(new Etherport(...), () => {
+const Etherport = require("etherport");
+const Board = require("firmata");
+const board = new Board(new Etherport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -259,7 +259,7 @@ The `Board` constructor creates an instance that represents a physical board.
 
   ```js
   // set sampling interval to 30 milliseconds
-  var board = new Board(serialPortName, {samplingInterval: 30});
+  const board = new Board(serialPortName, {samplingInterval: 30});
   ```
 
 

@@ -1,4 +1,4 @@
-var Board = require("../");
+const Board = require("../");
 
 Board.requestPort(function(error, port) {
   if (error) {

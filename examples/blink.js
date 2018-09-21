@@ -1,20 +1,20 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
-  board.on("ready", function() {
-    var pin = 13;
-    var state = 1;
+  board.on("ready", () => {
+    const pin = 13;
+    let state = 1;
 
     board.pinMode(pin, board.MODES.OUTPUT);
 
-    setInterval(function() {
+    setInterval(() => {
       board.digitalWrite(pin, (state ^= 1));
     }, 500);
   });

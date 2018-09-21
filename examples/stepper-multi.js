@@ -1,14 +1,14 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
-  board.on("ready", function() {
+  board.on("ready", () => {
 
     board.accelStepperConfig({
       deviceNum: 0,
@@ -38,14 +38,14 @@ Board.requestPort(function(error, port) {
       devices: [0, 1]
     });
 
-    board.multiStepperTo(0, [2000, 3000], function() {
+    board.multiStepperTo(0, [2000, 3000], () => {
 
-      board.accelStepperReportPosition(0, function(value) {
-        console.log("Stepper 0 position: " + value);
+      board.accelStepperReportPosition(0, value => {
+        console.log(`Stepper 0 position: ${value}`);
       });
 
-      board.accelStepperReportPosition(1, function(value) {
-        console.log("Stepper 1 position: " + value);
+      board.accelStepperReportPosition(1, value => {
+        console.log(`Stepper 1 position: ${value}`);
       });
 
     });

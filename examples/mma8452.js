@@ -1,26 +1,26 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var register = {
+  const register = {
     CTRL_REG1: 0x2A,
     XYZ_DATA_CFG: 0x0E,
     READ_X_MSB: 0x01,
   };
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
   // var board = new Board("/dev/cu.usbmodem1411");
 
   board.on("ready", function() {
     console.log("Ready");
 
-    var mma8452 = 0x1D;
-    var scale = 2; // 2G
-    var options = {
+    const mma8452 = 0x1D;
+    const scale = 2; // 2G
+    const options = {
       address: mma8452,
       settings: {
         stopTX: false,
@@ -30,8 +30,8 @@ Board.requestPort(function(error, port) {
     this.i2cConfig(options);
 
     function mode(which, callback) {
-      board.i2cReadOnce(mma8452, register.CTRL_REG1, 1, function(data) {
-        var value = data[0];
+      board.i2cReadOnce(mma8452, register.CTRL_REG1, 1, data => {
+        let value = data[0];
         if (which === "standby") {
           // Clear the first bit
           value &= ~1;
@@ -46,13 +46,13 @@ Board.requestPort(function(error, port) {
       });
     }
 
-    new Promise(function(resolve) {
-      mode("standby", function() {
+    new Promise(resolve => {
+      mode("standby", () => {
 
         // 00: 2G (0b00000000)
         // 01: 4G (0b00000001)
         // 10: 8G (0b00000010)
-        var fsr = scale >> 2; // 2G (0b00000000)
+        const fsr = scale >> 2; // 2G (0b00000000)
         board.i2cWrite(mma8452, register.XYZ_DATA_CFG, fsr);
 
         // 0: 800 Hz
@@ -63,21 +63,21 @@ Board.requestPort(function(error, port) {
         // 5: 12.5 Hz
         // 6: 6.25 Hz
         // 7: 1.56 Hz
-        var ctrlreg1 = 0b00000101 << 3; // 5 0b00[101]000
+        const ctrlreg1 = 0b00000101 << 3; // 5 0b00[101]000
         board.i2cWrite(mma8452, register.CTRL_REG1, ctrlreg1);
 
         mode("active", resolve);
       });
-    }).then(function() {
+    }).then(() => {
 
-      board.i2cRead(mma8452, 0x00, 1, function(data) {
-        var available = data[0];
+      board.i2cRead(mma8452, 0x00, 1, data => {
+        const available = data[0];
 
         if ((available & 0x08) >> 3) {
-          board.i2cReadOnce(mma8452, register.READ_X_MSB, 6, function(data) {
-            var x = (data[0] << 8 | data[1]) >> 4;
-            var y = (data[2] << 8 | data[3]) >> 4;
-            var z = (data[4] << 8 | data[5]) >> 4;
+          board.i2cReadOnce(mma8452, register.READ_X_MSB, 6, data => {
+            let x = (data[0] << 8 | data[1]) >> 4;
+            let y = (data[2] << 8 | data[3]) >> 4;
+            let z = (data[4] << 8 | data[5]) >> 4;
 
             if (data[0] > 0x7F) {
               x = -(1 + 0xFFF - x);

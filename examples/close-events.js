@@ -1,14 +1,14 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
-  board.on("close", function() {
+  board.on("close", () => {
     // Unplug the board to see this event!
     console.log("Closed!");
   });

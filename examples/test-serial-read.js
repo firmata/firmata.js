@@ -1,53 +1,53 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
   console.log(__filename);
   console.log("------------------------------");
 
-  board.on("open", function() {
+  board.on("open", () => {
     console.log("  ✔ open");
   });
 
-  board.on("reportversion", function() {
+  board.on("reportversion", () => {
     console.log("  ✔ reportversion");
   });
 
-  board.on("queryfirmware", function() {
+  board.on("queryfirmware", () => {
     console.log("  ✔ queryfirmware");
   });
 
-  board.on("capability-query", function() {
+  board.on("capability-query", () => {
     console.log("  ✔ capability-query");
   });
 
-  board.on("ready", function() {
+  board.on("ready", () => {
     console.log("  ✔ ready");
     clearTimeout(timeout);
 
-    var SW_SERIAL0 = this.SERIAL_PORT_IDs.SW_SERIAL0;
+    const SW_SERIAL0 = board.SERIAL_PORT_IDs.SW_SERIAL0;
 
-    this.serialConfig({
+    board.serialConfig({
       portId: SW_SERIAL0,
       baud: 9600,
       rxPin: 2,
       txPin: 3
     });
 
-    this.serialRead(SW_SERIAL0, function() {
+    board.serialRead(SW_SERIAL0, () => {
       console.log("  ✔ received data (exiting)");
       console.log("------------------------------");
       process.exit();
     });
   });
 
-  var timeout = setTimeout(function() {
+  var timeout = setTimeout(() => {
     console.log(board.currentBuffer);
     console.log(">>>>>>>>>>>>>>TIMEOUT<<<<<<<<<<<<<<");
     console.log("------------------------------");

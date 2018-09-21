@@ -1,22 +1,22 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
   board.on("ready", function() {
-    var a = 6;
-    var b = 7;
+    const a = 6;
+    const b = 7;
 
     console.log("Ready.");
 
     this.pinMode(a, this.MODES.PWM);
     this.pinMode(b, this.MODES.OUTPUT);
 
-    var states = {
+    const states = {
       5: 0,
       8: 0
     };
@@ -34,7 +34,7 @@ Board.requestPort(function(error, port) {
     }, this);
 
     // var analogs = [0, 1, 2, 3, 4, 5];
-    var analogs = [3];
+    const analogs = [3];
 
     analogs.forEach(function(pin) {
       pin = +pin;

@@ -1,17 +1,17 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
-  board.on("ready", function() {
+  board.on("ready", () => {
     console.log("READY");
 
-    var SW_SERIAL0 = board.SERIAL_PORT_IDs.SW_SERIAL0;
-    var maxBytesToRead = 4;
+    const SW_SERIAL0 = board.SERIAL_PORT_IDs.SW_SERIAL0;
+    const maxBytesToRead = 4;
 
     board.serialConfig({
       portId: SW_SERIAL0,
@@ -20,7 +20,7 @@ Board.requestPort(function(error, port) {
       txPin: 11
     });
 
-    board.serialRead(SW_SERIAL0, maxBytesToRead, function(data) {
+    board.serialRead(SW_SERIAL0, maxBytesToRead, data => {
       console.log(new Buffer(data).toString("ascii"));
     });
   });

@@ -1,45 +1,45 @@
-var Board = require("../");
+const Board = require("../");
 
-Board.requestPort(function(error, port) {
+Board.requestPort((error, port) => {
   if (error) {
     console.log(error);
     return;
   }
 
-  var board = new Board(port.comName);
+  const board = new Board(port.comName);
 
   console.log(__filename);
   console.log("------------------------------");
 
-  board.on("open", function() {
+  board.on("open", () => {
     console.log("  ✔ open");
   });
 
-  board.on("reportversion", function() {
+  board.on("reportversion", () => {
     console.log("  ✔ reportversion");
   });
 
-  board.on("queryfirmware", function() {
+  board.on("queryfirmware", () => {
     console.log("  ✔ queryfirmware");
   });
 
-  board.on("capability-query", function() {
+  board.on("capability-query", () => {
     console.log("  ✔ capability-query");
   });
 
-  board.on("ready", function() {
+  board.on("ready", () => {
     console.log("  ✔ ready");
     clearTimeout(timeout);
 
-    this.i2cConfig();
-    this.i2cRead(0x0A, 1, function() {
+    board.i2cConfig();
+    board.i2cRead(0x0A, 1, () => {
       console.log("  ✔ received data (exiting)");
       console.log("------------------------------");
       process.exit();
     });
   });
 
-  var timeout = setTimeout(function() {
+  var timeout = setTimeout(() => {
     console.log(board.currentBuffer);
     console.log(">>>>>>>>>>>>>>TIMEOUT<<<<<<<<<<<<<<");
     console.log("------------------------------");
