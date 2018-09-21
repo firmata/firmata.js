@@ -2,7 +2,7 @@ require("../common/bootstrap");
 
 const entry = path.join(__dirname, "/fixtures/entry.js");
 const output = path.join(__dirname, "/fixtures/output.js");
-const source = fs.readFileSync(path.join(__dirname, "/../../lib/firmata.js"), "utf8");
+const source = fs.readFileSync(path.join(__dirname, "/../../packages/firmata.js/lib/firmata.js"), "utf8");
 const lines = source.split("\n").map(line => line.trim());
 const startAt = lines.indexOf("* constants");
 

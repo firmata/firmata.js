@@ -2,6 +2,11 @@
 
 const Emitter = require("events");
 
+let list = function() {
+  /* istanbul ignore next */
+  return Promise.resolve([]);
+};
+
 class SerialPort extends Emitter {
   constructor(path/*, options, openCallback*/) {
     super();
@@ -24,15 +29,13 @@ class SerialPort extends Emitter {
   }
 }
 
+// This trash is necessary for stubbing with sinon.
+SerialPort.list = list;
+SerialPort.SerialPort = SerialPort;
+
 let com;
 let sp;
-let stub = {
-  SerialPort,
-  list() {
-    /* istanbul ignore next */
-    return Promise.resolve([]);
-  },
-};
+let stub = SerialPort;
 
 try {
   /* istanbul ignore if */

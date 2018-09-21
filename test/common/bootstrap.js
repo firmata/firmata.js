@@ -15,9 +15,11 @@ global.webpack = require("webpack");
 // Internal Dependencies
 global.Encoder7Bit = require("../../packages/firmata-io/lib/encoder7bit");
 global.OneWire = require("../../packages/firmata-io/lib/onewireutils");
-global.firmata = require("../../packages/firmata-io/lib/firmata");
 global.com = require("../../packages/firmata.js/lib/com");
-global.Firmata = require("../../packages/firmata.js/index.js");
+
+
+// global.firmata = require("../../packages/firmata-io/lib/firmata")(global.com.Serialport);
+global.firmata = require("../../packages/firmata.js/lib/firmata");
 
 // Fixtures
 global.fixtures = {

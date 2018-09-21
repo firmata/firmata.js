@@ -2,6 +2,15 @@ const cp = require("child_process");
 const tags = require("common-tags");
 
 module.exports = function (grunt) {
+
+  const globs = [
+    "gruntfile.js",
+    "packages/firmata.js/lib/*.js",
+    "packages/firmata-io/lib/*.js",
+    "test/*.js",
+    "examples/*.js"
+  ];
+
   grunt.initConfig({
     mochaTest: {
       files: [
@@ -10,14 +19,14 @@ module.exports = function (grunt) {
       ],
     },
     eslint: {
-      target: ["gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"],
+      target: globs,
       options: {
         configFile: ".eslint.json"
       }
     },
     jscs: {
       files: {
-        src: [ "gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"]
+        src: globs
       },
       options: {
         config: ".jscsrc",
@@ -48,7 +57,7 @@ module.exports = function (grunt) {
       }
     },
     jsbeautifier: {
-      files: [ "gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"],
+      files: globs,
       options: {
         js: {
           braceStyle: "collapse",

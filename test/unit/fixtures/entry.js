@@ -1,1 +1,1 @@
-var Firmata = require("../../../lib/firmata");
+var Firmata = require("../../../packages/firmata.js/lib/firmata");

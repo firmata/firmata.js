@@ -9,15 +9,15 @@
     "type": "git",
     "url": "git://github.com/firmata/firmata.js.git"
   },
-  "main": "index.js",
+  "main": "./lib/firmata",
   "bin": {
-    "firmata": "./repl.js"
+    "firmata": "./repl"
   },
   "devDependencies": {},
   "dependencies": {
     "browser-serialport": "latest",
     "serialport": "~6.0.4",
-    "@firmata/firmata-io": "^2.0.0"
+    "firmata-io": "^2.0.0"
   },
   "scripts": {
     "test": "grunt",
