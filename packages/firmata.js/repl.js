@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const firmata = require("./index.js");
+const firmata = require("./lib/firmata");
 const repl = require("repl");
 console.log("Enter USB Port and press enter:");
 process.stdin.resume();
