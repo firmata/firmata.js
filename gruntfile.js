@@ -10,14 +10,14 @@ module.exports = function (grunt) {
       ],
     },
     eslint: {
-      target: ["gruntfile.js", "lib/*.js", "test/*.js", "examples/*.js"],
+      target: ["gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"],
       options: {
         configFile: ".eslint.json"
       }
     },
     jscs: {
       files: {
-        src: [ "gruntfile.js", "lib/*.js", "test/*.js", "examples/*.js"]
+        src: [ "gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"]
       },
       options: {
         config: ".jscsrc",
@@ -48,7 +48,7 @@ module.exports = function (grunt) {
       }
     },
     jsbeautifier: {
-      files: [ "gruntfile.js", "lib/*.js", "test/*.js", "examples/*.js"],
+      files: [ "gruntfile.js", "packages/**/lib/*.js", "test/*.js", "examples/*.js"],
       options: {
         js: {
           braceStyle: "collapse",

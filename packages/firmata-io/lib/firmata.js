@@ -6,7 +6,6 @@ const Emitter = require("events");
 // Internal Dependencies
 const Encoder7Bit = require("./encoder7bit");
 const OneWire = require("./onewireutils");
-const com = require("./com");
 
 // Program specifics
 const i2cActive = new Map();
@@ -425,6 +424,13 @@ SYSEX_RESPONSE[SERIAL_MESSAGE] = function(board) {
 };
 
 /**
+ * The default transport class
+ */
+
+let Transport = null;
+
+
+/**
  * @class The Board object represents an arduino board.
  * @augments EventEmitter
  * @param {String} port This is the serial port the arduino is connected to.
@@ -443,344 +449,336 @@ SYSEX_RESPONSE[SERIAL_MESSAGE] = function(board) {
  * @property {SerialPort} sp The serial port object used to communicate with the arduino.
  */
 
-function Board(port, options, callback) {
-  if (typeof options === "function" || typeof options === "undefined") {
-    callback = options;
-    options = {};
-  }
+class Board extends Emitter {
+  constructor(port, options, callback) {
+    super();
 
-  if (!(this instanceof Board)) {
-    return new Board(port, options, callback);
-  }
-
-  Emitter.call(this);
-
-  var board = this;
-  var defaults = {
-    reportVersionTimeout: 5000,
-    samplingInterval: 19,
-    serialport: {
-      baudRate: 57600,
-      // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#open-options
-      highWaterMark: 256,
-    },
-  };
-
-  if (options.serialport && options.serialport.bufferSize) {
-    options.serialport.highWaterMark = options.serialport.bufferSize;
-  }
-
-  var settings = Object.assign({}, defaults, options);
-
-  this.isReady = false;
-
-  this.MODES = {
-    INPUT: 0x00,
-    OUTPUT: 0x01,
-    ANALOG: 0x02,
-    PWM: 0x03,
-    SERVO: 0x04,
-    SHIFT: 0x05,
-    I2C: 0x06,
-    ONEWIRE: 0x07,
-    STEPPER: 0x08,
-    SERIAL: 0x0A,
-    PULLUP: 0x0B,
-    IGNORE: 0x7F,
-    PING_READ: 0x75,
-    UNKOWN: 0x10,
-  };
-
-  this.I2C_MODES = {
-    WRITE: 0,
-    READ: 1,
-    CONTINUOUS_READ: 2,
-    STOP_READING: 3,
-  };
-
-  this.STEPPER = {
-    TYPE: {
-      DRIVER: 1,
-      TWO_WIRE: 2,
-      THREE_WIRE: 3,
-      FOUR_WIRE: 4,
-    },
-    STEP_SIZE: {
-      WHOLE: 0,
-      HALF: 1
-    },
-    RUN_STATE: {
-      STOP: 0,
-      ACCEL: 1,
-      DECEL: 2,
-      RUN: 3,
-    },
-    DIRECTION: {
-      CCW: 0,
-      CW: 1,
-    },
-  };
-
-  this.SERIAL_MODES = {
-    CONTINUOUS_READ: 0x00,
-    STOP_READING: 0x01,
-  };
-
-  // ids for hardware and software serial ports on the board
-  this.SERIAL_PORT_IDs = {
-    HW_SERIAL0: 0x00,
-    HW_SERIAL1: 0x01,
-    HW_SERIAL2: 0x02,
-    HW_SERIAL3: 0x03,
-    SW_SERIAL0: 0x08,
-    SW_SERIAL1: 0x09,
-    SW_SERIAL2: 0x10,
-    SW_SERIAL3: 0x11,
-
-    // Default can be used by dependant libraries to key on a
-    // single property name when negotiating ports.
-    //
-    // Firmata elects SW_SERIAL0: 0x08 as its DEFAULT
-    DEFAULT: 0x08,
-  };
-
-  // map to the pin resolution value in the capability query response
-  this.SERIAL_PIN_TYPES = {
-    RES_RX0: 0x00,
-    RES_TX0: 0x01,
-    RES_RX1: 0x02,
-    RES_TX1: 0x03,
-    RES_RX2: 0x04,
-    RES_TX2: 0x05,
-    RES_RX3: 0x06,
-    RES_TX3: 0x07,
-  };
-
-  this.RESOLUTION = {
-    ADC: null,
-    DAC: null,
-    PWM: null,
-  };
-
-  this.HIGH = 1;
-  this.LOW = 0;
-  this.pins = [];
-  this.ports = Array(16).fill(0);
-  this.analogPins = [];
-  this.version = {};
-  this.firmware = {};
-  this.buffer = [];
-  this.versionReceived = false;
-  this.name = "Firmata";
-  this.settings = settings;
-  this.pending = 0;
-  this.digitalPortQueue = 0x0000;
-
-  if (typeof port === "object") {
-    this.transport = port;
-  } else {
-    this.transport = new com.SerialPort(port, settings.serialport);
-  }
-
-  // For backward compat
-  this.sp = this.transport;
-
-  this.transport.on("close", event => {
-
-    // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#opening-and-closing
-    if (event && event.disconnect && event.disconnected) {
-      this.emit("disconnect");
-      return;
+    if (typeof options === "function" || typeof options === "undefined") {
+      callback = options;
+      options = {};
     }
 
-    this.emit("close");
-  });
+    var board = this;
+    var defaults = {
+      reportVersionTimeout: 5000,
+      samplingInterval: 19,
+      serialport: {
+        baudRate: 57600,
+        // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#open-options
+        highWaterMark: 256,
+      },
+    };
 
-  this.transport.on("open", event => {
-    this.emit("open", event);
-    // Legacy
-    this.emit("connect", event);
-  });
+    if (options.serialport && options.serialport.bufferSize) {
+      options.serialport.highWaterMark = options.serialport.bufferSize;
+    }
 
-  this.transport.on("error", error => {
-    if (!this.isReady && typeof callback === "function") {
-      callback(error);
+    var settings = Object.assign({}, defaults, options);
+
+    this.isReady = false;
+
+    this.MODES = {
+      INPUT: 0x00,
+      OUTPUT: 0x01,
+      ANALOG: 0x02,
+      PWM: 0x03,
+      SERVO: 0x04,
+      SHIFT: 0x05,
+      I2C: 0x06,
+      ONEWIRE: 0x07,
+      STEPPER: 0x08,
+      SERIAL: 0x0A,
+      PULLUP: 0x0B,
+      IGNORE: 0x7F,
+      PING_READ: 0x75,
+      UNKOWN: 0x10,
+    };
+
+    this.I2C_MODES = {
+      WRITE: 0,
+      READ: 1,
+      CONTINUOUS_READ: 2,
+      STOP_READING: 3,
+    };
+
+    this.STEPPER = {
+      TYPE: {
+        DRIVER: 1,
+        TWO_WIRE: 2,
+        THREE_WIRE: 3,
+        FOUR_WIRE: 4,
+      },
+      STEP_SIZE: {
+        WHOLE: 0,
+        HALF: 1
+      },
+      RUN_STATE: {
+        STOP: 0,
+        ACCEL: 1,
+        DECEL: 2,
+        RUN: 3,
+      },
+      DIRECTION: {
+        CCW: 0,
+        CW: 1,
+      },
+    };
+
+    this.SERIAL_MODES = {
+      CONTINUOUS_READ: 0x00,
+      STOP_READING: 0x01,
+    };
+
+    // ids for hardware and software serial ports on the board
+    this.SERIAL_PORT_IDs = {
+      HW_SERIAL0: 0x00,
+      HW_SERIAL1: 0x01,
+      HW_SERIAL2: 0x02,
+      HW_SERIAL3: 0x03,
+      SW_SERIAL0: 0x08,
+      SW_SERIAL1: 0x09,
+      SW_SERIAL2: 0x10,
+      SW_SERIAL3: 0x11,
+
+      // Default can be used by dependant libraries to key on a
+      // single property name when negotiating ports.
+      //
+      // Firmata elects SW_SERIAL0: 0x08 as its DEFAULT
+      DEFAULT: 0x08,
+    };
+
+    // map to the pin resolution value in the capability query response
+    this.SERIAL_PIN_TYPES = {
+      RES_RX0: 0x00,
+      RES_TX0: 0x01,
+      RES_RX1: 0x02,
+      RES_TX1: 0x03,
+      RES_RX2: 0x04,
+      RES_TX2: 0x05,
+      RES_RX3: 0x06,
+      RES_TX3: 0x07,
+    };
+
+    this.RESOLUTION = {
+      ADC: null,
+      DAC: null,
+      PWM: null,
+    };
+
+    this.HIGH = 1;
+    this.LOW = 0;
+    this.pins = [];
+    this.ports = Array(16).fill(0);
+    this.analogPins = [];
+    this.version = {};
+    this.firmware = {};
+    this.buffer = [];
+    this.versionReceived = false;
+    this.name = "Firmata";
+    this.settings = settings;
+    this.pending = 0;
+    this.digitalPortQueue = 0x0000;
+
+    if (typeof port === "object") {
+      this.transport = port;
     } else {
-      this.emit("error", error);
+      if (!Transport) {
+        throw new Error("Missing Default Transport");
+      }
+      this.transport = new Transport(port, settings.serialport);
     }
-  });
 
-  this.transport.on("data", data => {
-    var byte, currByte, response, first, last, handler;
+    this.transport.on("close", event => {
 
-    for (var i = 0; i < data.length; i++) {
-      byte = data[i];
-      // we dont want to push 0 as the first byte on our buffer
-      if (this.buffer.length === 0 && byte === 0) {
-        continue;
+      // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#opening-and-closing
+      if (event && event.disconnect && event.disconnected) {
+        this.emit("disconnect");
+        return;
+      }
+
+      this.emit("close");
+    });
+
+    this.transport.on("open", event => {
+      this.emit("open", event);
+      // Legacy
+      this.emit("connect", event);
+    });
+
+    this.transport.on("error", error => {
+      if (!this.isReady && typeof callback === "function") {
+        callback(error);
       } else {
-        this.buffer.push(byte);
+        this.emit("error", error);
+      }
+    });
 
-        first = this.buffer[0];
-        last = this.buffer[this.buffer.length - 1];
+    this.transport.on("data", data => {
+      var byte, currByte, response, first, last, handler;
 
-        // [START_SYSEX, ... END_SYSEX]
-        if (first === START_SYSEX && last === END_SYSEX) {
-
-          handler = SYSEX_RESPONSE[this.buffer[1]];
-
-          // Ensure a valid SYSEX_RESPONSE handler exists
-          // Only process these AFTER the REPORT_VERSION
-          // message has been received and processed.
-          if (handler && this.versionReceived) {
-            handler(this);
-          }
-
-          // It is possible for the board to have
-          // existing activity from a previous run
-          // that will leave any of the following
-          // active:
-          //
-          //    - ANALOG_MESSAGE
-          //    - SERIAL_READ
-          //    - I2C_REQUEST, CONTINUOUS_READ
-          //
-          // This means that we will receive these
-          // messages on transport "open", before any
-          // handshake can occur. We MUST assert
-          // that we will only process this buffer
-          // AFTER the REPORT_VERSION message has
-          // been received. Not doing so will result
-          // in the appearance of the program "hanging".
-          //
-          // Since we cannot do anything with this data
-          // until _after_ REPORT_VERSION, discard it.
-          //
-          this.buffer.length = 0;
-
-        } else if (first === START_SYSEX && (this.buffer.length > 0)) {
-          // we have a new command after an incomplete sysex command
-          currByte = data[i];
-          if (currByte > 0x7F) {
-            this.buffer.length = 0;
-            this.buffer.push(currByte);
-          }
+      for (var i = 0; i < data.length; i++) {
+        byte = data[i];
+        // we dont want to push 0 as the first byte on our buffer
+        if (this.buffer.length === 0 && byte === 0) {
+          continue;
         } else {
-          /* istanbul ignore else */
-          if (first !== START_SYSEX) {
-            // Check if data gets out of sync: first byte in buffer
-            // must be a valid response if not START_SYSEX
-            // Identify response on first byte
+          this.buffer.push(byte);
+
+          first = this.buffer[0];
+          last = this.buffer[this.buffer.length - 1];
+
+          // [START_SYSEX, ... END_SYSEX]
+          if (first === START_SYSEX && last === END_SYSEX) {
+
+            handler = SYSEX_RESPONSE[this.buffer[1]];
+
+            // Ensure a valid SYSEX_RESPONSE handler exists
+            // Only process these AFTER the REPORT_VERSION
+            // message has been received and processed.
+            if (handler && this.versionReceived) {
+              handler(this);
+            }
+
+            // It is possible for the board to have
+            // existing activity from a previous run
+            // that will leave any of the following
+            // active:
+            //
+            //    - ANALOG_MESSAGE
+            //    - SERIAL_READ
+            //    - I2C_REQUEST, CONTINUOUS_READ
+            //
+            // This means that we will receive these
+            // messages on transport "open", before any
+            // handshake can occur. We MUST assert
+            // that we will only process this buffer
+            // AFTER the REPORT_VERSION message has
+            // been received. Not doing so will result
+            // in the appearance of the program "hanging".
+            //
+            // Since we cannot do anything with this data
+            // until _after_ REPORT_VERSION, discard it.
+            //
+            this.buffer.length = 0;
+
+          } else if (first === START_SYSEX && (this.buffer.length > 0)) {
+            // we have a new command after an incomplete sysex command
+            currByte = data[i];
+            if (currByte > 0x7F) {
+              this.buffer.length = 0;
+              this.buffer.push(currByte);
+            }
+          } else {
+            /* istanbul ignore else */
+            if (first !== START_SYSEX) {
+              // Check if data gets out of sync: first byte in buffer
+              // must be a valid response if not START_SYSEX
+              // Identify response on first byte
+              response = first < START_SYSEX ? (first & START_SYSEX) : first;
+
+              // Check if the first byte is possibly
+              // a valid MIDI_RESPONSE (handler)
+              /* istanbul ignore else */
+              if (response !== REPORT_VERSION &&
+                  response !== ANALOG_MESSAGE &&
+                  response !== DIGITAL_MESSAGE) {
+                // If not valid, then we received garbage and can discard
+                // whatever bytes have been been queued.
+                this.buffer.length = 0;
+              }
+            }
+          }
+
+          // There are 3 bytes in the buffer and the first is not START_SYSEX:
+          // Might have a MIDI Command
+          if (this.buffer.length === 3 && first !== START_SYSEX) {
+            // response bytes under 0xF0 we have a multi byte operation
             response = first < START_SYSEX ? (first & START_SYSEX) : first;
 
-            // Check if the first byte is possibly
-            // a valid MIDI_RESPONSE (handler)
             /* istanbul ignore else */
-            if (response !== REPORT_VERSION &&
-                response !== ANALOG_MESSAGE &&
-                response !== DIGITAL_MESSAGE) {
-              // If not valid, then we received garbage and can discard
-              // whatever bytes have been been queued.
+            if (MIDI_RESPONSE[response]) {
+              // It's ok that this.versionReceived will be set to
+              // true every time a valid MIDI_RESPONSE is received.
+              // This condition is necessary to ensure that REPORT_VERSION
+              // is called first.
+              if (this.versionReceived || first === REPORT_VERSION) {
+                this.versionReceived = true;
+                MIDI_RESPONSE[response](this);
+              }
+              this.buffer.length = 0;
+            } else {
+              // A bad serial read must have happened.
+              // Reseting the buffer will allow recovery.
               this.buffer.length = 0;
             }
           }
         }
-
-        // There are 3 bytes in the buffer and the first is not START_SYSEX:
-        // Might have a MIDI Command
-        if (this.buffer.length === 3 && first !== START_SYSEX) {
-          // response bytes under 0xF0 we have a multi byte operation
-          response = first < START_SYSEX ? (first & START_SYSEX) : first;
-
-          /* istanbul ignore else */
-          if (MIDI_RESPONSE[response]) {
-            // It's ok that this.versionReceived will be set to
-            // true every time a valid MIDI_RESPONSE is received.
-            // This condition is necessary to ensure that REPORT_VERSION
-            // is called first.
-            if (this.versionReceived || first === REPORT_VERSION) {
-              this.versionReceived = true;
-              MIDI_RESPONSE[response](this);
-            }
-            this.buffer.length = 0;
-          } else {
-            // A bad serial read must have happened.
-            // Reseting the buffer will allow recovery.
-            this.buffer.length = 0;
-          }
-        }
-      }
-    }
-  });
-
-  // if we have not received the version within the allotted
-  // time specified by the reportVersionTimeout (user or default),
-  // then send an explicit request for it.
-  this.reportVersionTimeoutId = setTimeout(() => {
-    /* istanbul ignore else */
-    if (this.versionReceived === false) {
-      this.reportVersion(function() {});
-      this.queryFirmware(function() {});
-    }
-  }, settings.reportVersionTimeout);
-
-  function ready() {
-    board.isReady = true;
-    board.emit("ready");
-    /* istanbul ignore else */
-    if (typeof callback === "function") {
-      callback();
-    }
-  }
-
-  // Await the reported version.
-  this.once("reportversion", () => {
-    clearTimeout(this.reportVersionTimeoutId);
-    this.versionReceived = true;
-    this.once("queryfirmware", () => {
-
-      // Only preemptively set the sampling interval if `samplingInterval`
-      // property was _explicitly_ set as a constructor option.
-      if (options.samplingInterval !== undefined) {
-        this.setSamplingInterval(options.samplingInterval);
-      }
-      if (settings.skipCapabilities) {
-        this.analogPins = settings.analogPins || this.analogPins;
-        this.pins = settings.pins || this.pins;
-        /* istanbul ignore else */
-        if (!this.pins.length) {
-          for (var i = 0; i < (settings.pinCount || MAX_PIN_COUNT); i++) {
-            var analogChannel = this.analogPins.indexOf(i);
-            if (analogChannel < 0) {
-              analogChannel = 127;
-            }
-            this.pins.push({supportedModes: [], analogChannel: analogChannel});
-          }
-        }
-
-        // If the capabilities query is skipped,
-        // default resolution values will be used.
-        //
-        // Based on ATmega328/P
-        //
-        this.RESOLUTION.ADC = 0x3FF;
-        this.RESOLUTION.PWM = 0x0FF;
-
-        ready();
-      } else {
-        this.queryCapabilities(() => {
-          this.queryAnalogMapping(ready);
-        });
       }
     });
-  });
-}
 
-Board.prototype = Object.create(Emitter.prototype, {
-  constructor: {
-    value: Board,
-  },
-});
+    // if we have not received the version within the allotted
+    // time specified by the reportVersionTimeout (user or default),
+    // then send an explicit request for it.
+    this.reportVersionTimeoutId = setTimeout(() => {
+      /* istanbul ignore else */
+      if (this.versionReceived === false) {
+        this.reportVersion(function() {});
+        this.queryFirmware(function() {});
+      }
+    }, settings.reportVersionTimeout);
+
+    function ready() {
+      board.isReady = true;
+      board.emit("ready");
+      /* istanbul ignore else */
+      if (typeof callback === "function") {
+        callback();
+      }
+    }
+
+    // Await the reported version.
+    this.once("reportversion", () => {
+      clearTimeout(this.reportVersionTimeoutId);
+      this.versionReceived = true;
+      this.once("queryfirmware", () => {
+
+        // Only preemptively set the sampling interval if `samplingInterval`
+        // property was _explicitly_ set as a constructor option.
+        if (options.samplingInterval !== undefined) {
+          this.setSamplingInterval(options.samplingInterval);
+        }
+        if (settings.skipCapabilities) {
+          this.analogPins = settings.analogPins || this.analogPins;
+          this.pins = settings.pins || this.pins;
+          /* istanbul ignore else */
+          if (!this.pins.length) {
+            for (var i = 0; i < (settings.pinCount || MAX_PIN_COUNT); i++) {
+              var analogChannel = this.analogPins.indexOf(i);
+              if (analogChannel < 0) {
+                analogChannel = 127;
+              }
+              this.pins.push({supportedModes: [], analogChannel: analogChannel});
+            }
+          }
+
+          // If the capabilities query is skipped,
+          // default resolution values will be used.
+          //
+          // Based on ATmega328/P
+          //
+          this.RESOLUTION.ADC = 0x3FF;
+          this.RESOLUTION.PWM = 0x0FF;
+
+          ready();
+        } else {
+          this.queryCapabilities(() => {
+            this.queryAnalogMapping(ready);
+          });
+        }
+      });
+    });
+  }
+}
 
 /**
  * writeToTransport Due to the non-blocking behaviour of transport write
@@ -2383,7 +2381,7 @@ Board.isAcceptablePort = function(port) {
  */
 
 Board.requestPort = function(callback) {
-  com.list(function(error, ports) {
+  Transport.list(function(error, ports) {
     const port = ports.find(port => Board.isAcceptablePort(port) && port);
 
     if (port) {
@@ -2539,4 +2537,7 @@ if (process.env.IS_TEST_MODE) {
   };
 }
 
-module.exports = Board;
+module.exports = function(transport) {
+  Transport = transport;
+  return Board;
+};
