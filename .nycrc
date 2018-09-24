@@ -3,7 +3,8 @@
     "lcov"
   ],
   "include": [
-    "lib/**/*.js"
+    "packages/firmata-io/lib/**/*.js",
+    "packages/firmata.js/lib/**/*.js"
   ],
   "exclude": [
     "Gruntfile.js"

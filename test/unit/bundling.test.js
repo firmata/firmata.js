@@ -1,4 +1,11 @@
-require("../common/bootstrap");
+// Built-in Dependencies
+global.fs = require("fs");
+global.path = require("path");
+
+// Third-Party Dependencies
+const sinon = require("sinon");
+const browserify = require("browserify");
+const webpack = require("webpack");
 
 const entry = path.join(__dirname, "/fixtures/entry.js");
 const output = path.join(__dirname, "/fixtures/output.js");
@@ -6,7 +13,7 @@ const source = fs.readFileSync(path.join(__dirname, "/../../packages/firmata.js/
 const lines = source.split("\n").map(line => line.trim());
 const startAt = lines.indexOf("* constants");
 
-describe("Bundling", function() {
+describe("Bundling", /* this sensitive */ function() {
   const context = this;
 
   beforeEach(() => {
@@ -17,7 +24,7 @@ describe("Bundling", function() {
     fs.unlinkSync(output);
   });
 
-  it("must browserify", function(done) {
+  it("must browserify", done => {
     context.timeout(1e5);
     const b = browserify(entry);
 
@@ -31,7 +38,7 @@ describe("Bundling", function() {
     });
   });
 
-  it("must webpack", function(done) {
+  it("must webpack", done => {
     context.timeout(1e5);
     const w = webpack({
       entry,

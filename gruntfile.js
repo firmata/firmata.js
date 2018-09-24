@@ -5,8 +5,9 @@ module.exports = function (grunt) {
 
   const globs = [
     "gruntfile.js",
-    "packages/firmata.js/lib/*.js",
     "packages/firmata-io/lib/*.js",
+    "packages/firmata.js/lib/*.js",
+    "packages/firmata.js/test/*.js",
     "test/*.js",
     "examples/*.js"
   ];
@@ -14,8 +15,9 @@ module.exports = function (grunt) {
   grunt.initConfig({
     mochaTest: {
       files: [
-        "test/common/bootstrap.js",
-        "test/unit/*.js"
+        "packages/firmata.js/test/common/bootstrap.js",
+        "packages/firmata.js/test/unit/*.js",
+        "test/unit/*.js",
       ],
     },
     eslint: {

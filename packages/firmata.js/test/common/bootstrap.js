@@ -13,13 +13,13 @@ global.sinon = require("sinon");
 global.webpack = require("webpack");
 
 // Internal Dependencies
-global.Encoder7Bit = require("../../packages/firmata-io/lib/encoder7bit");
-global.OneWire = require("../../packages/firmata-io/lib/onewireutils");
-global.com = require("../../packages/firmata.js/lib/com");
+global.Encoder7Bit = require("../../../../packages/firmata-io/lib/encoder7bit");
+global.OneWire = require("../../../../packages/firmata-io/lib/onewireutils");
+global.com = require("../../lib/com");
 
 
-// global.firmata = require("../../packages/firmata-io/lib/firmata")(global.com.Serialport);
-global.firmata = require("../../packages/firmata.js/lib/firmata");
+// global.firmata = require("../../../../packages/firmata-io/lib/firmata")(global.com.Serialport);
+global.firmata = require("../../lib/firmata");
 
 // Fixtures
 global.fixtures = {
