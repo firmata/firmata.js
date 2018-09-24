@@ -14,11 +14,5 @@
     "firmata": "./repl.js"
   },
   "devDependencies": {},
-  "dependencies": {},
-  "scripts": {
-    "test": "grunt",
-    "attempt-timeout": "node examples/test-i2c-read.js && node examples/test-i2c-read.js && node examples/test-analog-read.js && node examples/test-analog-read.js && node examples/test-serial-read.js && node examples/test-serial-read.js",
-    "test-cover": "nyc grunt test",
-    "coveralls": "nyc --reporter=lcov grunt test && cat ./coverage/lcov.info | coveralls"
-  }
+  "dependencies": {}
 }

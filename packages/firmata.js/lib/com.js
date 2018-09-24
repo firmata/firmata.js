@@ -2,6 +2,7 @@
 
 const Emitter = require("events");
 
+/* istanbul ignore next */
 let list = function() {
   /* istanbul ignore next */
   return Promise.resolve([]);
