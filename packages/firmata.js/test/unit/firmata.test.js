@@ -726,7 +726,7 @@ describe("Board: lifecycle", function() {
 
       const args = board.transport.write.lastCall.args;
 
-      assert.ok(args[0].equals(Buffer([1, 2, 3, 4])));
+      assert.ok(args[0].equals(Buffer.from([1, 2, 3, 4])));
 
       args[1]();
       assert.equal(board.pending, 0);
@@ -1174,17 +1174,17 @@ describe("Board: lifecycle", function() {
 
     // Valid sampling interval
     board.setSamplingInterval(20);
-    assert.ok(new Buffer([0xf0, 0x7a, 0x14, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(Buffer.from([0xf0, 0x7a, 0x14, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
 
     // Invalid sampling interval is constrained to a valid interval
     // > 65535 => 65535
     board.setSamplingInterval(65540);
-    assert.ok(new Buffer([0xf0, 0x7a, 0x7f, 0x7f, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(Buffer.from([0xf0, 0x7a, 0x7f, 0x7f, 0xf7]).equals(spy.lastCall.args[0]));
 
     // Invalid sampling interval is constrained to a valid interval
     // < 10 => 10
     board.setSamplingInterval(0);
-    assert.ok(new Buffer([0xf0, 0x7a, 0x0a, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
+    assert.ok(Buffer.from([0xf0, 0x7a, 0x0a, 0x00, 0xf7]).equals(spy.lastCall.args[0]));
 
     spy.restore();
     done();
@@ -1702,7 +1702,7 @@ describe("Board: lifecycle", function() {
 
 
   it("must be able to send a string", done => {
-    const bytes = new Buffer("test string", "utf8");
+    const bytes = Buffer.from("test string", "utf8");
     const length = bytes.length;
     board.sendString(bytes);
     assert.equal(transport.lastWrite[0], START_SYSEX);
@@ -1723,7 +1723,7 @@ describe("Board: lifecycle", function() {
     });
     transport.emit("data", [START_SYSEX]);
     transport.emit("data", [STRING_DATA]);
-    const bytes = new Buffer("test string", "utf8");
+    const bytes = Buffer.from("test string", "utf8");
     Array.prototype.forEach.call(bytes, (value, index) => {
       transport.emit("data", [value]);
     });
