@@ -12,8 +12,12 @@ node_js:
 before_install:
   - npm install -g grunt-cli
 
-install: npm install
-script: grunt test
+install:
+  - npm install
+  - lerna bootstrap
+
+script:
+  - grunt test
 
 after_success:
   - npm run coveralls
