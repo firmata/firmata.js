@@ -453,7 +453,7 @@ let Transport = null;
  * @property {SerialPort} sp The serial port object used to communicate with the arduino.
  */
 
-class Board extends Emitter {
+class Firmata extends Emitter {
   constructor(port, options, callback) {
     super();
 
@@ -1686,8 +1686,8 @@ class Board extends Emitter {
       PING_READ,
       pin,
       value,
-      ...Board.encode(pulseOutArray),
-      ...Board.encode(timeoutArray),
+      ...Firmata.encode(pulseOutArray),
+      ...Firmata.encode(timeoutArray),
       END_SYSEX,
     ]);
 
@@ -2243,7 +2243,7 @@ class Board extends Emitter {
    *                             called with an array of _raw_ data from the slave. Data
    *                             decoding must be done within the handler itself.
    *
-   *                             Use Board.decode(data) to extract useful values from
+   *                             Use Firmata.decode(data) to extract useful values from
    *                             the incoming response data.
    *
    *  @param {function} handler Function which handles receipt of responses matching
@@ -2251,11 +2251,11 @@ class Board extends Emitter {
    */
 
   sysexResponse(commandByte, handler) {
-    if (Board.SYSEX_RESPONSE[commandByte]) {
+    if (Firmata.SYSEX_RESPONSE[commandByte]) {
       throw new Error(`${commandByte} is not an available SYSEX_RESPONSE byte`);
     }
 
-    Board.SYSEX_RESPONSE[commandByte] = board => handler.call(board, board.buffer.slice(2, -1));
+    Firmata.SYSEX_RESPONSE[commandByte] = board => handler.call(board, board.buffer.slice(2, -1));
 
     return this;
   }
@@ -2269,8 +2269,8 @@ class Board extends Emitter {
 
   clearSysexResponse(commandByte) {
     /* istanbul ignore else */
-    if (Board.SYSEX_RESPONSE[commandByte]) {
-      delete Board.SYSEX_RESPONSE[commandByte];
+    if (Firmata.SYSEX_RESPONSE[commandByte]) {
+      delete Firmata.SYSEX_RESPONSE[commandByte];
     }
   }
 
@@ -2304,7 +2304,7 @@ class Board extends Emitter {
   }
 
   /**
-   * Board.isAcceptablePort Determines if a `port` object (from SerialPort.list(...))
+   * Firmata.isAcceptablePort Determines if a `port` object (from SerialPort.list(...))
    * is a valid Arduino (or similar) device.
    * @return {Boolean} true if port can be connected to by Firmata
    */
@@ -2320,13 +2320,13 @@ class Board extends Emitter {
   }
 
   /**
-   * Board.requestPort(callback) Request an acceptable port to connect to.
+   * Firmata.requestPort(callback) Request an acceptable port to connect to.
    * callback(error, port)
    */
 
   static requestPort(callback) {
     Transport.list(function(error, ports) {
-      const port = ports.find(port => Board.isAcceptablePort(port) && port);
+      const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
 
       if (port) {
         callback(null, port);
@@ -2357,7 +2357,7 @@ class Board extends Emitter {
     const decoded = [];
 
     if (data.length % 2 !== 0) {
-      throw new Error("Board.decode(data) called with odd number of data bytes");
+      throw new Error("Firmata.decode(data) called with odd number of data bytes");
     }
 
     while (data.length) {
@@ -2373,12 +2373,12 @@ class Board extends Emitter {
 }
 
 // Prototype Compatibility Aliases
-Board.prototype.analogWrite = Board.prototype.pwmWrite;
+Firmata.prototype.analogWrite = Firmata.prototype.pwmWrite;
 
 // Static Compatibility Aliases
-Board.Board = Board;
-Board.SYSEX_RESPONSE = SYSEX_RESPONSE;
-Board.MIDI_RESPONSE = MIDI_RESPONSE;
+Firmata.Board = Firmata;
+Firmata.SYSEX_RESPONSE = SYSEX_RESPONSE;
+Firmata.MIDI_RESPONSE = MIDI_RESPONSE;
 
 // The following are used internally.
 
@@ -2521,7 +2521,7 @@ function decodeCustomFloat(input) {
 
 /* istanbul ignore else */
 if (process.env.IS_TEST_MODE) {
-  Board.test = {
+  Firmata.test = {
     i2cPeripheralSettings(board) {
       return i2cActive.get(board);
     },
@@ -2536,7 +2536,11 @@ if (process.env.IS_TEST_MODE) {
   };
 }
 
-module.exports = function(transport) {
+const bindTransport = function(transport) {
   Transport = transport;
-  return Board;
+  return Firmata;
 };
+
+bindTransport.Firmata = Firmata;
+
+module.exports = bindTransport;

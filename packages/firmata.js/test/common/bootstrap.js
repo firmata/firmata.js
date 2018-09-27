@@ -17,8 +17,6 @@ global.Encoder7Bit = require("../../../../packages/firmata-io/lib/encoder7bit");
 global.OneWire = require("../../../../packages/firmata-io/lib/onewireutils");
 global.com = require("../../lib/com");
 
-
-// global.firmata = require("../../../../packages/firmata-io/lib/firmata")(global.com.Serialport);
 global.firmata = require("../../lib/firmata");
 
 // Fixtures
