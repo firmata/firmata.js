@@ -2325,6 +2325,11 @@ class Firmata extends Emitter {
    */
 
   static requestPort(callback) {
+    if (!Transport || !Transport.list) {
+      process.nextTick(() => {
+        callback(new Error("No Transport provided"), null);
+      });
+    }
     Transport.list(function(error, ports) {
       const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
 
@@ -2368,8 +2373,6 @@ class Firmata extends Emitter {
 
     return decoded;
   }
-
-
 }
 
 // Prototype Compatibility Aliases

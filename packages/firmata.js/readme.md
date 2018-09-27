@@ -35,8 +35,8 @@ If you run *firmata* from the command line it will prompt you for the serial por
 #### With a path string: 
 
 ```js
-const Board = require("firmata");
-const board = new Board("system path or name");
+const Firmata = require("firmata");
+const board = new Firmata("system path or name");
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -47,8 +47,8 @@ board.on("ready", () => {
 
 ```js
 const Serialport = require("serialport");
-const Board = require("firmata");
-const board = new Board(new Serialport(...));
+const Firmata = require("firmata");
+const board = new Firmata(new Serialport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -62,8 +62,8 @@ board.on("ready", () => {
 
 ```js
 const Etherport = require("etherport");
-const Board = require("firmata");
-const board = new Board(new Etherport(...));
+const Firmata = require("firmata");
+const board = new Firmata(new Etherport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -73,8 +73,8 @@ board.on("ready", () => {
 ### Using the `readyCallback`:
 
 ```js
-const Board = require("firmata");
-const board = new Board("system path or name", () => {
+const Firmata = require("firmata");
+const board = new Firmata("system path or name", () => {
   // Arduino is ready to communicate
 });
 ```
@@ -83,8 +83,8 @@ const board = new Board("system path or name", () => {
 
 ```js
 const Serialport = require("serialport");
-const Board = require("firmata");
-const board = new Board(new Serialport(...), () => {
+const Firmata = require("firmata");
+const board = new Firmata(new Serialport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -93,8 +93,8 @@ const board = new Board(new Serialport(...), () => {
 
 ```js
 const Etherport = require("etherport");
-const Board = require("firmata");
-const board = new Board(new Etherport(...), () => {
+const Firmata = require("firmata");
+const board = new Firmata(new Etherport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -103,12 +103,12 @@ const board = new Board(new Etherport(...), () => {
 **Any object can be a `Transport` object, as long as it emits an "open" event and a "data" event, which match the semantics of a `Serialport` object.**
 
 
-# `Board`
+# `Firmata`
 
-The `Board` constructor creates an instance that represents a physical board. 
+The `Firmata` constructor creates an instance that represents a physical board. 
 
-- `new Board(path[, options][, readyCallback])` 
-- `new Board(port[, options][, readyCallback])` 
+- `new Firmata(path[, options][, readyCallback])` 
+- `new Firmata(port[, options][, readyCallback])` 
 
   | Parameter | Type   | Description | Default  | Required |
   |-----------|------- |------------ |--------- |----------|
@@ -120,13 +120,13 @@ The `Board` constructor creates an instance that represents a physical board.
   \* _**Either**_ a **path** or a **port** are required.
 
   - Notes: 
-    - `new Board(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
-      + `new Board("/dev/usb.whatever")`
-      + `new Board("/dev/ttyACM0")`
-      + `new Board("COM1")`
-    - `new Board(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
-      + `new Board(new Serialport(...))` 
-      + `new Board(new Etherport(...))`
+    - `new Firmata(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
+      + `new Firmata("/dev/usb.whatever")`
+      + `new Firmata("/dev/ttyACM0")`
+      + `new Firmata("COM1")`
+    - `new Firmata(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
+      + `new Firmata(new Serialport(...))` 
+      + `new Firmata(new Etherport(...))`
 
 - Options<a name="board-options"></a>
 
@@ -143,7 +143,7 @@ The `Board` constructor creates an instance that represents a physical board.
 
 
 
-  ## Board Instance
+  ## Firmata Instance
 
 - `board.MODES`
   This is an enumeration of the different modes available. These are used in calls to the *pinMode* function.
@@ -180,7 +180,7 @@ The `Board` constructor creates an instance that represents a physical board.
   {
     mode: Number,  // Current mode of pin which is on the the board.MODES.
     value: Number, // Current value of the pin. when pin is digital and set to output it will be
-                   // Board.HIGH or Board.LOW. If the pin is an analog pin it will be an numeric
+                   // Firmata.HIGH or Firmata.LOW. If the pin is an analog pin it will be an numeric
                    // value between 0 and 1023.
     supportedModes: [ ...Number ], // Array of modes from board.MODES that are supported on this pin.
     analogChannel: Number, // Will be 127 for digital pins and the pin number for analog pins.
@@ -191,7 +191,7 @@ The `Board` constructor creates an instance that represents a physical board.
 
   This array holds all pins digital and analog. To get the analog pin number as seen on the arduino board use the analogChannel attribute.
 
-- `analogPins`
+- `board.analogPins`
 
   This is an array of all the array indexes of the analog pins in the `board.pins` array. For example to get the analog pin 5 from the `board.pins` attributes use:
 
@@ -199,23 +199,23 @@ The `Board` constructor creates an instance that represents a physical board.
   board.pins[board.analogPins[5]];`
   ```
 
-## Board Prototype API
+## Firmata Prototype API
 
 ### Pin
 
-- `pinMode(pin,mode)`
+- `board.pinMode(pin,mode)`
 
-  Set a mode for a pin. pin is the number of the pin and the mode is on of the Board.MODES values. All digital pins are set to board.MODES.OUTPUT by default (because this is what the Firmata firmware running on the board defaults to) and all analog pins are set to board.MODES.ANALOG (analog input) by default.
+  Set a mode for a pin. pin is the number of the pin and the mode is on of the Firmata.MODES values. All digital pins are set to board.MODES.OUTPUT by default (because this is what the Firmata firmware running on the board defaults to) and all analog pins are set to board.MODES.ANALOG (analog input) by default.
 
-- `digitalWrite(pin,value,enqueue)`
+- `board.digitalWrite(pin,value,enqueue)`
 
   Write an output to a digital pin. pin is the number of the pin and the value is either board.HIGH or board.LOW. enqueue is optional and when true will update the local pin value but will not write the data until `writeQueuedDigitalPorts()` is called.
 
-- `writeQueuedDigitalPorts()`
+- `board.writeQueuedDigitalPorts()`
 
   Directs firmata to update all ports whose values have been changed via digitalWrite with the `enqueue` parameter set to true.
 
-- `digitalRead(pin,callback)`
+- `board.digitalRead(pin,callback)`
 
   Register to get the digital value (board.HIGH or board.LOW). The value is reported via the callback whenever it changes. To get the locally stored value at any other time you can use `board.pins[pinNumber].value`.
 
@@ -231,11 +231,11 @@ The `Board` constructor creates an instance that represents a physical board.
 
   *Note if you are familiar with the use of digitalRead when writing an Arduino sketch, the firmata.js implementation of digitalRead is very different in that it's reporting-based rather than immediately returning a value as in an Arduino sketch.*
 
-- `analogWrite(pin,value)`
+- `board.analogWrite(pin,value)`
 
   Write an output to an analog pin (PWM). pin is the number of the pin and the value is between 0 and 255.
 
-- `analogRead(pin,callback)`
+- `board.analogRead(pin,callback)`
 
   Register to get the analog value (0 - 1023) of the pin. The value is reported via the callback at the current sampling interval. The sampling interval is 19 milliseconds by default so the analog value is reported every 19 ms unless the sampling interval is changed. See documentation for `board.setSamplingInterval` below. To get the locally stored value at any other time you can use `board.pins[board.analogPins[analogPinNumber]].value`, but the value will only be as fresh as the most recent report via the sampling interval.
 
@@ -251,39 +251,40 @@ The `Board` constructor creates an instance that represents a physical board.
 
   *Note if you are familiar with the use of analogRead when writing an Arduino sketch, the firmata.js implementation of analogRead is very different in that it's reporting-based rather than immediately returning a value as in an Arduino sketch.*
 
-- `setSamplingInterval(interval)`
+- `board.setSamplingInterval(interval)`
 
   Set the sampling interval in milliseconds. Default is 19 ms. Minimum is 10 ms, max is 65535 ms. The sampling interval controls how often analog values are reported when using `board.analogRead` and how often i2c device values are reported when using `board.i2cRead`. The same sampling interval is used for both analog and i2c value reporting.
 
-  You can alternatively set the sampling interval when creating a new Board instance:
+  You can alternatively set the sampling interval when creating a new Firmata instance:
 
   ```js
   // set sampling interval to 30 milliseconds
-  const board = new Board(serialPortName, {samplingInterval: 30});
+  const board = new Firmata(serialPortName, {samplingInterval: 30});
   ```
 
 
-- `getSamplingInterval()`
+- `board.getSamplingInterval()`
 
   Get the current sampling interval value in milliseconds.
 
 ### Servo
 
-- `servoWrite(pin, degree)`
+- `board.servoWrite(pin, degree)`
+- `board.servoWrite(pin, pulse)`
 
   Write a degree value to a servo pin.
 
-- `servoConfig(pin, min, max)`
+- `board.servoConfig(pin, min, max)`
 
   Setup a servo with a specific min and max pulse (call instead of `pinMode`, which will provide default).
 
 ### I2C
 
-- `i2cConfig(delay)`
+- `board.i2cConfig(delay)`
 
   Configure and enable I2C, optionally provide a value in μs to delay between reads (defaults to `0`). Required to enable I2C communication.
 
-- `i2cConfig(options)`
+- `board.i2cConfig(options)`
 
   Configure and enable I2C, optionally provide an object that contains properties to use for  whose value is a number in μs to delay between reads. Required to enable I2C communication.
 
@@ -299,83 +300,83 @@ The `Board` constructor creates an instance that represents a physical board.
   | stopTX  | Stop transmission after setting a register to read from. Setting to `false` will keep the transmission connection active. An example of the `false` behavior is the [MMA8452](https://github.com/sparkfun/MMA8452_Accelerometer/blob/master/Libraries/Arduino/src/SparkFun_MMA8452Q.cpp#L242-L270) | true | No |
 
 
-- `i2cWrite(address, [...bytes])`
+- `board.i2cWrite(address, [...bytes])`
 
   Write an arbitrary number of bytes. May not exceed 64 Bytes.
 
-- `i2cWrite(address, register, [...bytes])`
+- `board.i2cWrite(address, register, [...bytes])`
 
   Write an arbitrary number of bytes to the specified register. May not exceed 64 Bytes.
 
-- `i2cWriteReg(address, register, byte)`
+- `board.i2cWriteReg(address, register, byte)`
 
   Write a byte value to a specific register.
 
-- `i2cRead(address, numberOfBytesToRead, handler(data))`
+- `board.i2cRead(address, numberOfBytesToRead, handler(data))`
 
   Read a specified number of bytes, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes.
 
-- `i2cRead(address, register, numberOfBytesToRead, handler(data))`
+- `board.i2cRead(address, register, numberOfBytesToRead, handler(data))`
 
   Read a specified number of bytes from a register, continuously. `handler` receives an array of values, with a length corresponding to the number of read bytes.
 
-- `i2cReadOnce(address, numberOfBytesToRead, handler(data))`
+- `board.i2cReadOnce(address, numberOfBytesToRead, handler(data))`
 
   Read a specified number of bytes, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes.
 
-- `i2cReadOnce(address, register, numberOfBytesToRead, handler(data))`
+- `board.i2cReadOnce(address, register, numberOfBytesToRead, handler(data))`
 
   Read a specified number of bytes from a register, one time. `handler` receives an array of values, with a length corresponding to the number of read bytes.
 
-- `sendI2CConfig(delay)` **Deprecated**
+- `board.sendI2CConfig(delay)` **Deprecated**
 
   Set I2C Config on the arduino
 
-- `sendI2CWriteRequest(slaveAddress, [bytes])` **Deprecated**
+- `board.sendI2CWriteRequest(slaveAddress, [bytes])` **Deprecated**
 
   Write an array of bytes to a an I2C device.
 
-- `sendI2CReadRequest(slaveAddress, numBytes, function(data))` **Deprecated**
+- `board.sendI2CReadRequest(slaveAddress, numBytes, function(data))` **Deprecated**
 
   Requests a number of bytes from a slave I2C device. When the bytes are received from the I2C device the callback is called with the byte array.
 
 ### Debug
 
-- `sendString("a string")`
+- `board.sendString("a string")`
 
   Send an arbitrary string.
 
 ### One-Wire
 
-- `sendOneWireConfig(pin, enableParasiticPower)`
+- `board.sendOneWireConfig(pin, enableParasiticPower)`
 
   Configure the pin as the controller in a 1-wire bus. Set `enableParasiticPower` to `true` if you want the data pin to power the bus.
 
-- `sendOneWireSearch(pin, callback)`
+- `board.sendOneWireSearch(pin, callback)`
 
   Searches for 1-wire devices on the bus. The callback should accept an error argument and an array of device identifiers.
 
-- `sendOneWireAlarmsSearch(pin, callback)`
+- `board.sendOneWireAlarmsSearch(pin, callback)`
 
   Searches for 1-wire devices on the bus in an alarmed state. The callback should accept and error argument and an array of device identifiers.
 
-- `sendOneWireRead(pin, device, numBytesToRead, callback)`
+- `board.sendOneWireRead(pin, device, numBytesToRead, callback)`
 
   Reads data from a device on the bus and invokes the callback.
 
-- `sendOneWireReset()`
+- `board.sendOneWireReset()`
 
   Resets all devices on the bus.
 
-- `sendOneWireWrite(pin, device, data)`
+- `board.sendOneWireWrite(pin, device, data)`
 
   Writes data to the bus to be received by the device. The device should be obtained from a previous call to `sendOneWireSearch`.
 
-- `sendOneWireDelay(pin, delay)`
+- `board.sendOneWireDelay(pin, delay)`
 
   Tells Firmata to not do anything for the amount of ms. Use when you need to give a device attached to the bus time to do a calculation.
 
-- `sendOneWireWriteAndRead(pin, device, data, numBytesToRead, callback)`
+- `board.sendOneWireWriteAndRead(pin, device, data, numBytesToRead, callback)`
 
   Sends the `data` to the `device` on the bus, reads the specified number of bytes and invokes the `callback`.
 
@@ -404,7 +405,7 @@ The `Board` constructor creates an instance that represents a physical board.
   Configure a hardware or serial port -- required before using serial read/write functions
 
   ```
-  options = {
+  {
     portId: board.SERIAL_PORT_IDs.HW_SERIAL1, // <number> The serial port to use (HW_SERIAL2, SW_SERIAL0, SW_SERIAL1...)
     baud:   115200, // <number> (optional) The baud rate of the serial port; default is 57600
     rxPin:  5,      // <number> (optional)[SW Serial only] The RX pin of the SoftwareSerial instance
@@ -484,12 +485,12 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
   
-  - `board.accelStepperConfig(opts)`
+  - `board.accelStepperConfig(options)`
 
   Configure a stepper motor
 
     ```
-    opts = {
+    {
       deviceNum: 0, // <number> Device number for the stepper (range 0-9)
       type: board.STEPPER.TYPE.DRIVER, // <number> (optional) Type of stepper or controller; default is FOUR_WIRE
       stepSize: board.STEPPER.STEP_SIZE.HALF, // <number> (optional) Size of step; default is WHOLE
@@ -519,39 +520,39 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
     1. Invert motor pins 1, 2 & enablePin = 0b11001 = 25
 
 
-- `board.prototype.accelStepperZero(deviceNum)`
+- `board.accelStepperZero(deviceNum)`
 
   Set the current stepper position to zero
 
-- `Board.prototype.accelStepperStep(deviceNum, steps, callback)`
+- `board.accelStepperStep(deviceNum, steps, callback)`
 
   Move the stepper motor by a number of steps. Optional callback will be called when motor has finished moving or stop is called
 
-- `Board.prototype.accelStepperTo(deviceNum, position, callback)`
+- `board.accelStepperTo(deviceNum, position, callback)`
 
   Move the stepper motor to a specified position. Optional callback will be called when motor has finished moving or stop is called
 
-- `Board.prototype.accelStepperEnable(deviceNum, enabled)`
+- `board.accelStepperEnable(deviceNum, enabled)`
 
   If enabled param is set to false, stepper will be disabled, otherwise stepper will be enabled
 
-- `Board.prototype.accelStepperStop(deviceNum)`
+- `board.accelStepperStop(deviceNum)`
 
   Stop the stepper motor. Triggers a stepper-done event
 
-- `Board.prototype.accelStepperReportPosition(deviceNum)`
+- `board.accelStepperReportPosition(deviceNum)`
 
   Request the current position of the stepper. Triggers a `"stepper-position"` event.
 
-- `Board.prototype.accelStepperSpeed(deviceNum, speed)`
+- `board.accelStepperSpeed(deviceNum, speed)`
 
   Set the speed of the stepper in steps per second
 
-- `Board.prototype.accelStepperAcceleration(deviceNum, acceleration)`
+- `board.accelStepperAcceleration(deviceNum, acceleration)`
 
   Set the acceleration and deceleration for the stepper in steps / sec^2
 
-- `Board.prototype.multiStepperConfig(opts)`
+- `board.multiStepperConfig(opts)`
   
   Configure a multStepper group. multiStepper groups allow you to pass an array of targeted positions and have all the steppers move to their targets and arrive at the same time. Note that acceleration cannot be used when moving a multiStepper group.
 
@@ -562,11 +563,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
 
-- `Board.prototype.multiStepperTo(groupNum, positions, callback)`
+- `board.multiStepperTo(groupNum, positions, callback)`
 
   Move a goup of steppers to and array of desired positions. Optional callback will be called when group has finished moving or multiStepperStop is called
 
-- `Board.prototype.multiStepperStop(groupNum)`
+- `board.multiStepperStop(groupNum)`
 
   Stop a group of stepper motors. Triggers a multi-stepper-done event
 
@@ -576,13 +577,13 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
   Allow user code to handle arbitrary sysex responses. `commandByte` must be associated with some message that's expected from the slave device. The `handler` is called with an array of _raw_ data from the slave. Data decoding must be done within the handler itself.
 
-  - Use `Board.decode(data)` to extract useful values from the incoming response data.
+  - Use `Firmata.decode(data)` to extract useful values from the incoming response data.
 
 - `board.sysexCommand(message)`
 
   Allow user code to send arbitrary sysex messages. The `message` array is expected to be all necessary bytes between `START_SYSEX` and `END_SYSEX` (non-inclusive). It will be assumed that the data in the message array is already encoded as 2 7-bit bytes LSB first.
 
-  - Use `Board.encode(data)` to encode data values into an array of 7-bit byte pairs.
+  - Use `Firmata.encode(data)` to encode data values into an array of 7-bit byte pairs.
 
 - `board.clearSysexResponse(commandByte)`
 
@@ -591,11 +592,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
 ### Encode/Decode
 
-- `Board.encode(data)`
+- `Firmata.encode(data)`
 
   Encode an array of 8-bit data values as an array of two 7-bit byte pairs (each). (LSB first).
 
-- `Board.decode(data)`
+- `Firmata.decode(data)`
 
   Decode an array of 7-bit byte pairs into a an array of 8-bit data values. (LSB first)
 
@@ -605,6 +606,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 (The MIT License)
 
 Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>
+Copyright (c) 2015-2018 The Firmata.js Authors (see AUTHORS.md)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
