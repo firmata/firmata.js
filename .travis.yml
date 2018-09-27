@@ -14,7 +14,6 @@ before_install:
 
 install:
   - npm install
-  - lerna bootstrap
 
 script:
   - grunt test

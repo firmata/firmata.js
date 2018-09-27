@@ -30,6 +30,7 @@
   "scripts": {
     "test": "grunt",
     "test-cover": "nyc grunt test",
-    "coveralls": "nyc --reporter=lcov grunt test && cat ./coverage/lcov.info | coveralls"
+    "coveralls": "nyc --reporter=lcov grunt test && cat ./coverage/lcov.info | coveralls",
+    "postinstall": "lerna bootstrap --no-ci"
   }
 }
