@@ -16,7 +16,7 @@
   "devDependencies": {},
   "dependencies": {
     "browser-serialport": "latest",
-    "serialport": "~6.0.4",
+    "serialport": "^7.0.0",
     "firmata-io": "^2.0.0"
   },
   "scripts": {
