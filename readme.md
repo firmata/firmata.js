@@ -24,6 +24,11 @@ npm install -g firmata
 ```
 
 
+# Examples
+
+Take a look at [the examples directory](https://github.com/firmata/firmata.js/tree/monorepo/packages/firmata.js/examples) of [Firmata.js](https://github.com/firmata/firmata.js/tree/monorepo/packages/firmata.js/readme.md).
+
+
 # REPL
 
 If you run *firmata* from the command line it will prompt you for the serial port. Then it will present you with a REPL with a board variable available.
@@ -35,8 +40,8 @@ If you run *firmata* from the command line it will prompt you for the serial por
 #### With a path string: 
 
 ```js
-const Board = require("firmata");
-const board = new Board("system path or name");
+const Firmata = require("firmata");
+const board = new Firmata("system path or name");
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -47,8 +52,8 @@ board.on("ready", () => {
 
 ```js
 const Serialport = require("serialport");
-const Board = require("firmata");
-const board = new Board(new Serialport(...));
+const Firmata = require("firmata");
+const board = new Firmata(new Serialport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -62,8 +67,8 @@ board.on("ready", () => {
 
 ```js
 const Etherport = require("etherport");
-const Board = require("firmata");
-const board = new Board(new Etherport(...));
+const Firmata = require("firmata");
+const board = new Firmata(new Etherport(...));
 
 board.on("ready", () => {
   // Arduino is ready to communicate
@@ -73,8 +78,8 @@ board.on("ready", () => {
 ### Using the `readyCallback`:
 
 ```js
-const Board = require("firmata");
-const board = new Board("system path or name", () => {
+const Firmata = require("firmata");
+const board = new Firmata("system path or name", () => {
   // Arduino is ready to communicate
 });
 ```
@@ -83,8 +88,8 @@ const board = new Board("system path or name", () => {
 
 ```js
 const Serialport = require("serialport");
-const Board = require("firmata");
-const board = new Board(new Serialport(...), () => {
+const Firmata = require("firmata");
+const board = new Firmata(new Serialport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -93,8 +98,8 @@ const board = new Board(new Serialport(...), () => {
 
 ```js
 const Etherport = require("etherport");
-const Board = require("firmata");
-const board = new Board(new Etherport(...), () => {
+const Firmata = require("firmata");
+const board = new Firmata(new Etherport(...), () => {
   // Arduino is ready to communicate
 });
 ```
@@ -103,12 +108,12 @@ const board = new Board(new Etherport(...), () => {
 **Any object can be a `Transport` object, as long as it emits an "open" event and a "data" event, which match the semantics of a `Serialport` object.**
 
 
-# `Board`
+# `Firmata`
 
-The `Board` constructor creates an instance that represents a physical board. 
+The `Firmata` constructor creates an instance that represents a physical board. 
 
-- `new Board(path[, options][, readyCallback])` 
-- `new Board(port[, options][, readyCallback])` 
+- `new Firmata(path[, options][, readyCallback])` 
+- `new Firmata(port[, options][, readyCallback])` 
 
   | Parameter | Type   | Description | Default  | Required |
   |-----------|------- |------------ |--------- |----------|
@@ -120,13 +125,13 @@ The `Board` constructor creates an instance that represents a physical board.
   \* _**Either**_ a **path** or a **port** are required.
 
   - Notes: 
-    - `new Board(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
-      + `new Board("/dev/usb.whatever")`
-      + `new Board("/dev/ttyACM0")`
-      + `new Board("COM1")`
-    - `new Board(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
-      + `new Board(new Serialport(...))` 
-      + `new Board(new Etherport(...))`
+    - `new Firmata(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
+      + `new Firmata("/dev/usb.whatever")`
+      + `new Firmata("/dev/ttyACM0")`
+      + `new Firmata("COM1")`
+    - `new Firmata(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
+      + `new Firmata(new Serialport(...))` 
+      + `new Firmata(new Etherport(...))`
 
 - Options<a name="board-options"></a>
 
@@ -143,7 +148,7 @@ The `Board` constructor creates an instance that represents a physical board.
 
 
 
-  ## Board Instance
+  ## Firmata Instance
 
 - `board.MODES`
   This is an enumeration of the different modes available. These are used in calls to the *pinMode* function.
@@ -180,7 +185,7 @@ The `Board` constructor creates an instance that represents a physical board.
   {
     mode: Number,  // Current mode of pin which is on the the board.MODES.
     value: Number, // Current value of the pin. when pin is digital and set to output it will be
-                   // Board.HIGH or Board.LOW. If the pin is an analog pin it will be an numeric
+                   // Firmata.HIGH or Firmata.LOW. If the pin is an analog pin it will be an numeric
                    // value between 0 and 1023.
     supportedModes: [ ...Number ], // Array of modes from board.MODES that are supported on this pin.
     analogChannel: Number, // Will be 127 for digital pins and the pin number for analog pins.
@@ -199,13 +204,13 @@ The `Board` constructor creates an instance that represents a physical board.
   board.pins[board.analogPins[5]];`
   ```
 
-## Board Prototype API
+## Firmata Prototype API
 
 ### Pin
 
 - `pinMode(pin,mode)`
 
-  Set a mode for a pin. pin is the number of the pin and the mode is on of the Board.MODES values. All digital pins are set to board.MODES.OUTPUT by default (because this is what the Firmata firmware running on the board defaults to) and all analog pins are set to board.MODES.ANALOG (analog input) by default.
+  Set a mode for a pin. pin is the number of the pin and the mode is on of the Firmata.MODES values. All digital pins are set to board.MODES.OUTPUT by default (because this is what the Firmata firmware running on the board defaults to) and all analog pins are set to board.MODES.ANALOG (analog input) by default.
 
 - `digitalWrite(pin,value,enqueue)`
 
@@ -255,11 +260,11 @@ The `Board` constructor creates an instance that represents a physical board.
 
   Set the sampling interval in milliseconds. Default is 19 ms. Minimum is 10 ms, max is 65535 ms. The sampling interval controls how often analog values are reported when using `board.analogRead` and how often i2c device values are reported when using `board.i2cRead`. The same sampling interval is used for both analog and i2c value reporting.
 
-  You can alternatively set the sampling interval when creating a new Board instance:
+  You can alternatively set the sampling interval when creating a new Firmata instance:
 
   ```js
   // set sampling interval to 30 milliseconds
-  const board = new Board(serialPortName, {samplingInterval: 30});
+  const board = new Firmata(serialPortName, {samplingInterval: 30});
   ```
 
 
@@ -523,35 +528,35 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
   Set the current stepper position to zero
 
-- `Board.prototype.accelStepperStep(deviceNum, steps, callback)`
+- `Firmata.prototype.accelStepperStep(deviceNum, steps, callback)`
 
   Move the stepper motor by a number of steps. Optional callback will be called when motor has finished moving or stop is called
 
-- `Board.prototype.accelStepperTo(deviceNum, position, callback)`
+- `Firmata.prototype.accelStepperTo(deviceNum, position, callback)`
 
   Move the stepper motor to a specified position. Optional callback will be called when motor has finished moving or stop is called
 
-- `Board.prototype.accelStepperEnable(deviceNum, enabled)`
+- `Firmata.prototype.accelStepperEnable(deviceNum, enabled)`
 
   If enabled param is set to false, stepper will be disabled, otherwise stepper will be enabled
 
-- `Board.prototype.accelStepperStop(deviceNum)`
+- `Firmata.prototype.accelStepperStop(deviceNum)`
 
   Stop the stepper motor. Triggers a stepper-done event
 
-- `Board.prototype.accelStepperReportPosition(deviceNum)`
+- `Firmata.prototype.accelStepperReportPosition(deviceNum)`
 
   Request the current position of the stepper. Triggers a `"stepper-position"` event.
 
-- `Board.prototype.accelStepperSpeed(deviceNum, speed)`
+- `Firmata.prototype.accelStepperSpeed(deviceNum, speed)`
 
   Set the speed of the stepper in steps per second
 
-- `Board.prototype.accelStepperAcceleration(deviceNum, acceleration)`
+- `Firmata.prototype.accelStepperAcceleration(deviceNum, acceleration)`
 
   Set the acceleration and deceleration for the stepper in steps / sec^2
 
-- `Board.prototype.multiStepperConfig(opts)`
+- `Firmata.prototype.multiStepperConfig(opts)`
   
   Configure a multStepper group. multiStepper groups allow you to pass an array of targeted positions and have all the steppers move to their targets and arrive at the same time. Note that acceleration cannot be used when moving a multiStepper group.
 
@@ -562,11 +567,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
 
-- `Board.prototype.multiStepperTo(groupNum, positions, callback)`
+- `Firmata.prototype.multiStepperTo(groupNum, positions, callback)`
 
   Move a goup of steppers to and array of desired positions. Optional callback will be called when group has finished moving or multiStepperStop is called
 
-- `Board.prototype.multiStepperStop(groupNum)`
+- `Firmata.prototype.multiStepperStop(groupNum)`
 
   Stop a group of stepper motors. Triggers a multi-stepper-done event
 
@@ -576,13 +581,13 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
   Allow user code to handle arbitrary sysex responses. `commandByte` must be associated with some message that's expected from the slave device. The `handler` is called with an array of _raw_ data from the slave. Data decoding must be done within the handler itself.
 
-  - Use `Board.decode(data)` to extract useful values from the incoming response data.
+  - Use `Firmata.decode(data)` to extract useful values from the incoming response data.
 
 - `board.sysexCommand(message)`
 
   Allow user code to send arbitrary sysex messages. The `message` array is expected to be all necessary bytes between `START_SYSEX` and `END_SYSEX` (non-inclusive). It will be assumed that the data in the message array is already encoded as 2 7-bit bytes LSB first.
 
-  - Use `Board.encode(data)` to encode data values into an array of 7-bit byte pairs.
+  - Use `Firmata.encode(data)` to encode data values into an array of 7-bit byte pairs.
 
 - `board.clearSysexResponse(commandByte)`
 
@@ -591,11 +596,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 
 ### Encode/Decode
 
-- `Board.encode(data)`
+- `Firmata.encode(data)`
 
   Encode an array of 8-bit data values as an array of two 7-bit byte pairs (each). (LSB first).
 
-- `Board.decode(data)`
+- `Firmata.decode(data)`
 
   Decode an array of 7-bit byte pairs into a an array of 8-bit data values. (LSB first)
 
