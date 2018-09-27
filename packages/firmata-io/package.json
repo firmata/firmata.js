@@ -10,9 +10,6 @@
     "url": "git://github.com/firmata/firmata.js.git"
   },
   "main": "lib/firmata",
-  "bin": {
-    "firmata": "./repl.js"
-  },
   "devDependencies": {},
   "dependencies": {}
 }
