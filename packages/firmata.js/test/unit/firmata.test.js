@@ -145,6 +145,26 @@ describe("Board.requestPort", () => {
     });
   });
 
+  it("produces an error when there is no Transfer.list method", done => {
+    com.list = null;
+
+    Board.requestPort((error, port) => {
+      assert.equal(port, null);
+      assert.equal(error.message, "No Transport provided");
+      done();
+    });
+  });
+
+  it("produces an error when there is no Transfer", done => {
+    Board.test.transport = null;
+
+    Board.requestPort((error, port) => {
+      assert.equal(port, null);
+      assert.equal(error.message, "No Transport provided");
+      Board.test.restoreTransport();
+      done();
+    });
+  });
 });
 
 

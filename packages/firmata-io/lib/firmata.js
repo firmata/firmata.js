@@ -1442,7 +1442,12 @@ class Firmata extends Emitter {
    */
 
   sendOneWireSearch(pin, callback) {
-    this._sendOneWireSearch(ONEWIRE_SEARCH_REQUEST, `1-wire-search-reply-${pin}`, pin, callback);
+    this._sendOneWireSearch(
+      ONEWIRE_SEARCH_REQUEST,
+      `1-wire-search-reply-${pin}`,
+      pin,
+      callback
+    );
   }
 
   /**
@@ -1453,7 +1458,12 @@ class Firmata extends Emitter {
    */
 
   sendOneWireAlarmsSearch(pin, callback) {
-    this._sendOneWireSearch(ONEWIRE_SEARCH_ALARMS_REQUEST, `1-wire-search-alarms-reply-${pin}`, pin, callback);
+    this._sendOneWireSearch(
+      ONEWIRE_SEARCH_ALARMS_REQUEST,
+      `1-wire-search-alarms-reply-${pin}`,
+      pin,
+      callback
+    );
   }
 
   _sendOneWireSearch(type, event, pin, callback) {
@@ -1486,10 +1496,20 @@ class Firmata extends Emitter {
       /* istanbul ignore next */
       callback(new Error("1-Wire device read timeout - are you running ConfigurableFirmata?"));
     }, 5000);
-    this._sendOneWireRequest(pin, ONEWIRE_READ_REQUEST_BIT, device, numBytesToRead, correlationId, null, null, `1-wire-read-reply-${correlationId}`, data => {
-      clearTimeout(timeout);
-      callback(null, data);
-    });
+    this._sendOneWireRequest(
+      pin,
+      ONEWIRE_READ_REQUEST_BIT,
+      device,
+      numBytesToRead,
+      correlationId,
+      null,
+      null,
+      `1-wire-read-reply-${correlationId}`,
+      data => {
+        clearTimeout(timeout);
+        callback(null, data);
+      }
+    );
   }
 
   /**
@@ -1498,7 +1518,10 @@ class Firmata extends Emitter {
    */
 
   sendOneWireReset(pin) {
-    this._sendOneWireRequest(pin, ONEWIRE_RESET_REQUEST_BIT);
+    this._sendOneWireRequest(
+      pin,
+      ONEWIRE_RESET_REQUEST_BIT
+    );
   }
 
   /**
@@ -1512,7 +1535,15 @@ class Firmata extends Emitter {
    */
 
   sendOneWireWrite(pin, device, data) {
-    this._sendOneWireRequest(pin, ONEWIRE_WRITE_REQUEST_BIT, device, null, null, null, Array.isArray(data) ? data : [data]);
+    this._sendOneWireRequest(
+      pin,
+      ONEWIRE_WRITE_REQUEST_BIT,
+      device,
+      null,
+      null,
+      null,
+      Array.isArray(data) ? data : [data]
+    );
   }
 
   /**
@@ -1522,7 +1553,14 @@ class Firmata extends Emitter {
    */
 
   sendOneWireDelay(pin, delay) {
-    this._sendOneWireRequest(pin, ONEWIRE_DELAY_REQUEST_BIT, null, null, null, delay);
+    this._sendOneWireRequest(
+      pin,
+      ONEWIRE_DELAY_REQUEST_BIT,
+      null,
+      null,
+      null,
+      delay
+    );
   }
 
   /**
@@ -1544,11 +1582,20 @@ class Firmata extends Emitter {
       /* istanbul ignore next */
       callback(new Error("1-Wire device read timeout - are you running ConfigurableFirmata?"));
     }, 5000);
-    this._sendOneWireRequest(pin, ONEWIRE_WRITE_REQUEST_BIT | ONEWIRE_READ_REQUEST_BIT, device, numBytesToRead, correlationId, null, Array.isArray(data) ? data : [data], `1-wire-read-reply-${correlationId}`, data => {
-      clearTimeout(timeout);
-
-      callback(null, data);
-    });
+    this._sendOneWireRequest(
+      pin,
+      ONEWIRE_WRITE_REQUEST_BIT | ONEWIRE_READ_REQUEST_BIT,
+      device,
+      numBytesToRead,
+      correlationId,
+      null,
+      Array.isArray(data) ? data : [data],
+      `1-wire-read-reply-${correlationId}`,
+      data => {
+        clearTimeout(timeout);
+        callback(null, data);
+      }
+    );
   }
 
   // see http://firmata.org/wiki/Proposals#OneWire_Proposal
@@ -1667,13 +1714,20 @@ class Firmata extends Emitter {
       throw new Error("Please upload PingFirmata to the board");
     }
 
-    const {pin, value, pulseOut = 0, timeout = 1000000} = options;
+    const {
+      pin,
+      value,
+      pulseOut = 0,
+      timeout = 1000000
+    } = options;
+
     const pulseOutArray = [
       (pulseOut >> 24) & 0xFF,
       (pulseOut >> 16) & 0xFF,
       (pulseOut >> 8) & 0XFF,
       (pulseOut & 0xFF),
     ];
+
     const timeoutArray = [
       (timeout >> 24) & 0xFF,
       (timeout >> 16) & 0xFF,
@@ -1745,7 +1799,15 @@ class Firmata extends Emitter {
 
     data.push(iface);
 
-    ["stepPin", "motorPin1", "directionPin", "motorPin2", "motorPin3", "motorPin4", "enablePin"].forEach(pin => {
+    [
+      "stepPin",
+      "motorPin1",
+      "directionPin",
+      "motorPin2",
+      "motorPin3",
+      "motorPin4",
+      "enablePin"
+    ].forEach(pin => {
       if (typeof options[pin] !== "undefined") {
         data.push(options[pin]);
       }
@@ -2325,23 +2387,22 @@ class Firmata extends Emitter {
    */
 
   static requestPort(callback) {
-    if (!Transport || !Transport.list) {
+    if (!Transport || (Transport && typeof Transport.list !== "function")) {
       process.nextTick(() => {
         callback(new Error("No Transport provided"), null);
       });
+    } else {
+      Transport.list((error, ports) => {
+        const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
+
+        if (port) {
+          callback(null, port);
+        } else {
+          callback(new Error("No Acceptable Port Found"), null);
+        }
+      });
     }
-    Transport.list(function(error, ports) {
-      const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
-
-      if (port) {
-        callback(null, port);
-      } else {
-        callback(new Error("No Acceptable Port Found"), null);
-      }
-    });
   }
-
-
 
   // Expose encode/decode for custom sysex messages
   static encode(data) {
@@ -2524,12 +2585,20 @@ function decodeCustomFloat(input) {
 
 /* istanbul ignore else */
 if (process.env.IS_TEST_MODE) {
+  let transport = null;
   Firmata.test = {
     i2cPeripheralSettings(board) {
       return i2cActive.get(board);
     },
     get i2cActive() {
       return i2cActive;
+    },
+    set transport(value) {
+      transport = Transport;
+      Transport = value;
+    },
+    restoreTransport() {
+      Transport = transport;
     },
     encode32BitSignedInteger,
     decode32BitSignedInteger,
