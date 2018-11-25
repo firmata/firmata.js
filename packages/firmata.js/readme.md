@@ -209,9 +209,9 @@ The `Firmata` constructor creates an instance that represents a physical board.
 
 - `board.digitalWrite(pin,value,enqueue)`
 
-  Write an output to a digital pin. pin is the number of the pin and the value is either board.HIGH or board.LOW. enqueue is optional and when true will update the local pin value but will not write the data until `writeQueuedDigitalPorts()` is called.
+  Write an output to a digital pin. pin is the number of the pin and the value is either board.HIGH or board.LOW. enqueue is optional and when true will update the local pin value but will not write the data until `flushDigitalPorts()` is called.
 
-- `board.writeQueuedDigitalPorts()`
+- `board.flushDigitalPorts()`
 
   Directs firmata to update all ports whose values have been changed via digitalWrite with the `enqueue` parameter set to true.
 
