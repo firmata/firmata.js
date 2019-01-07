@@ -16,12 +16,11 @@
   "devDependencies": {},
   "dependencies": {
     "browser-serialport": "latest",
-    "serialport": "^7.0.0",
-    "firmata-io": "^2.0.0"
+    "firmata-io": "^2.0.0",
+    "serialport": "^7.1.1"
   },
   "scripts": {
     "test": "grunt",
-    "attempt-timeout": "node examples/test-i2c-read.js && node examples/test-i2c-read.js && node examples/test-analog-read.js && node examples/test-analog-read.js && node examples/test-serial-read.js && node examples/test-serial-read.js",
     "test-cover": "nyc grunt test",
     "coveralls": "nyc --reporter=lcov grunt test && cat ./coverage/lcov.info | coveralls"
   },
