@@ -8,7 +8,7 @@ let list = function() {
   return Promise.resolve([]);
 };
 
-class SerialPort extends Emitter {
+class Stub extends Emitter {
   constructor(path/*, options, openCallback*/) {
     super();
     this.isOpen = true;
@@ -31,12 +31,13 @@ class SerialPort extends Emitter {
 }
 
 // This trash is necessary for stubbing with sinon.
-SerialPort.list = list;
-SerialPort.SerialPort = SerialPort;
+Stub.list = list;
+Stub.SerialPort = Stub;
 
 let com;
-let sp;
-let stub = SerialPort;
+let error;
+let SerialPort;
+let stub = Stub;
 
 try {
   /* istanbul ignore if */
@@ -47,14 +48,13 @@ try {
     if (process.env.IS_TEST_MODE) {
       com = stub;
     } else {
-      sp = require("serialport");
-      com = {
-        SerialPort: sp,
-        list: sp.list,
-      };
+      SerialPort = require("serialport");
+      com = SerialPort;
     }
   }
-} catch (err) {}
+} catch (err) {
+  error = err;
+}
 
 
 /* istanbul ignore if */
@@ -63,7 +63,8 @@ if (com == null) {
     com = stub;
   } else {
     console.log("It looks like serialport didn't compile properly. This is a common problem and its fix is well documented here https://github.com/voodootikigod/node-serialport#to-install");
-    console.log("The result of requiring the package is: ", sp);
+    console.log(`The result of requiring the package is: ${SerialPort}`);
+    console.log(error);
     throw "Missing serialport dependency";
   }
 }
