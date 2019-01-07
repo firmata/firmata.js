@@ -21,17 +21,20 @@ npm install serialport --save
 
 - Serialport
 - Etherport
-- TODO: @monteslu
-
 
 # Basic Usage
 
-## With A Transport Class
+## With A _Transport Class_
 
 Here's an example using the `Serialport` class:
 
 ```js
-const Serialport = require("serialport");
+// Require your Transport!
+const Serialport = require("serialport"); 
+// Pass the Transport class to the transport binding 
+// function exported by firmata-io. The transport binding
+// function will return the Firmata class object with
+// the Transport class bound in its scope. 
 const Firmata = require("firmata-io")(Serialport);
 
 Firmata.requestPort((error, port) => {
@@ -49,18 +52,24 @@ Firmata.requestPort((error, port) => {
 });
 ```
 
-## With A Transport Instance
+## With A _Transport Instance_
 
 Here's an example using a `Serialport` instance:
 
 ```js
+// Require your Transport!
 const Serialport = require("serialport");
+// Get the Firmata class without a bound transport. 
 const Firmata = require("firmata-io").Firmata;
 
 Serialport.list().then(ports => {
   // Figure which port to use...
   const port = ports.find(port => port.manufacturer.startsWith("Arduino"));
+  
+  // Instantiate an instance of your Transport class
   const transport = new Serialport(port.comName);
+
+  // Pass the new instance directly to the Firmata class
   const board = new Firmata(transport);
 
   board.on("close", () => {
@@ -76,7 +85,7 @@ Serialport.list().then(ports => {
 (The MIT License)
 
 Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>
-Copyright (c) 2015-2018 The Firmata.js Authors (see AUTHORS.md)
+Copyright (c) 2015-2019 The Firmata.js Authors (see AUTHORS.md)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

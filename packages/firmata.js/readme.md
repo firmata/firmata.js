@@ -606,7 +606,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
 (The MIT License)
 
 Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>
-Copyright (c) 2015-2018 The Firmata.js Authors (see AUTHORS.md)
+Copyright (c) 2015-2019 The Firmata.js Authors (see AUTHORS.md)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
