@@ -9,7 +9,7 @@ module.exports = {
     let previous = 0;
     const output = [];
 
-    data.forEach(byte => {
+    for (let byte of data) {
       if (shift === 0) {
         output.push(byte & 0x7f);
         shift++;
@@ -24,7 +24,7 @@ module.exports = {
           previous = byte >> (8 - shift);
         }
       }
-    });
+    }
 
     /* istanbul ignore else */
     if (shift > 0) {
@@ -34,12 +34,12 @@ module.exports = {
     return output;
   },
   from7BitArray(encoded) {
-    const expectedBytes = (encoded.length) * 7 >> 3;
+    const expectedBytes = encoded.length * 7 >> 3;
     const decoded = [];
 
     for (let i = 0; i < expectedBytes; i++) {
       const j = i << 3;
-      const pos = parseInt(j / 7, 10);
+      const pos = (j / 7) >>> 0;
       const shift = j % 7;
       decoded[i] = (encoded[pos] >> shift) | ((encoded[pos + 1] << (7 - shift)) & 0xFF);
     }
