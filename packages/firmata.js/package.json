@@ -13,7 +13,7 @@
   "devDependencies": {},
   "dependencies": {
     "firmata-io": "^2.0.0",
-    "serialport": "^7.1.1"
+    "serialport": "^7.1.3"
   },
   "scripts": {
     "test": "grunt",
