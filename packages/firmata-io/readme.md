@@ -84,7 +84,7 @@ Serialport.list().then(ports => {
 
 (The MIT License)
 
-Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>
+Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>\
 Copyright (c) 2015-2019 The Firmata.js Authors (see AUTHORS.md)
 
 Permission is hereby granted, free of charge, to any person obtaining
