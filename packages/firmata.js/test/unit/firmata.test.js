@@ -2480,10 +2480,10 @@ describe("Board: lifecycle", function() {
     transport.emit("data", [START_SYSEX, PULSE_OUT, ONEWIRE_SEARCH_ALARMS_REPLY, ONEWIRE_RESET_REQUEST_BIT, 0x28, 0x36, 0x3F, 0x0F, 0x52, 0x00, 0x00, 0x00, 0x5D, 0x00, END_SYSEX]);
   });
   it("must be able to send a 1-wire write read", done => {
-    sandbox.spy(board, Board.test.symbols.sendOneWireRequest);
+    sandbox.spy(board, Board.test.symbols.SYM_sendOneWireRequest);
     board.sendOneWireRead(1, 1, 1, () => {});
 
-    board[Board.test.symbols.sendOneWireRequest].lastCall.args[8]();
+    board[Board.test.symbols.SYM_sendOneWireRequest].lastCall.args[8]();
     done();
   });
   it("must be able to send a 1-wire reset request", done => {
