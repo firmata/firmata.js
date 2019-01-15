@@ -28,6 +28,7 @@
     "no-empty": 0,
     "no-eq-null": 0,
     "no-undef": 2,
+    "no-unused-vars": "error",
     "no-use-before-define": 0,
     "quotes": [ 2, "double", {"avoidEscape": true}],
     "strict": 0,
