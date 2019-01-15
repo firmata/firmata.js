@@ -67,6 +67,10 @@ const SYSTEM_RESET = 0xFF;
 
 const MAX_PIN_COUNT = 128;
 
+
+const sendOneWireSearch = Symbol("sendOneWireSearch");
+const sendOneWireRequest = Symbol("sendOneWireRequest");
+
 /**
  * MIDI_RESPONSE contains functions to be called when we receive a MIDI message from the arduino.
  * used as a switch object as seen here http://james.padolsey.com/javascript/how-to-avoid-switch-case-syndrome/
@@ -1482,7 +1486,7 @@ class Firmata extends Emitter {
    */
 
   sendOneWireSearch(pin, callback) {
-    this._sendOneWireSearch(
+    this[sendOneWireSearch](
       ONEWIRE_SEARCH_REQUEST,
       `1-wire-search-reply-${pin}`,
       pin,
@@ -1498,7 +1502,7 @@ class Firmata extends Emitter {
    */
 
   sendOneWireAlarmsSearch(pin, callback) {
-    this._sendOneWireSearch(
+    this[sendOneWireSearch](
       ONEWIRE_SEARCH_ALARMS_REQUEST,
       `1-wire-search-alarms-reply-${pin}`,
       pin,
@@ -1506,7 +1510,7 @@ class Firmata extends Emitter {
     );
   }
 
-  _sendOneWireSearch(type, event, pin, callback) {
+  [sendOneWireSearch](type, event, pin, callback) {
     writeToTransport(this, [
       START_SYSEX,
       ONEWIRE_DATA,
@@ -1542,7 +1546,7 @@ class Firmata extends Emitter {
       /* istanbul ignore next */
       callback(new Error("1-Wire device read timeout - are you running ConfigurableFirmata?"));
     }, 5000);
-    this._sendOneWireRequest(
+    this[sendOneWireRequest](
       pin,
       ONEWIRE_READ_REQUEST_BIT,
       device,
@@ -1564,7 +1568,7 @@ class Firmata extends Emitter {
    */
 
   sendOneWireReset(pin) {
-    this._sendOneWireRequest(
+    this[sendOneWireRequest](
       pin,
       ONEWIRE_RESET_REQUEST_BIT
     );
@@ -1581,7 +1585,7 @@ class Firmata extends Emitter {
    */
 
   sendOneWireWrite(pin, device, data) {
-    this._sendOneWireRequest(
+    this[sendOneWireRequest](
       pin,
       ONEWIRE_WRITE_REQUEST_BIT,
       device,
@@ -1599,7 +1603,7 @@ class Firmata extends Emitter {
    */
 
   sendOneWireDelay(pin, delay) {
-    this._sendOneWireRequest(
+    this[sendOneWireRequest](
       pin,
       ONEWIRE_DELAY_REQUEST_BIT,
       null,
@@ -1628,7 +1632,7 @@ class Firmata extends Emitter {
       /* istanbul ignore next */
       callback(new Error("1-Wire device read timeout - are you running ConfigurableFirmata?"));
     }, 5000);
-    this._sendOneWireRequest(
+    this[sendOneWireRequest](
       pin,
       ONEWIRE_WRITE_REQUEST_BIT | ONEWIRE_READ_REQUEST_BIT,
       device,
@@ -1645,7 +1649,7 @@ class Firmata extends Emitter {
   }
 
   // see http://firmata.org/wiki/Proposals#OneWire_Proposal
-  _sendOneWireRequest(pin, subcommand, device, numBytesToRead, correlationId, delay, dataToWrite, event, callback) {
+  [sendOneWireRequest](pin, subcommand, device, numBytesToRead, correlationId, delay, dataToWrite, event, callback) {
     const bytes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     if (device || numBytesToRead || correlationId || delay || dataToWrite) {
@@ -2453,10 +2457,14 @@ class Firmata extends Emitter {
       Transport.list((error, ports) => {
         const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
 
-        if (port) {
-          callback(null, port);
+        if (error) {
+          callback(error, null);
         } else {
-          callback(new Error("No Acceptable Port Found"), null);
+          if (port) {
+            callback(null, port);
+          } else {
+            callback(new Error("No Acceptable Port Found"), null);
+          }
         }
       });
     }
@@ -2660,6 +2668,11 @@ if (process.env.IS_TEST_MODE) {
     encodeCustomFloat,
     decodeCustomFloat,
     writeToTransport,
+
+    symbols: {
+      sendOneWireRequest,
+      sendOneWireSearch,
+    }
   };
 }
 
