@@ -12,7 +12,6 @@
   "main": "./lib/firmata",
   "devDependencies": {},
   "dependencies": {
-    "browser-serialport": "latest",
     "firmata-io": "^2.0.0",
     "serialport": "^7.1.1"
   },

@@ -40,17 +40,12 @@ let SerialPort;
 let stub = Stub;
 
 try {
-  /* istanbul ignore if */
-  if (process.browser || parseFloat(process.versions.nw) >= 0.13) {
-    com = require("browser-serialport");
+  /* istanbul ignore else */
+  if (process.env.IS_TEST_MODE) {
+    com = stub;
   } else {
-    /* istanbul ignore else */
-    if (process.env.IS_TEST_MODE) {
-      com = stub;
-    } else {
-      SerialPort = require("serialport");
-      com = SerialPort;
-    }
+    SerialPort = require("serialport");
+    com = SerialPort;
   }
 } catch (err) {
   error = err;
