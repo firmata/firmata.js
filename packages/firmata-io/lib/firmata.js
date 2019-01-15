@@ -2456,6 +2456,7 @@ class Firmata extends Emitter {
       Transport.list((error, ports) => {
         const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
 
+        /* istanbul ignore if */
         if (error) {
           callback(error, null);
         } else {
