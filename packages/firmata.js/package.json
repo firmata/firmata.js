@@ -1,7 +1,7 @@
 {
   "name": "firmata",
   "description": "Firmata protocol implementation for programmatic interaction with Arduino and Arduino compatible development boards. Includes Serialport",
-  "version": "2.0.0",
+  "version": "2.0.0-pre",
   "author": "Julian Gautier",
   "license": "MIT",
   "homepage": "http://www.github.com/firmata/firmata.js",
