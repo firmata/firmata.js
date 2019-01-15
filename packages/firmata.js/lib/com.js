@@ -2,13 +2,7 @@
 
 const Emitter = require("events");
 
-/* istanbul ignore next */
-let list = function() {
-  /* istanbul ignore next */
-  return Promise.resolve([]);
-};
-
-class Stub extends Emitter {
+class TransportStub extends Emitter {
   constructor(path/*, options, openCallback*/) {
     super();
     this.isOpen = true;
@@ -28,34 +22,37 @@ class Stub extends Emitter {
     this.lastWrite = buffer;
     this.emit("write", buffer);
   }
+
+  static list() {
+    /* istanbul ignore next */
+    return Promise.resolve([]);
+  }
 }
 
 // This trash is necessary for stubbing with sinon.
-Stub.list = list;
-Stub.SerialPort = Stub;
+TransportStub.SerialPort = TransportStub;
 
 let com;
 let error;
 let SerialPort;
-let stub = Stub;
 
 try {
   /* istanbul ignore else */
   if (process.env.IS_TEST_MODE) {
-    com = stub;
+    com = TransportStub;
   } else {
     SerialPort = require("serialport");
     com = SerialPort;
   }
 } catch (err) {
+  /* istanbul ignore next */
   error = err;
 }
-
 
 /* istanbul ignore if */
 if (com == null) {
   if (process.env.IS_TEST_MODE) {
-    com = stub;
+    com = TransportStub;
   } else {
     console.log("It looks like serialport didn't compile properly. This is a common problem and its fix is well documented here https://github.com/voodootikigod/node-serialport#to-install");
     console.log(`The result of requiring the package is: ${SerialPort}`);
