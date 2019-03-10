@@ -303,6 +303,10 @@ The `Firmata` constructor creates an instance that represents a physical board.
 - `board.i2cWrite(address, [...bytes])`
 
   Write an arbitrary number of bytes. May not exceed 64 Bytes.
+  
+  - `board.i2cWrite(address, byte)`
+
+  Write a single byte to the current register.
 
 - `board.i2cWrite(address, register, [...bytes])`
 
