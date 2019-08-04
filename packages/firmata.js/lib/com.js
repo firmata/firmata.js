@@ -54,7 +54,8 @@ if (com == null) {
   if (process.env.IS_TEST_MODE) {
     com = TransportStub;
   } else {
-    console.log("It looks like serialport didn't compile properly. This is a common problem and its fix is well documented here https://github.com/voodootikigod/node-serialport#to-install");
+    console.log("It looks like serialport didn't install properly.");
+    console.log("More information can be found here https://serialport.io/docs/guide-installation");
     console.log(`The result of requiring the package is: ${SerialPort}`);
     console.log(error);
     throw "Missing serialport dependency";
