@@ -6,7 +6,7 @@ Board.requestPort(function(error, port) {
     return;
   }
 
-  var board = new Board(port.comName);
+  var board = new Board(port.path);
 
   board.on("ready", function() {
 

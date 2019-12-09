@@ -12,7 +12,7 @@ Board.requestPort((error, port) => {
     READ_X_MSB: 0x01,
   };
 
-  const board = new Board(port.comName);
+  const board = new Board(port.path);
   // var board = new Board("/dev/cu.usbmodem1411");
 
   board.on("ready", function() {

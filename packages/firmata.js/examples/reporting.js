@@ -5,7 +5,7 @@ Board.requestPort((error, port) => {
     console.log(error);
     return;
   }
-  const board = new Board(port.comName);
+  const board = new Board(port.path);
 
   board.on("ready", function() {
     const a = 6;

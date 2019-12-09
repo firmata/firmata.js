@@ -10,7 +10,7 @@ Install Firmata-io:
 npm install firmata-io --save
 ```
 
-Install a Transport: 
+Install a Transport:
 
 
 ```sh
@@ -30,11 +30,11 @@ Here's an example using the `Serialport` class:
 
 ```js
 // Require your Transport!
-const Serialport = require("serialport"); 
-// Pass the Transport class to the transport binding 
+const Serialport = require("serialport");
+// Pass the Transport class to the transport binding
 // function exported by firmata-io. The transport binding
 // function will return the Firmata class object with
-// the Transport class bound in its scope. 
+// the Transport class bound in its scope.
 const Firmata = require("firmata-io")(Serialport);
 
 Firmata.requestPort((error, port) => {
@@ -43,7 +43,7 @@ Firmata.requestPort((error, port) => {
     return;
   }
 
-  const board = new Firmata(port.comName);
+  const board = new Firmata(port.path);
 
   board.on("close", () => {
     // Unplug the board to see this event!
@@ -59,15 +59,15 @@ Here's an example using a `Serialport` instance:
 ```js
 // Require your Transport!
 const Serialport = require("serialport");
-// Get the Firmata class without a bound transport. 
+// Get the Firmata class without a bound transport.
 const Firmata = require("firmata-io").Firmata;
 
 Serialport.list().then(ports => {
   // Figure which port to use...
   const port = ports.find(port => port.manufacturer.startsWith("Arduino"));
-  
+
   // Instantiate an instance of your Transport class
-  const transport = new Serialport(port.comName);
+  const transport = new Serialport(port.path);
 
   // Pass the new instance directly to the Firmata class
   const board = new Firmata(transport);

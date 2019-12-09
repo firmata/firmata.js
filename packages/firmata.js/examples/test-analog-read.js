@@ -6,7 +6,7 @@ Board.requestPort((error, port) => {
     return;
   }
 
-  const board = new Board(port.comName);
+  const board = new Board(port.path);
 
   console.log(__filename);
   console.log("------------------------------");

@@ -9,7 +9,7 @@ describe("com.*", () => {
   const response = {
     error: null,
     port: {
-      comName: null
+      path: null
     },
   };
 
