@@ -6,7 +6,7 @@ Board.requestPort((error, port) => {
     return;
   }
 
-  const board = new Board(port.comName);
+  const board = new Board(port.path);
 
   board.on("ready", () => {
     console.log("READY");

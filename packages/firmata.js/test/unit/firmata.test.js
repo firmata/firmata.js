@@ -67,49 +67,47 @@ describe("Board.requestPort", () => {
   const response = {
     error: null,
     port: {
-      comName: null
+      path: null
     },
   };
 
   beforeEach(() => {
-    sandbox.stub(com, "list").callsFake(callback => {
-      process.nextTick(() => {
-        callback(response.error, [response.port]);
-      });
+    sandbox.stub(com, "list").callsFake(() => {
+      return response.error ? Promise.reject(error) : Promise.resolve([response.port])
     });
   });
 
   afterEach(() => {
     sandbox.restore();
     response.error = null;
-    response.port.comName = null;
+    response.port.path = null;
   });
 
   it("can identify an acceptable port", done => {
-    response.port.comName = "/dev/usb.whatever";
+    response.port.path = "/dev/usb.whatever";
     assert.equal(Board.isAcceptablePort(response.port), true);
 
-    response.port.comName = "/dev/ttyACM0";
+    response.port.path = "/dev/ttyACM0";
     assert.equal(Board.isAcceptablePort(response.port), true);
 
-    response.port.comName = "COM0";
+    response.port.path = "COM0";
     assert.equal(Board.isAcceptablePort(response.port), true);
 
     done();
   });
 
   it("can identify an unacceptable port", done => {
-    response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
+    response.port.path = "/dev/tty.Bluetooth-Incoming-Port";
     assert.equal(Board.isAcceptablePort(response.port), false);
 
-    response.port.comName = "/dev/someotherthing";
+    response.port.path = "/dev/someotherthing";
     assert.equal(Board.isAcceptablePort(response.port), false);
 
     done();
   });
 
   it("invokes callback with an acceptable port: usb", done => {
-    response.port.comName = "/dev/usb.whatever";
+    response.port.path = "/dev/usb.whatever";
 
     Board.requestPort((error, port) => {
       assert.equal(port, response.port);
@@ -118,7 +116,7 @@ describe("Board.requestPort", () => {
   });
 
   it("invokes callback with an acceptable port: acm", done => {
-    response.port.comName = "/dev/ttyACM0";
+    response.port.path = "/dev/ttyACM0";
 
     Board.requestPort((error, port) => {
       assert.equal(port, response.port);
@@ -127,7 +125,7 @@ describe("Board.requestPort", () => {
   });
 
   it("invokes callback with an acceptable port: com", done => {
-    response.port.comName = "COM0";
+    response.port.path = "COM0";
 
     Board.requestPort((error, port) => {
       assert.equal(port, response.port);
@@ -136,7 +134,7 @@ describe("Board.requestPort", () => {
   });
 
   it("doesn't call callback with an unacceptable port: Bluetooth-Incoming-Port", done => {
-    response.port.comName = "/dev/tty.Bluetooth-Incoming-Port";
+    response.port.path = "/dev/tty.Bluetooth-Incoming-Port";
 
     Board.requestPort((error, port) => {
       assert.equal(port, null);

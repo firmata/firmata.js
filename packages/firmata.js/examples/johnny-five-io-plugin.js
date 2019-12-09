@@ -2,8 +2,8 @@ const SerialPort = require("serialport");
 const five = require("johnny-five");
 const Firmata = require("../");
 
-SerialPort.list((error, list) => {
-  const device = list.reduce((accum, item) => {
+SerialPort.list().then(ports => {
+  const device = ports.reduce((accum, item) => {
     if (item.manufacturer.indexOf("Arduino") === 0) {
       return item;
     }
@@ -17,7 +17,7 @@ SerialPort.list((error, list) => {
    */
 
   const board = new five.Board({
-    io: new Firmata(device.comName)
+    io: new Firmata(device.path)
   });
 
   board.on("ready", () => {

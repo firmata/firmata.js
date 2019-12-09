@@ -32,7 +32,7 @@ If you run *firmata* from the command line it will prompt you for the serial por
 
 ### Using the `"ready"` event...
 
-#### With a path string: 
+#### With a path string:
 
 ```js
 const Firmata = require("firmata");
@@ -105,40 +105,40 @@ const board = new Firmata(new Etherport(...), () => {
 
 # `Firmata`
 
-The `Firmata` constructor creates an instance that represents a physical board. 
+The `Firmata` constructor creates an instance that represents a physical board.
 
-- `new Firmata(path[, options][, readyCallback])` 
-- `new Firmata(port[, options][, readyCallback])` 
+- `new Firmata(path[, options][, readyCallback])`
+- `new Firmata(port[, options][, readyCallback])`
 
   | Parameter | Type   | Description | Default  | Required |
   |-----------|------- |------------ |--------- |----------|
-  | path      | String | A system path or port name. | none | Yes\* | 
-  | port      | Transport | A Transport object. | none | Yes\* | 
-  | [options] | object | Optional settings to used when constructing. | [See Below](#board-options) | No | 
-  | [readyCallback] | function | Optional "ready" callback to call when connection to board is complete. | none | No | 
+  | path      | String | A system path or port name. | none | Yes\* |
+  | port      | Transport | A Transport object. | none | Yes\* |
+  | [options] | object | Optional settings to used when constructing. | [See Below](#board-options) | No |
+  | [readyCallback] | function | Optional "ready" callback to call when connection to board is complete. | none | No |
 
   \* _**Either**_ a **path** or a **port** are required.
 
-  - Notes: 
-    - `new Firmata(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example: 
+  - Notes:
+    - `new Firmata(path: string)`: instances can be constructed using only a system path of the serial port to open or name, for example:
       + `new Firmata("/dev/usb.whatever")`
       + `new Firmata("/dev/ttyACM0")`
       + `new Firmata("COM1")`
-    - `new Firmata(port: Transport)`: instances can be constructed using a "Transport" object, for example: 
-      + `new Firmata(new Serialport(...))` 
+    - `new Firmata(port: Transport)`: instances can be constructed using a "Transport" object, for example:
+      + `new Firmata(new Serialport(...))`
       + `new Firmata(new Etherport(...))`
 
 - Options<a name="board-options"></a>
 
   | Property | Type   | Description | Default  | Required |
   |-----------|------- |------------ |--------- |----------|
-  | skipCapabilities | Boolean | Set to `true` to skip the `CAPABILITY_QUERY` | `true` | No | 
-  | reportVersionTimeout | Number | Time in milliseconds to wait before timing out the initial request for the firmware version. | 5000 | No | 
-  | samplingInterval | Number | Time in milliseconds of the sampling interval on the actual board. | 19 | No | 
-  | serialport | Object | See: [Serialport:openOptions](https://github.com/EmergingTechnologyAdvisors/node-serialport#module_serialport--SerialPort..openOptions). These will be ignored if the first argument is a Transport object. | \* | No | 
+  | skipCapabilities | Boolean | Set to `true` to skip the `CAPABILITY_QUERY` | `true` | No |
+  | reportVersionTimeout | Number | Time in milliseconds to wait before timing out the initial request for the firmware version. | 5000 | No |
+  | samplingInterval | Number | Time in milliseconds of the sampling interval on the actual board. | 19 | No |
+  | serialport | Object | See: [Serialport:openOptions](https://github.com/EmergingTechnologyAdvisors/node-serialport#module_serialport--SerialPort..openOptions). These will be ignored if the first argument is a Transport object. | \* | No |
 
   \* Defaults are defined in `Serialport`.
-  
+
 
 
 
@@ -463,10 +463,10 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
 
-- `board.STEPPER.STEP_SIZE` 
+- `board.STEPPER.STEP_SIZE`
 
   Available step sizes.
-  
+
   ```js
   {
     WHOLE: 0,
@@ -474,17 +474,17 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   }
   ```
 
-- `board.STEPPER.DIRECTION` 
+- `board.STEPPER.DIRECTION`
 
   Stepper directions.
-  
+
   ```js
   {
     CCW: 0,
     CW: 1
   }
   ```
-  
+
   - `board.accelStepperConfig(options)`
 
   Configure a stepper motor
@@ -504,11 +504,11 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
       invertPins: 0 // <number> (optional) Controls which pins to invert (see table below); default is 0
     }
     ```
-    
+
     **invertPins**
 
     The invertPins value is a 5-bit number
-    
+
     bit 5           |bit 4           |bit 3           |bit 2           |bit 1
     ----------------|----------------|----------------|----------------|----------------
     invert motorPin1|invert motorPin2|invert motorPin3|invert motorPin4|invert enablePin
@@ -553,7 +553,7 @@ accelStepper support 2, 3, and 4 wire configurations as well as step + direction
   Set the acceleration and deceleration for the stepper in steps / sec^2
 
 - `board.multiStepperConfig(opts)`
-  
+
   Configure a multStepper group. multiStepper groups allow you to pass an array of targeted positions and have all the steppers move to their targets and arrive at the same time. Note that acceleration cannot be used when moving a multiStepper group.
 
   ```

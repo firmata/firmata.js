@@ -2427,7 +2427,7 @@ class Firmata extends Emitter {
   }
 
   /**
-   * Firmata.isAcceptablePort Determines if a `port` object (from SerialPort.list(...))
+   * Firmata.isAcceptablePort Determines if a `port` object (from SerialPort.list())
    * is a valid Arduino (or similar) device.
    * @return {Boolean} true if port can be connected to by Firmata
    */
@@ -2435,7 +2435,7 @@ class Firmata extends Emitter {
   static isAcceptablePort(port) {
     let rport = /usb|acm|^com/i;
 
-    if (rport.test(port.comName)) {
+    if (rport.test(port.path)) {
       return true;
     }
 
@@ -2452,22 +2452,18 @@ class Firmata extends Emitter {
       process.nextTick(() => {
         callback(new Error("No Transport provided"), null);
       });
-    } else {
-      Transport.list((error, ports) => {
-        const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
-
-        /* istanbul ignore if */
-        if (error) {
-          callback(error, null);
-        } else {
-          if (port) {
-            callback(null, port);
-          } else {
-            callback(new Error("No Acceptable Port Found"), null);
-          }
-        }
-      });
+      return
     }
+    Transport.list().then((ports) => {
+      const port = ports.find(port => Firmata.isAcceptablePort(port) && port);
+      if (port) {
+        callback(null, port);
+      } else {
+        callback(new Error("No Acceptable Port Found"), null);
+      }
+    }).catch(error => {
+      callback(error, null);
+    });
   }
 
   // Expose encode/decode for custom sysex messages

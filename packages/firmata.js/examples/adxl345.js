@@ -12,7 +12,7 @@ Board.requestPort((error, port) => {
     READ: 0xB2,
   };
 
-  const board = new Board(port.comName);
+  const board = new Board(port.path);
 
   board.on("ready", function() {
     console.log("Ready");
