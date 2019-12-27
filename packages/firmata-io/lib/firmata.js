@@ -725,6 +725,9 @@ class Firmata extends Emitter {
       if (this.versionReceived === false) {
         this.reportVersion(function() {});
         this.queryFirmware(function() {});
+        this.NoFirmataPresent = setTimeout( () => {
+          callback(true);
+        },settings.reportVersionTimeout);
       }
     }, settings.reportVersionTimeout);
 
@@ -740,6 +743,7 @@ class Firmata extends Emitter {
     // Await the reported version.
     this.once("reportversion", () => {
       clearTimeout(this.reportVersionTimeoutId);
+      clearTimeout(this.NoFirmataPresent);
       this.versionReceived = true;
       this.once("queryfirmware", () => {
 
