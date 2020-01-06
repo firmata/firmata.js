@@ -15,7 +15,7 @@
     "coveralls": "^3.0.9",
     "grunt": "^1.0.1",
     "grunt-cli": "^1.2.0",
-    "grunt-eslint": "^21.0.0",
+    "grunt-eslint": "^22.0.0",
     "grunt-jsbeautifier": "^0.2.13",
     "grunt-mocha-test": "^0.13.3",
     "lerna": "^3.20.2",
