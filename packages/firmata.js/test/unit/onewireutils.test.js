@@ -1,6 +1,6 @@
 require("../common/bootstrap");
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 
 describe("OneWire.crc8/OneWire.readDevices", () => {
 

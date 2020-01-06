@@ -60,7 +60,7 @@ const SYSTEM_RESET = 0xFF;
 // Used by custom sysex tests
 const NON_STANDARD_REPLY = 0x11;
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 
 describe("Board.requestPort", () => {
 

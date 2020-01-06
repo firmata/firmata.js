@@ -2,7 +2,7 @@
 // and gaurding against changes to the "com" stubs.
 require("../common/bootstrap");
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 
 describe("com.*", () => {
 
