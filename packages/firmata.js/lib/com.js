@@ -40,6 +40,9 @@ try {
   /* istanbul ignore else */
   if (process.env.IS_TEST_MODE) {
     com = TransportStub;
+  } else if (process && process.versions.nw && parseFloat(process.versions.nw) >= 0.13) {
+    SerialPort = require("nwjs-serialport").SerialPort;
+    com = SerialPort;
   } else {
     SerialPort = require("serialport");
     com = SerialPort;
