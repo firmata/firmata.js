@@ -13,7 +13,7 @@
   "dependencies": {
     "firmata-io": "^2.2.0",
     "serialport": "^8.0.5",
-    "chrome-apps-serialport": "^1.0.0"
+    "chrome-apps-serialport": "^1.0.4"
   },
   "scripts": {
     "test": "grunt",
