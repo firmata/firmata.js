@@ -64,13 +64,17 @@ const Firmata = require("firmata-io").Firmata;
 
 Serialport.list().then(ports => {
   // Figure which port to use...
-  const port = ports.find(port => port.manufacturer.startsWith("Arduino"));
+  const port = ports.find(port => {
+    return port.manufacturer && port.manufacturer.startsWith("Arduino")
+  });
 
   // Instantiate an instance of your Transport class
   const transport = new Serialport(port.path);
 
   // Pass the new instance directly to the Firmata class
   const board = new Firmata(transport);
+
+  board.on("connect", () => console.log("Connected!"));
 
   board.on("close", () => {
     // Unplug the board to see this event!
