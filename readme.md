@@ -24,7 +24,7 @@ Take a look at [the examples directory](https://github.com/firmata/firmata.js/tr
 (The MIT License)
 
 Copyright (c) 2011-2015 Julian Gautier <julian.gautier@alumni.neumont.edu>\
-Copyright (c) 2015-2019 The Firmata.js Authors (see AUTHORS.md)
+Copyright (c) 2015-2020 The Firmata.js Authors (see AUTHORS.md)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
