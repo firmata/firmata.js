@@ -1306,10 +1306,24 @@ describe("Board: lifecycle", function() {
   });
 
   it("must be able to set mode on analog pins", done => {
+    sandbox.spy(board.transport, "write");
     board.pinMode(board.analogPins[0], board.MODES.INPUT);
-    assert.equal(transport.lastWrite[0], PIN_MODE);
-    assert.equal(transport.lastWrite[1], board.analogPins[0]);
-    assert.equal(transport.lastWrite[2], board.MODES.INPUT);
+    assert.equal(board.transport.write.lastCall.args[0][0], PIN_MODE);
+    assert.equal(board.transport.write.lastCall.args[0][1], board.analogPins[0]);
+    assert.equal(board.transport.write.lastCall.args[0][2], board.MODES.INPUT);
+    assert.equal(board.transport.write.callCount, 1);
+    done();
+  });
+
+
+  it("must be able to set mode on analog pins, reconciling the pin number correctly, given ANALOG mode", done => {
+    sandbox.spy(board.transport, "write");
+    assert.equal(board.pins[0].mode, undefined);
+    assert.equal(board.pins[14].mode, 0);
+    board.pinMode(0, board.MODES.ANALOG);
+    assert.equal(board.pins[0].mode, undefined);
+    assert.equal(board.pins[14].mode, board.MODES.ANALOG);
+    assert.equal(board.transport.write.callCount, 0);
     done();
   });
 

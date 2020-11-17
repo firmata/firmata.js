@@ -933,12 +933,24 @@ class Firmata extends Emitter {
    */
 
   pinMode(pin, mode) {
-    this.pins[pin].mode = mode;
-    writeToTransport(this, [
-      PIN_MODE,
-      pin,
-      mode
-    ]);
+    if (mode === this.MODES.ANALOG) {
+      // Because pinMode may be called before analogRead(pin, () => {}), but isn't
+      // necessary to initiate an analog read on an analog pin, we'll assign the
+      // mode here, but do nothing further. In analogRead(), the call to
+      // reportAnalogPin(pin, 1) is all that's needed to turn on analog input
+      // reading.
+      //
+      // reportAnalogPin(...) will reconcile the pin number as well, the
+      // same operation we use here to assign a "mode":
+      this.pins[this.analogPins[pin]].mode = mode;
+    } else {
+      this.pins[pin].mode = mode;
+      writeToTransport(this, [
+        PIN_MODE,
+        pin,
+        mode
+      ]);
+    }
   }
 
   /**
