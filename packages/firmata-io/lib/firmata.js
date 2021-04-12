@@ -594,7 +594,7 @@ class Firmata extends Emitter {
     this.transport.on("close", event => {
 
       // https://github.com/node-serialport/node-serialport/blob/5.0.0/UPGRADE_GUIDE.md#opening-and-closing
-      if (event && event.disconnect && event.disconnected) {
+      if (event && event.disconnected) {
         this.emit("disconnect");
         return;
       }
