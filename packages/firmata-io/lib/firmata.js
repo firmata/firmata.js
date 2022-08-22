@@ -61,6 +61,7 @@ const SERIAL_FLUSH = 0x60;
 const SERIAL_LISTEN = 0x70;
 const START_SYSEX = 0xF0;
 const STEPPER = 0x72;
+const ENCODER = 0x61;
 const ACCELSTEPPER = 0x62;
 const STRING_DATA = 0x71;
 const SYSTEM_RESET = 0xFF;
@@ -383,6 +384,74 @@ const SYSEX_RESPONSE = {
     board.emit(`stepper-done-${deviceNum}`, true);
   },
 
+  /* ------------------------------------ ENCODER STUFF ------------------------------------ */
+
+  /* -----------------------------------------------------
+  * Report encoder's position
+  *
+  * 0 START_SYSEX                (0xF0)
+  * 1 ENCODER_DATA               (0x61)
+  * 2 Encoder #  &  DIRECTION    [= (direction << 6) | (#)]
+  * 3 current position, bits 0-6
+  * 4 current position, bits 7-13
+  * 5 current position, bits 14-20
+  * 6 current position, bits 21-27
+  * 7 END_SYSEX                  (0xF7)
+  * -----------------------------------------------------
+  */
+
+  /* -----------------------------------------------------
+  * Report all encoders positions
+  *
+  * 0 START_SYSEX                (0xF0)
+  * 1 ENCODER_DATA               (0x61)
+  * 2 first enc. #  & first enc. dir. 
+  * 3 first enc. position, bits 0-6
+  * 4 first enc. position, bits 7-13
+  * 5 first enc. position, bits 14-20
+  * 6 first enc. position, bits 21-27
+  * 7 second enc. #  & second enc. dir. 
+  * ...
+  * N END_SYSEX                  (0xF7)
+  * -----------------------------------------------------
+  */
+
+
+  [ENCODER](board) {
+
+    let end = buffer[7];
+    let cursor = 2;
+    let stop = 0;
+  
+    do {
+      
+      const numDir = buffer[cursor];
+  
+      const directionMask = 0x40; // B01000000
+      const channelMask   = 0x3F; // B00111111 
+      
+      const direction = ( numDir & directionMask ) >> 6;
+      const number = numDir & channelMask;
+  
+      const position = decode32BitSignedInteger(buffer.slice(cursor + 1, cursor + 5))
+  
+      // console.log({ direction, number, position });
+
+      board.emit(`encoder-position-${number}`, { direction, position, number });
+  
+      // update cursor and end 
+      cursor = cursor + 5;
+      end = buffer[cursor];
+  
+      stop = stop + 1;
+  
+      console.log(end.toString(16));
+  
+    } while (end != END_SYSEX);
+
+  },
+
+  
   /**
    * Handles the message from a stepper or group of steppers completing move
    * @param {Board} board
