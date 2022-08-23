@@ -438,8 +438,6 @@ const SYSEX_RESPONSE = {
   
       const state = { direction, position, number };
 
-      // console.log(state});
-
       board.emit(`encoder-position-${number}`, state);
       positions.push(state);
   
@@ -1885,6 +1883,12 @@ class Firmata extends Emitter {
   }
 
   /* ------------------------------------ ENCODER STUFF ------------------------------------ */
+
+  /**
+   * Encoder logic is based on this https://github.com/firmata/protocol/blob/master/encoder.md
+   * 
+   * Note you must use http://firmatabuilder.com/ and the firmata encoder for this to work 
+   */
 
   /**
    *  Attach Encoder
