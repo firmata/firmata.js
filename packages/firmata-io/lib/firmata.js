@@ -416,16 +416,17 @@ const SYSEX_RESPONSE = {
   * -----------------------------------------------------
   */
 
-
   [ENCODER](board) {
 
-    let end = buffer[7];
+    let end = board.buffer[7];
     let cursor = 2;
     let stop = 0;
+
+    const positions = [];
   
     do {
       
-      const numDir = buffer[cursor];
+      const numDir = board.buffer[cursor];
   
       const directionMask = 0x40; // B01000000
       const channelMask   = 0x3F; // B00111111 
@@ -433,21 +434,24 @@ const SYSEX_RESPONSE = {
       const direction = ( numDir & directionMask ) >> 6;
       const number = numDir & channelMask;
   
-      const position = decode32BitSignedInteger(buffer.slice(cursor + 1, cursor + 5))
+      const position = decode32BitSignedInteger(board.buffer.slice(cursor + 1, cursor + 5))
   
-      // console.log({ direction, number, position });
+      const state = { direction, position, number };
 
-      board.emit(`encoder-position-${number}`, { direction, position, number });
+      // console.log(state});
+
+      board.emit(`encoder-position-${number}`, state);
+      positions.push(state);
   
       // update cursor and end 
       cursor = cursor + 5;
-      end = buffer[cursor];
+      end = board.buffer[cursor];
   
       stop = stop + 1;
-  
-      console.log(end.toString(16));
-  
+    
     } while (end != END_SYSEX);
+
+    board.emit(`encoder-positions`, positions);
 
   },
 
@@ -1879,6 +1883,114 @@ class Firmata extends Emitter {
 
     this.once(`ping-read-${pin}`, callback);
   }
+
+  /* ------------------------------------ ENCODER STUFF ------------------------------------ */
+
+  /**
+   *  Attach Encoder
+   *
+   */
+  encoderAttach(options){
+
+    let {
+      encoderNum,
+      encoderPin1,
+      encoderPin2,
+    } = options;
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x00,           // 2 ENCODER_ATTACH             (0x00)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      encoderPin1,    // 4 pin A #                    (first pin) 
+      encoderPin2,    // 5 pin B #                    (second pin)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+  /**
+   *  Report encoder position
+   *
+   */
+  encoderReport(encoderNum, callback){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x01,           // 2 ENCODER_REPORT_POSITION    (0x01)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+
+    if (callback) {
+      this.once(`encoder-position-${encoderNum}`, callback);
+    }
+  }
+
+  /**
+   *  Report all encoder positions
+   *
+   */
+  encoderReportAll(callback){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x02,           // 2 ENCODER_REPORT_POSITIONS   (0x02)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+
+    if (callback) {
+      this.once(`encoder-positions`, callback);
+    }
+  }
+
+  /**
+   *  Reset encoder position to zero
+   *
+   */
+  encoderResetToZero(encoderNum){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x03,           // 2 ENCODER_RESET_POSITION     (0x03)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+  /**
+   *  Reset encoder position to zero
+   *
+   */
+   encoderEnableReporting(enable){
+
+    const enbl = enable ? 0x11 : 0x00;
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x04,           // 2 ENCODER_REPORT_AUTO        (0x04)
+      enbl,           // 3 enable                     (0x00 => false, true otherwise)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+
+  /* ---------------------------------- END ENCODER STUFF ----------------------------------- */
+
 
   /**
    * Stepper functions to support version 2 of ConfigurableFirmata's asynchronous control of stepper motors
