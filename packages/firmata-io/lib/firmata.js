@@ -61,6 +61,7 @@ const SERIAL_FLUSH = 0x60;
 const SERIAL_LISTEN = 0x70;
 const START_SYSEX = 0xF0;
 const STEPPER = 0x72;
+const ENCODER = 0x61;
 const ACCELSTEPPER = 0x62;
 const STRING_DATA = 0x71;
 const SYSTEM_RESET = 0xFF;
@@ -383,6 +384,76 @@ const SYSEX_RESPONSE = {
     board.emit(`stepper-done-${deviceNum}`, true);
   },
 
+  /* ------------------------------------ ENCODER STUFF ------------------------------------ */
+
+  /* -----------------------------------------------------
+  * Report encoder's position
+  *
+  * 0 START_SYSEX                (0xF0)
+  * 1 ENCODER_DATA               (0x61)
+  * 2 Encoder #  &  DIRECTION    [= (direction << 6) | (#)]
+  * 3 current position, bits 0-6
+  * 4 current position, bits 7-13
+  * 5 current position, bits 14-20
+  * 6 current position, bits 21-27
+  * 7 END_SYSEX                  (0xF7)
+  * -----------------------------------------------------
+  */
+
+  /* -----------------------------------------------------
+  * Report all encoders positions
+  *
+  * 0 START_SYSEX                (0xF0)
+  * 1 ENCODER_DATA               (0x61)
+  * 2 first enc. #  & first enc. dir. 
+  * 3 first enc. position, bits 0-6
+  * 4 first enc. position, bits 7-13
+  * 5 first enc. position, bits 14-20
+  * 6 first enc. position, bits 21-27
+  * 7 second enc. #  & second enc. dir. 
+  * ...
+  * N END_SYSEX                  (0xF7)
+  * -----------------------------------------------------
+  */
+
+  [ENCODER](board) {
+
+    let end = board.buffer[7];
+    let cursor = 2;
+    let stop = 0;
+
+    const positions = [];
+  
+    do {
+      
+      const numDir = board.buffer[cursor];
+  
+      const directionMask = 0x40; // B01000000
+      const channelMask   = 0x3F; // B00111111 
+      
+      const direction = ( numDir & directionMask ) >> 6;
+      const number = numDir & channelMask;
+  
+      const position = decode32BitSignedInteger(board.buffer.slice(cursor + 1, cursor + 5))
+  
+      const state = { direction, position, number };
+
+      board.emit(`encoder-position-${number}`, state);
+      positions.push(state);
+  
+      // update cursor and end 
+      cursor = cursor + 5;
+      end = board.buffer[cursor];
+  
+      stop = stop + 1;
+    
+    } while (end != END_SYSEX);
+
+    board.emit(`encoder-positions`, positions);
+
+  },
+
+  
   /**
    * Handles the message from a stepper or group of steppers completing move
    * @param {Board} board
@@ -1810,6 +1881,120 @@ class Firmata extends Emitter {
 
     this.once(`ping-read-${pin}`, callback);
   }
+
+  /* ------------------------------------ ENCODER STUFF ------------------------------------ */
+
+  /**
+   * Encoder logic is based on this https://github.com/firmata/protocol/blob/master/encoder.md
+   * 
+   * Note you must use http://firmatabuilder.com/ and the firmata encoder for this to work 
+   */
+
+  /**
+   *  Attach Encoder
+   *
+   */
+  encoderAttach(options){
+
+    let {
+      encoderNum,
+      encoderPin1,
+      encoderPin2,
+    } = options;
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x00,           // 2 ENCODER_ATTACH             (0x00)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      encoderPin1,    // 4 pin A #                    (first pin) 
+      encoderPin2,    // 5 pin B #                    (second pin)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+  /**
+   *  Report encoder position
+   *
+   */
+  encoderReport(encoderNum, callback){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x01,           // 2 ENCODER_REPORT_POSITION    (0x01)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+
+    if (callback) {
+      this.once(`encoder-position-${encoderNum}`, callback);
+    }
+  }
+
+  /**
+   *  Report all encoder positions
+   *
+   */
+  encoderReportAll(callback){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x02,           // 2 ENCODER_REPORT_POSITIONS   (0x02)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+
+    if (callback) {
+      this.once(`encoder-positions`, callback);
+    }
+  }
+
+  /**
+   *  Reset encoder position to zero
+   *
+   */
+  encoderResetToZero(encoderNum){
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x03,           // 2 ENCODER_RESET_POSITION     (0x03)
+      encoderNum,     // 3 encoder #                  ([0 - MAX_ENCODERS-1])
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+  /**
+   *  Reset encoder position to zero
+   *
+   */
+   encoderEnableReporting(enable){
+
+    const enbl = enable ? 0x11 : 0x00;
+
+    const data = [
+      START_SYSEX,    // 0 START_SYSEX                (0xF0)
+      ENCODER,        // 1 ENCODER_DATA               (0x61)
+      0x04,           // 2 ENCODER_REPORT_AUTO        (0x04)
+      enbl,           // 3 enable                     (0x00 => false, true otherwise)
+      END_SYSEX       // 6 END_SYSEX                  (0xF7)
+    ];
+
+    writeToTransport(this, data);
+  }
+
+
+  /* ---------------------------------- END ENCODER STUFF ----------------------------------- */
+
 
   /**
    * Stepper functions to support version 2 of ConfigurableFirmata's asynchronous control of stepper motors

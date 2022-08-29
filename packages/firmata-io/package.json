@@ -1,5 +1,5 @@
 {
-  "name": "firmata-io",
+  "name": "@joepuzzo/firmata-io",
   "description": "Firmata protocol implementation",
   "version": "2.3.0",
   "author": "Julian Gautier",
